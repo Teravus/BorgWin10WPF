@@ -21,6 +21,49 @@ namespace BorgWin10WPF
             return frames;
         }
 
+        // Find next forward direction scene based on SceneMS
+        public static SceneDefinition FindNextMainScene(List<SceneDefinition> options, SceneDefinition existingScene)
+        {
+            SceneDefinition nextScene = null; // At the end of the game, we won't find one and we want to return null
+                                              // so the game knows to end
+
+            // Find our current position in the options array.
+            int currentMainSceneArrayPosition = -1; // We didn't find one if -1
+
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i].SceneType != SceneType.Main)
+                    continue;
+
+                if (existingScene.Name == options[i].Name)
+                {
+
+                    currentMainSceneArrayPosition = i;
+                    break;
+                }
+            }
+
+
+            if (currentMainSceneArrayPosition > -1) // Make sure to account for V000
+            {
+                // search for the next main video in the array
+                // This will most likely be the next position in the array, but I'm using
+                // a less naive search so people can edit the scene file
+
+                int nextScenePosition = currentMainSceneArrayPosition + 1;
+
+                for (int i = nextScenePosition; i < options.Count; i++)
+                {
+                    if (options[i].SceneType != SceneType.Main)
+                        continue;
+                    nextScene = options[i];
+                    break;
+                }
+
+            }
+
+            return nextScene;
+        }
         public static AspectRatioMaxResult GetMax(double width, double height, double AspectDecimal)
         {
             var heightbywidth = width / AspectDecimal;
@@ -42,6 +85,30 @@ namespace BorgWin10WPF
             return new AspectRatioMaxResult() { Direction = direction, Length = length };
             // we know if height is a certain thing and it isn't in ratio
         }
+        public static bool ValidateSaveGameName(string SaveName)
+        {
+            bool GoodYN = true;
+
+            if (SaveName.Contains(","))
+                GoodYN = false;
+
+            if (SaveName.Contains("\n"))
+                GoodYN = false;
+
+            if (SaveName.Contains("\r"))
+                GoodYN = false;
+
+            if (SaveName.Contains("<"))
+                GoodYN = false;
+            if (SaveName.Contains(">"))
+                GoodYN = false;
+
+            if (SaveName.Contains(";"))
+                GoodYN = false;
+
+
+            return GoodYN;
+        }
         internal static string CheckForOriginalMedia()
         {
             string result = string.Empty;
@@ -49,11 +116,9 @@ namespace BorgWin10WPF
             {
                 string.Format("MAIN_{0}X.AVI", 1),
                 string.Format("MAIN_{0}X.AVI", 2),
-                string.Format("SS_{0}X.AVI", 1),
-                string.Format("SS_{0}X.AVI", 2),
-                string.Format("COMPUTER.AVI"),
-                string.Format("HOLODECK.AVI"),
-                string.Format("IP_1.AVI")
+                string.Format("MAIN_{0}X.AVI", 3),
+                string.Format("LOGOX.AVI"),
+                string.Format("IPX.AVI")
             };
             for (int i = 0; i < FileLocations.Count; i++)
             {

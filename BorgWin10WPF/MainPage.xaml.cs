@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ using LibVLCSharp;
 using LibVLCSharp.WPF;
 using LibVLCSharp.Shared;
 using System.Windows.Threading;
+using XamlAnimatedGif;
 using System.Runtime.InteropServices;
 
 namespace BorgWin10WPF
@@ -50,6 +52,21 @@ namespace BorgWin10WPF
         // Aspect ratio.  Used for calculating the black bar offset when window doesn't match the aspect ratio.
         private double _OriginalAspectRatio = _OriginalMainVideoWidth / _OriginalMainVideoHeight;
 
+        // All Scenes
+        private List<SceneDefinition> _scenes = new List<SceneDefinition>();
+
+        // Just Info scenes (ip000)
+        private List<SceneDefinition> _infoScenes = new List<SceneDefinition>();
+
+        // Just Computer video Scenes (Replaying from time Stop Zero Zero.  Zero Zero.  Zero Zero.)
+        private List<SceneDefinition> _computerScenes = new List<SceneDefinition>();
+
+        // Just the holodeck video scenes (Chirp, and hum)
+        private List<SceneDefinition> _holodeckScenes = new List<SceneDefinition>();
+
+        // All the hotspots!
+        private List<HotspotDefinition> _hotspots = new List<HotspotDefinition>();
+
         // This is the visualization of the translated position that you clicked.
         private Rectangle _clickRectangle = null;
 
@@ -74,6 +91,12 @@ namespace BorgWin10WPF
         // Is the cursor visible?
         private bool _mcurVisible = false;
 
+        // Here is the main processor for the game.
+        private ScenePlayer _mainScenePlayer = null;
+
+        // This plays sound only videos..   that support the main player.   The main player needs this.  It is precious.
+        private SupportingPlayer _supportingPlayer = null;
+
         // So..  if the game is expecting input from the user...  Don't allow them to pause the game.
         private bool _actionTime = false;
 
@@ -82,14 +105,15 @@ namespace BorgWin10WPF
         private SelectionChangedEventHandler lstSceneChanged = null;
 
         // This is the tricorder cursor for when the game is paused.
-        BitmapImage TricorderCursor = null;  //new BitmapImage(new Uri(Path.Combine("Assets", "KlingonHolodeckCur.gif"), UriKind.Relative));
+        BitmapImage TricorderCursor = new BitmapImage(new Uri(System.IO.Path.Combine("Assets", "KlingonHolodeckCur.gif"), UriKind.Relative));
 
         // This is the borg cube when the game says User do something.
-        BitmapImage CubeCursor = null; // new BitmapImage(new Uri(Path.Combine("Assets", "dktahg.gif"), UriKind.Relative));
+        BitmapImage CubeCursor = new BitmapImage(new Uri(System.IO.Path.Combine("Assets", "dktahg.gif"), UriKind.Relative));
 
         // We have two VideoViews on the form.   The loading order isn't guaranteed.   So..   we keep track of if we have initialized libVLC with this
         bool _coreVLCInitialized = false;
 
+        TricorderGifAnimationController TricorderAnimation;
 
         public MainPage()
         {
@@ -121,10 +145,22 @@ namespace BorgWin10WPF
 
                 var relclickX = (int)((_lastClickPoint.X - letterbox_width) / ((clickareawidth - (letterbox_width * 2)) / _HotspotOriginalMainVideoWidth));
                 var relclickY = (int)((_lastClickPoint.Y - letterbox_height) / ((clickareaheight - (letterbox_height * 2)) / _HotspotOriginalMainVideoHeight));
-
+                relclickY += 19; // Borg wants things offset by more
                 long time = 0;
                 TimeSpan ts = TimeSpan.Zero;
+                // When you click, it shows a debug message on the output window.  Including the current time in milliseconds since video start.
+                if (_MainVideoLoaded)
+                {
+                    time = VideoView.MediaPlayer.Time;
+                    ts = TimeSpan.FromMilliseconds(time);
+                }
                 System.Diagnostics.Debug.WriteLine("{0},{1}({2},{3})[{4}] - t{5} - f{6}", _lastClickPoint.X, _lastClickPoint.Y, relclickX, relclickY, ts.ToString(@"hh\:mm\:ss"), (long)((float)time), Utilities.MsTo15fpsFrames(time));
+
+                // If we have loaded the main video and player..   Tell it a user clickdd!
+                if (_MainVideoLoaded && _mainScenePlayer != null && !string.IsNullOrEmpty(_mainScenePlayer.ScenePlaying))
+                {
+                    _mainScenePlayer.MouseClick(relclickX, relclickY);
+                }
                 // trnslated click Visualization for the click spot
                 if (_clickRectangle == null)
                 {
@@ -166,25 +202,25 @@ namespace BorgWin10WPF
                         // We have to show errors in potentially two spots.   Spot 1.   If the video player is loaded.
                         // Spot 2!   If the vido player isn't loaded.
 
-                        // Video Player Loaded
-                        //if (_mainScenePlayer != null)
-                        //{
-                        //    txtGenericErrorText.Text = unhandledException.Message;
-                        //    GenericErrorDialog.Visibility = Visibility.Visible;
-                        //    _mcurVisible = true;
-                        //    CurEmulator.Source = dktahgCursor;
-                        //    AnimationBehavior.SetSourceUri(CurEmulator, dktahgCursor.UriSource);
-                        //    CurEmulator.Visibility = Visibility.Visible;
-                        //    err.Handled = true;
-                        //    return;
-                        //}
+                        //Video Player Loaded
+                        if (_mainScenePlayer != null)
+                        {
+                            txtGenericErrorText.Text = unhandledException.Message;
+                            GenericErrorDialog.Visibility = Visibility.Visible;
+                            _mcurVisible = true;
+                            CurEmulator.Source = CubeCursor;
+                            AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
+                            CurEmulator.Visibility = Visibility.Visible;
+                            err.Handled = true;
+                            return;
+                        }
 
                         // Video player not loaded.
-                        //VideoErrorDialog.Visibility = Visibility.Visible;
-                        //txtVideoErrorText.Text = unhandledException.Message;
+                        VideoErrorDialog.Visibility = Visibility.Visible;
+                        txtVideoErrorText.Text = unhandledException.Message;
                         _mcurVisible = true;
                         CurEmulator.Source = CubeCursor;
-                        //AnimationBehavior.SetSourceUri(CurEmulator, dktahgCursor.UriSource);
+                        AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
                         CurEmulator.Visibility = Visibility.Visible;
                         err.Handled = true;
                         err.Handled = true;
@@ -207,6 +243,8 @@ namespace BorgWin10WPF
                         _libVLCMain = new LibVLC(optionsarray);
                         _libVLCInfo = _libVLCMain;
                     }
+                    _mediaPlayerMain = new LibVLCSharp.Shared.MediaPlayer(_libVLCMain);
+                    VideoView.MediaPlayer = _mediaPlayerMain;
                     // If you want console spam.  Uncomment this and the line in log_fired to lag the game..   and..  get the reason why libVLC is not happy.
                     // _libVLCMain.Log += Log_Fired;
 
@@ -231,7 +269,7 @@ namespace BorgWin10WPF
                         if (!_actionTime) // No pausing during active time.  It is too difficult to separate single and double clicks during some scenes that you need to rapid click.
                         {
 
-                            //SwitchGameModeActiveInfo();
+                            SwitchGameModeActiveInfo();
 
                             e2.Handled = true;
 
@@ -296,46 +334,77 @@ namespace BorgWin10WPF
 
 
                 };
-            };
-            // When the libVLC player control is loaded, initialize the unmanaged libVLC library. 
-            // Loading order is not guaranteed so..    the other viewer may load first.
-            // Only initialize libvlc once.
-            VideoInfo.Loaded += (s2, e2) =>
-            {
-                if (!_coreVLCInitialized)
+
+                // When the libVLC player control is loaded, initialize the unmanaged libVLC library. 
+                // Loading order is not guaranteed so..    the other viewer may load first.
+                // Only initialize libvlc once.
+                VideoInfo.Loaded += (s2, e2) =>
                 {
-                    _coreVLCInitialized = true;
-                    Core.Initialize();
-                    // Command line Options to VLC
-                    List<string> options = new List<string>();
-                    var optionsarray = options.ToArray();
-                    _libVLCMain = new LibVLC(optionsarray);
+                    if (!_coreVLCInitialized)
+                    {
+                        _coreVLCInitialized = true;
+                        Core.Initialize();
+                        // Command line Options to VLC
+                        List<string> options = new List<string>();
+                        var optionsarray = options.ToArray();
+                        _libVLCMain = new LibVLC(optionsarray);
+                        _libVLCInfo = _libVLCMain;
+                    }
+                    List<string> options2 = new List<string>();
+
+
                     _libVLCInfo = _libVLCMain;
-                }
-                List<string> options2 = new List<string>();
-    
 
-                _libVLCInfo = _libVLCMain;
+                    var _mediaPlayerInfo = new LibVLCSharp.Shared.MediaPlayer(_libVLCInfo);
+                    VideoInfo.MediaPlayer = _mediaPlayerInfo;
+                    _mediaPlayerInfo.EnableMouseInput = false;
+                    _mediaPlayerInfo.EnableKeyInput = false;
 
-                //var _mediaPlayerInfo = new LibVLCSharp.Shared.MediaPlayer(_libVLCInfo);
-                //VideoInfo.MediaPlayer = _mediaPlayerInfo;
-                //_mediaPlayerInfo.EnableMouseInput = false;
-                //_mediaPlayerInfo.EnableKeyInput = false;
+                    //// Uncomment this and the line in log_fired to lag the game..   and..  get the reason why libVLC is not happy.
+                    ////_libVLCInfo.Log += Log_Fired;
 
-                //// Uncomment this and the line in log_fired to lag the game..   and..  get the reason why libVLC is not happy.
-                ////_libVLCInfo.Log += Log_Fired;
+                    var InfoScenes = _scenes.Where(xy => xy.SceneType == SceneType.Info).ToList();
+                    _infoScenes = InfoScenes;
 
-                //var InfoScenes = _scenes.Where(xy => xy.SceneType == SceneType.Info).ToList();
-                //_infoScenes = InfoScenes;
+                    //var ComputerScenes = SceneLoader.LoadSupportingScenesFromAsset("computerscenes.txt");
+                    //_computerScenes = ComputerScenes;
+                    var HolodeckScenes = SceneLoader.LoadSupportingScenesFromAsset("holodeckscenes.txt");
+                    //var HolodeckScenes = new List<SceneDefinition>();
 
-                //var ComputerScenes = SceneLoader.LoadSupportingScenesFromAsset("computerscenes.txt");
-                //_computerScenes = ComputerScenes;
-                //var HolodeckScenes = SceneLoader.LoadSupportingScenesFromAsset("holodeckscenes.txt");
-                //_holodeckScenes = HolodeckScenes;
-                //_supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, ComputerScenes, HolodeckScenes, _libVLCInfo);
-                //Load_Computer_list(_computerScenes);
+                    _holodeckScenes = HolodeckScenes;
+                    //_supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, ComputerScenes, HolodeckScenes, _libVLCInfo);
+                    _supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, null, HolodeckScenes, _libVLCInfo);
+                    //Load_Computer_list(_computerScenes);
+
+                };
+                // Save this as a delgate because we need to hook/unhook it
+                lstSceneChanged = (o, arg) =>
+                {
+
+                    var ClickedItems = arg.AddedItems;
+                    foreach (var item in ClickedItems)
+                    {
+                        ComboBoxItem citem = item as ComboBoxItem;
+                        string scenename = citem.Content.ToString();
+                        SceneDefinition founddef = null;
+                        foreach (var scenedef in _scenes)
+                        {
+                            if (scenedef.Name == scenename)
+                            {
+                                founddef = scenedef;
+                                break;
+                            }
+                        }
+                        if (founddef != null && _MainVideoLoaded)
+                        {
+                            _mainScenePlayer.PlayScene(founddef);
+                        }
+                    }
+                };
+                lstScene.SelectionChanged += lstSceneChanged;
 
             };
+
             Unloaded += (s, e) =>
             {
                 VideoView.MediaPlayer = null;
@@ -361,29 +430,195 @@ namespace BorgWin10WPF
                 }
             };
 
-            // Window says mouse has moved.
-            this.MouseMove += (s, e) =>
+
+            // You clicked New game!
+            btnNewGame.Click += (s, e) =>
             {
-                Mouse_Moved();
+                string FileCheckResult = Utilities.CheckForOriginalMedia();
+                if (!string.IsNullOrEmpty(FileCheckResult))
+                {
+                    // Display message.
+                    txtVideoErrorText.Text = FileCheckResult;
+                    VideoErrorDialog.Visibility = Visibility.Visible;
+                    return;
+                }
+                VideoErrorDialog.Visibility = Visibility.Collapsed;
+                PrepPlayer();
+                _mainScenePlayer.TheSupportingPlayer = _supportingPlayer;
+                WindowResized(this, null);
+                _mainScenePlayer.PlayScene(_scenes[0]);
+
+                //CurEmulator.Visibility = Visibility.Visible;
+
 
             };
 
+            // You clicked OK on the video not found error message
+            btnVideoFileMissingOKCancel.Click += (s, e) =>
+            {
+                VideoErrorDialog.Visibility = Visibility.Collapsed;
+                _mcurVisible = false;
+                CurEmulator.Source = CubeCursor;
+
+                CurEmulator.Visibility = Visibility.Collapsed;
+
+            };
+            // You clicked OK on the error message.  This is an Unhandled Error!   Baaaaad.   So try to autosave and quit.!
+            btnGenericcErrorOKCancel.Click += async (s, e) =>
+            {
+                try
+                {
+                    var savedata = _mainScenePlayer.GetSaveInfo();
+                    DateTime now = DateTime.Now;
+                    string SaveName = string.Format("AutoSave_{0}{1}{2}{3}{4}{5}", now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second);
+                    SaveDefinition info = _mainScenePlayer.GetSaveInfo();
+
+                    info.SaveName = SaveName;
+
+                    //List<SaveDefinition> saves = new List<SaveDefinition>();// await SaveLoader.LoadSavesFromAsset("RIVER.TXT");
+                    //saves.Add(info);
+                    //await SaveLoader.SaveSavesToAsset(saves, "RIVER.TXT");
+
+                }
+                catch
+                {
+                    // Whoops  can't do anything about it.
+                }
+                Close();
+            };
+            // Debug when you play a computer video scene
+            lstComputer.SelectionChanged += (s, e) =>
+            {
+
+                var ClickedItems = e.AddedItems;
+                foreach (var item in ClickedItems)
+                {
+                    ComboBoxItem citem = item as ComboBoxItem;
+                    string scenename = citem.Content.ToString();
+                    SceneDefinition founddef = null;
+                    foreach (var scenedef in _computerScenes)
+                    {
+                        if (scenedef.Name == scenename)
+                        {
+                            founddef = scenedef;
+                            break;
+                        }
+                    }
+                    if (founddef != null && _MainVideoLoaded)
+                    {
+                        _supportingPlayer.DebugSetEvents(false);
+                        _supportingPlayer.QueueScene(founddef, "computer"); // I'm treating these like info regardless of the actual type so it doesn't affect the main video when testing.
+                    }
+                }
+            };
+            // Window says mouse has moved.
+            this.MouseMove += (s, e) =>
+        {
+            Mouse_Moved();
+
+        };
+            // You picked one of your saved games!   Enable the load button!
+            lstRiver.SelectionChanged += (s, e) =>
+            {
+                if (lstRiver.SelectedIndex >= 0)
+                {
+                    btnLoad.IsEnabled = true;
+                }
+                else
+                {
+                    btnLoad.IsEnabled = false;
+                }
+            };
+            // You cancelled your game load!  Make up your mind!
+
+            btnLoadCancel.Click += (s, e) =>
+            {
+                LoadDialog.Visibility = Visibility.Collapsed;
+            };
+
+            // You're quitting the game!   Fill out my survey.  Like..  Follow..  Subscribe!
+            btnQuitGame.Click += (s, e) =>
+            {
+                VideoView.Width = VideoViewGrid.ActualWidth;
+                VideoView.Height = VideoViewGrid.ActualHeight;
+                Quit();
+            };
             // Create the Spinning klingon logo cursor to show the user when the game is paused.
             TricorderCursor = new BitmapImage();
-            //TricorderCursor.BeginInit();
-            //TricorderCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "KlingonHolodeckCur.gif"));
-            //TricorderCursor.EndInit();
+            TricorderCursor.BeginInit();
+            TricorderCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "KlingonHolodeckCur.gif"));
+            TricorderCursor.EndInit();
 
             //new BitmapImage(new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "KlingonHolodeckCur.gif")));
 
 
             // Create the Klingon knife cursor for the action scenes where we demand the user do something!
             CubeCursor = new BitmapImage();
-            //CubeCursor.BeginInit();
-            //CubeCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "dktahg.gif"));// new BitmapImage(new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "dktahg.gif")));
-            //CubeCursor.EndInit();
+            CubeCursor.BeginInit();
+
+            CubeCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "dktahg.gif"));// new BitmapImage(new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "dktahg.gif")));
+            CubeCursor.EndInit();
             // You clicked the clickable surface!   Start a timer..  to see if you only single clickd or double clicked.  
             // If the timer fires..  you have single clickddd.  If it doesn't fire you have double clickdd.
+
+
+            // You have cancelled the save dialog.
+            btnSaveCancel.Click += (s, e) =>
+            {
+                if (!VideoView.MediaPlayer.IsPlaying)
+                    VideoView.MediaPlayer.Play();
+                SaveDialog.Visibility = Visibility.Collapsed;
+
+                _mcurVisible = false;
+                CurEmulator.Source = CubeCursor;
+                AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
+                CurEmulator.Visibility = Visibility.Collapsed;
+            };
+
+            // You clicked the save button!
+
+            // Get the user game state from the player and save it to the save file!
+            btnSave.Click += async (s, e) =>
+            {
+                string SaveName = txtSaveName.Text;
+
+                if (string.IsNullOrEmpty(SaveName))
+                {
+                    txtSaveErrorText.Text = "Please type a Name in the box.";
+                    txtSaveErrorText.Visibility = Visibility.Visible;
+                    return;
+                }
+
+                if (Utilities.ValidateSaveGameName(SaveName))
+                {
+                    SaveDefinition info = _mainScenePlayer.GetSaveInfo();
+
+                    info.SaveName = SaveName;
+
+                    //List<SaveDefinition> saves = await SaveLoader.LoadSavesFromAsset("RIVER.TXT");
+                    //saves.Add(info);
+                    //await SaveLoader.SaveSavesToAsset(saves, "RIVER.TXT");
+
+                    if (!VideoView.MediaPlayer.IsPlaying)
+                        VideoView.MediaPlayer.Play();
+                    SaveDialog.Visibility = Visibility.Collapsed;
+
+                    _mcurVisible = false;
+
+                    CurEmulator.Source = CubeCursor;
+                    AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
+
+                    CurEmulator.Visibility = Visibility.Collapsed;
+                    txtSaveErrorText.Visibility = Visibility.Collapsed;
+                    txtSaveErrorText.Text = "";
+                    return;
+
+                }
+                txtSaveErrorText.Text = "Please remove this dishonorable text you Ferengi Ha'DIbaH!";
+                txtSaveErrorText.Visibility = Visibility.Visible;
+
+
+            };
             ClickSurface.Click += (o, cEventArgs) =>
             {
                 var tappedspot = Mouse.GetPosition(ClickSurface);
@@ -403,7 +638,7 @@ namespace BorgWin10WPF
                 if (!_actionTime) // No pausing during active time.  It is too difficult to separate single and double clicks during some scenes that you need to rapid click.
                 {
 
-                    //SwitchGameModeActiveInfo();
+                    SwitchGameModeActiveInfo();
 
                     cEventArgs.Handled = true;
 
@@ -432,63 +667,65 @@ namespace BorgWin10WPF
             {
                 Mouse_Moved();
             };
-            //txtSaveText.MouseMove += (o, cEventArgs) =>
-            //{
-            //    Mouse_Moved();
-            //};
-            //txtSaveName.MouseMove += (o, cEventArgs) =>
-            //{
-            //    Mouse_Moved();
-            //};
-            //txtSaveErrorText.MouseMove += (o, cEventArgs) =>
-            //{
-            //    Mouse_Moved();
-            //};
-            txtOffsetMs.MouseMove += (o, cEventArgs) =>
+            txtSaveText.MouseMove += (o, cEventArgs) =>
             {
                 Mouse_Moved();
             };
+            txtSaveName.MouseMove += (o, cEventArgs) =>
+            {
+                Mouse_Moved();
+            };
+            txtSaveErrorText.MouseMove += (o, cEventArgs) =>
+            {
+                Mouse_Moved();
+            };
+            txtOffsetMs.MouseMove += (o, cEventArgs) =>
+        {
+            Mouse_Moved();
+        };
             txtMS.MouseMove += (o, cEventArgs) =>
             {
                 Mouse_Moved();
             };
-            //txtLoadText.MouseMove += (o, cEventArgs) =>
-            //{
-            //    Mouse_Moved();
-            //};
-            lstScene.MouseMove += (o, cEventArgs) =>
+            txtLoadText.MouseMove += (o, cEventArgs) =>
             {
                 Mouse_Moved();
             };
-            //SaveDialog.MouseMove += (o, cEventArgs) =>
-            //{
-            //    Mouse_Moved();
-            //};
-            //LoadDialog.MouseMove += (o, cEventArgs) =>
-            //{
-            //    Mouse_Moved();
-            //};
-            //GenericErrorDialog.MouseMove += (o, cEventArgs) =>
-            //{
-            //    Mouse_Moved();
-            //};
-            //VideoErrorDialog.MouseMove += (o, cEventArgs) =>
-            //{
-            //    Mouse_Moved();
-            //};
-            //btnGenericcErrorOKCancel.MouseMove += (o, cEventArgs) =>
-            //{
-            //    Mouse_Moved();
-            //};
-            //btnVideoFileMissingOKCancel.MouseMove += (o, cEventArgs) =>
-            //{
-            //    Mouse_Moved();
-            //};
+            lstScene.MouseMove += (o, cEventArgs) =>
+        {
+            Mouse_Moved();
+        };
+            SaveDialog.MouseMove += (o, cEventArgs) =>
+            {
+                Mouse_Moved();
+            };
+            LoadDialog.MouseMove += (o, cEventArgs) =>
+            {
+                Mouse_Moved();
+            };
+            GenericErrorDialog.MouseMove += (o, cEventArgs) =>
+            {
+                Mouse_Moved();
+            };
+            VideoErrorDialog.MouseMove += (o, cEventArgs) =>
+            {
+                Mouse_Moved();
+            };
+            btnGenericcErrorOKCancel.MouseMove += (o, cEventArgs) =>
+            {
+                Mouse_Moved();
+            };
+            btnVideoFileMissingOKCancel.MouseMove += (o, cEventArgs) =>
+            {
+                Mouse_Moved();
+            };
 
-
+            Uri uri = new Uri(@"F:\github\Repos\BorgWin10WPF\BorgWin10WPF\bin\x64\Debug\Assets\QTricorderT.gif");
+            AnimationBehavior.SetSourceUri(InfoSpring, uri);
+            TricorderAnimation = new TricorderGifAnimationController(InfoSpring);
 
         }
-
+      
 
         private void Mouse_Moved()
         {
@@ -534,26 +771,369 @@ namespace BorgWin10WPF
             VideoViewGrid.Width = width;
             VideoViewGrid.Height = height;
 
-            //if (_MainVideoLoaded)
-            //{
+            double widthby2 = ((double)width * 0.5d);
+            double widthby3 = ((double)width * 0.3333d);
+            double heightby3 = ((double)height * 0.3333d);
+            double heightby4 = ((double)height * 0.25d);
+            double infowidthby2 = widthby3 * 0.5d;
 
-            ClickSurface.Width = width;
-            ClickSurface.Height = height;
+            double leftmargin = widthby2 - infowidthby2;
+            double topmargin = heightby4 * 3d;
+            
 
-            VideoView.Width = width;
-            VideoView.Height = height;
-            //}
+
+            VideoInfo.Width = width * 0.24d;
+            VideoInfo.Height = heightby4;
+
+            InfoSpring.Width = widthby2;
+            InfoSpring.Height = height*0.5d;
+
+            Thickness VideoInfoMargin = new Thickness(leftmargin+20, topmargin, 0, 0);
+            Thickness TricorderFrameMargin = new Thickness(width*0.5 - (InfoSpring.Width * 0.5), height * 0.5+ InfoSpring.Height*0.1, 0, 0);
+
+            VideoInfo.Margin = VideoInfoMargin;
+            InfoSpring.Margin = TricorderFrameMargin;
+
+
+            if (_MainVideoLoaded)
+            {
+
+                ClickSurface.Width = width;
+                ClickSurface.Height = height;
+                if (_mainScenePlayer != null)
+                {
+                    var aspectquery = Utilities.GetMax(width, height, _OriginalAspectRatio);
+                    switch (aspectquery.Direction)
+                    {
+                        case "W":
+                            _mainScenePlayer.HotspotScale = (float)(width / _OriginalMainVideoWidth);
+                            break;
+                        case "H":
+                            _mainScenePlayer.HotspotScale = (float)(height / _OriginalMainVideoHeight);
+                            break;
+                    }
+
+                }
+                VideoView.Width = width;
+                VideoView.Height = height;
+            }
             ImgStartMain.Height = height;
             ImgStartMain.Width = width;
-            //grdStartControls.Height = height;
-            //grdStartControls.Width = width;
+            grdStartControls.Height = height;
+            grdStartControls.Width = width;
 
         }
         private void Keydown(object o, KeyEventArgs ea)
         {
+            if (_MainVideoLoaded)
+            {
+                switch (ea.Key)
+                {
+                    case Key.H:
+                        tbHelpText.Visibility = Visibility.Visible;
+                        break;
+                }
+            }
         }
         private void Keyup(object o, KeyEventArgs ea)
         {
+            if (_MainVideoLoaded)
+            {
+                // OemPlus
+                // OemMinus
+                // Add
+                // Subtract
+                switch (ea.Key)
+                {
+                    case Key.Q:
+                        Quit();
+                        return;
+                    case Key.S:
+                        if (SaveDialog.Visibility == Visibility.Collapsed)
+                        {
+
+                            if (VideoView.MediaPlayer.IsPlaying)
+                                VideoView.MediaPlayer.Pause();
+                            SaveDialog.Visibility = Visibility.Visible;
+                            //var pointerPosition = Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition;
+                            //var pos = Window.Current.CoreWindow.PointerPosition;
+                            //CurEmulator.Margin = new Thickness(pos.X - Window.Current.Bounds.X, pos.Y - Window.Current.Bounds.Y + 1, 0, 0);
+                            _mcurVisible = true;
+                            CurEmulator.Source = CubeCursor;
+                            AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
+                            CurEmulator.Visibility = Visibility.Visible;
+                        }
+                        return;
+                    case Key.N:
+                        if (txtMS.Visibility == Visibility.Visible && txtOffsetMs.Visibility == Visibility.Visible) // Only if debug is visible
+                        {
+                            VideoView.MediaPlayer.Time -= 15000;
+                        }
+                        break;
+                    case Key.M:
+                        if (txtMS.Visibility == Visibility.Visible && txtOffsetMs.Visibility == Visibility.Visible) // Only if debug is visible
+                        {
+                            VideoView.MediaPlayer.Time += 15000;
+                        }
+                        break;
+
+                    case Key.C:
+                        if (txtMS.Visibility == Visibility.Visible && txtOffsetMs.Visibility == Visibility.Visible) // Only if debug is visible
+                        {
+                            if (_mainScenePlayer != null)
+                            {
+                                _mainScenePlayer.JumpToChallenge();
+                            }
+                        }
+                        break;
+                    case Key.Enter:
+                        if (txtMS.Visibility == Visibility.Visible && txtOffsetMs.Visibility == Visibility.Visible) // Only if debug is visible
+                        {
+                            float offsetint = 0;
+                            if (txtOffsetMs.Text.Length > 0)
+                                offsetint = Convert.ToSingle(txtOffsetMs.Text);
+                            if (txtMS.Text.Length > 0)
+                            {
+                                //VideoView.MediaPlayer.Time = (long)(((Convert.ToSingle(txtMS.Text)-2)* 98.14f) + (offsetint));
+                                VideoView.MediaPlayer.Time = (long)(Utilities.Frames15fpsToMS(Convert.ToInt32(txtMS.Text) - 2) + (offsetint * 100));
+
+                            }
+                        }
+                        break;
+                    case Key.Oem3: // Accento Debug
+                        if (txtMS.Visibility == Visibility.Visible && txtOffsetMs.Visibility == Visibility.Visible)
+                        {
+                            txtMS.Visibility = Visibility.Collapsed;
+                            txtOffsetMs.Visibility = Visibility.Collapsed;
+                            lstScene.Visibility = Visibility.Collapsed;
+                            lstComputer.Visibility = Visibility.Collapsed;
+                            CurEmulator.Visibility = Visibility.Collapsed;
+                            tbDebugTextBlock.Visibility = Visibility.Collapsed;
+                            _mainScenePlayer.VisualizeRemoveHotspots();
+                            if (_clickRectangle != null) _clickRectangle.Visibility = Visibility.Collapsed;
+                            _mcurVisible = false;
+                        }
+                        else
+                        {
+                            txtMS.Visibility = Visibility.Visible;
+                            txtOffsetMs.Visibility = Visibility.Visible;
+                            lstScene.Visibility = Visibility.Visible;
+                            lstComputer.Visibility = Visibility.Visible;
+                            CurEmulator.Visibility = Visibility.Visible;
+                            tbDebugTextBlock.Visibility = Visibility.Visible;
+                            if (_clickRectangle != null) _clickRectangle.Visibility = Visibility.Visible;
+                            // Unhook the scene changed event because we don't want it to restart the scene
+                            lstScene.SelectionChanged -= lstSceneChanged;
+                            var sp = _mainScenePlayer.ScenePlaying;
+                            for (int i = 0; i < lstScene.Items.Count; i++)
+                            {
+                                ComboBoxItem item = lstScene.Items[i] as ComboBoxItem;
+                                if (item.Content.ToString() == sp)
+                                {
+                                    lstScene.SelectedIndex = i;
+                                    break;
+                                }
+                            }
+                            lstScene.SelectionChanged += lstSceneChanged;
+                            //var pointerPosition = Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition;
+
+                            //var pos = this.PointFromScreen;// PointerPosition;
+                            //CurEmulator.Margin = new Thickness(pos.X - Window.Current.Bounds.X, pos.Y - Window.Current.Bounds.Y + 1, 0, 0);
+                            ShowCursor();
+                            _mainScenePlayer.VisualizeHotspots(VVGrid);// VideoViewGrid);
+                            _mcurVisible = true;
+                        }
+                        break;
+                    case Key.Space:
+                        SwitchGameModeActiveInfo();
+                        break;
+                    case Key.P:
+                    case Key.Pause:
+                    case Key.Play:
+                    case Key.MediaPlayPause:
+                        SwitchGameModeActiveInfo();
+                        break;
+                    // OemPlus
+                    // OemMinus
+                    // Add
+                    // Subtract
+                    case Key.OemPlus:
+                    case Key.Add:
+                        _mainScenePlayer.IncreaseVolume();
+                        _supportingPlayer.IncreaseVolume();
+                        break;
+                    case Key.OemMinus:
+                    case Key.Subtract:
+                        _mainScenePlayer.LowerVolume();
+                        _supportingPlayer.LowerVolume();
+                        break;
+                    case Key.H:
+                        tbHelpText.Visibility = Visibility.Collapsed;
+                        break;
+                }
+            }
+        }
+        private void SwitchGameModeActiveInfo()
+        {
+            if (!_actionTime) // No pausing during active time.  It is too difficult to separate single and double clicks during some scenes that you need to rapid click.
+            {
+                if (_MainVideoLoaded)
+                {
+                    // If the Save or load dialog is visible, we want them resuming the video with double click
+                    if (SaveDialog.Visibility == Visibility.Collapsed && LoadDialog.Visibility == Visibility.Collapsed)
+                    {
+                        if (VideoView.MediaPlayer.IsPlaying)
+                        {
+                            VideoView.MediaPlayer.Pause();
+                            TricorderAnimation.OpenTricorder();
+                            CurEmulator.Visibility = Visibility.Visible;
+                            VideoInfo.Visibility = Visibility.Visible;
+                            CurEmulator.Source = TricorderCursor;
+                            AnimationBehavior.SetSourceUri(CurEmulator, TricorderCursor.UriSource);
+
+                            //var beep = _holodeckScenes[0];
+                            var hum = _holodeckScenes[0];
+                            //_supportingPlayer.QueueScene(beep, "holodeck");
+                            _supportingPlayer.QueueScene(hum, "holodeck", 0, true);
+
+                            //var pointerPosition = Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition;
+                            //var pos = Window.Current.CoreWindow.PointerPosition;
+                            //CurEmulator.Margin = new Thickness(pos.X - Window.Current.Bounds.X, pos.Y - Window.Current.Bounds.Y + 1, 0, 0);
+                            var point = Mouse.GetPosition(ClickSurface);
+                            CurEmulator.Margin = new Thickness(point.X, point.Y + 1, 0, 0);
+                            _mcurVisible = true;
+                        }
+                        else
+                        {
+                            _supportingPlayer.Pause();
+                            _supportingPlayer.ClearQueue();
+
+                            VideoInfo.Visibility = Visibility.Collapsed;
+                            TricorderAnimation.CloseTricorder();
+                            VideoView.MediaPlayer.Play();
+
+                            CurEmulator.Source = CubeCursor;
+                            AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
+                            
+                            CurEmulator.Visibility = Visibility.Collapsed;
+                            _mcurVisible = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void Quit()
+        {
+            string FileCheckResult = Utilities.CheckForOriginalMedia();
+            if (!string.IsNullOrEmpty(FileCheckResult))
+            {
+                // Display message.
+                Close();
+            }
+
+            SceneDefinition scene = null;
+            if (_scenes != null && _scenes.Count == 0)
+            {
+                PrepPlayer();
+            }
+            if (_scenes == null)
+            {
+                PrepPlayer();
+            }
+            if (_scenes.Count == 0)
+            {
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                Close();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            }
+            else
+            {
+                scene = _scenes[0];
+                if (scene != null)
+                {
+                    _mainScenePlayer.PlayScene(scene);
+                }
+                scene = _scenes.Where(xy => xy.Name == "LOGO1").FirstOrDefault();
+                if (scene != null)
+                {
+                    _mainScenePlayer.PlayScene(scene);
+                }
+            }
+        }
+
+        private void PrepPlayer()
+        {
+            btnNewGame.IsEnabled = false;
+            grdStartControls.Visibility = Visibility.Collapsed;
+
+            _scenes = SceneLoader.LoadScenesFromAsset("scenes.txt");
+            _hotspots = HotspotLoader.LoadHotspotsFromAsset("hotspots.txt");
+            _infoScenes = _scenes.Where(xy => xy.SceneType == SceneType.Info).ToList();
+
+            for (int i = 0; i < _hotspots.Count; i++)
+            {
+                var hotspot = _hotspots[i];
+                foreach (var scene in _scenes)
+                {
+                    if (hotspot.RelativeVideoName.ToLowerInvariant() == scene.Name.ToLowerInvariant())
+                    {
+                        if (hotspot.ActionVideo.ToLowerInvariant().StartsWith("i_"))
+                        {
+                            scene.PausedHotspots.Add(hotspot);
+                        }
+                        else
+                        {
+                            scene.PlayingHotspots.Add(hotspot);
+                        }
+
+                    }
+                }
+            }
+
+            Load_Scene_List(_scenes);
+            _mainScenePlayer = new ScenePlayer(VideoView, _scenes);
+            Load_Main_Video();
+
+            ImgStartMain.Visibility = Visibility.Collapsed;
+            Mouse.OverrideCursor = Cursors.None;
+
+            _mainScenePlayer.VisualizationHeightMultiplier = _OriginalMainVideoHeight / _HotspotOriginalMainVideoHeight;
+            _mainScenePlayer.VisualizationWidthMultiplier = _OriginalMainVideoWidth / _HotspotOriginalMainVideoWidth;
+            _mainScenePlayer.innerGrid = VVGrid;
+            _mainScenePlayer.ActionOn += () =>
+            {
+                _actionTime = true;
+                _clickTimer.Interval = TimeSpan.FromSeconds(0.05);
+                ShowCursor();
+            };
+            _mainScenePlayer.ActionOff += () =>
+            {
+                _actionTime = false;
+                _clickTimer.Interval = TimeSpan.FromSeconds(0.2);
+                HideCursor();
+
+            };
+            _mainScenePlayer.QuitGame += () =>
+            {
+
+                Close();
+            };
+            _mainScenePlayer.InfoVideoTrigger += (start, end) =>
+            {
+                SceneDefinition InfoSceneToPlay = _infoScenes.Where(xy => xy.StartMS >= start && xy.EndMS <= end).FirstOrDefault();
+                // todo write a way to find the scene by start and end.
+
+                if (InfoSceneToPlay != null)
+                {
+                    var hum = _holodeckScenes[0];
+                    _supportingPlayer.QueueScene(InfoSceneToPlay, "info", 0);
+                    _supportingPlayer.QueueScene(hum, "holodeck", 0, true);
+                }
+
+            };
+            VideoInfo.Visibility = Visibility.Collapsed;
+            ClickSurface.Focus();
         }
         private void ShowCursor()
         {
@@ -571,6 +1151,30 @@ namespace BorgWin10WPF
             CurEmulator.Visibility = Visibility.Collapsed;
 
             _mcurVisible = false;
+        }
+
+        private void Load_Main_Video()
+        {
+            var result = _mainScenePlayer.Load_Main_Video(_libVLCMain);
+            _OriginalMainVideoHeight = result.OriginalMainVideoHeight;
+            _OriginalMainVideoWidth = result.OriginalMainVideoWidth;
+
+            _MainVideoLoaded = result.Loaded;
+
+        }
+        private void Load_Scene_List(List<SceneDefinition> defs)
+        {
+            lstScene.Items.Clear();
+
+            foreach (var def in defs)
+            {
+                if (def.SceneType == SceneType.Main || def.SceneType == SceneType.Inaction || def.SceneType == SceneType.Bad)
+                    lstScene.Items.Add(new ComboBoxItem() { Content = def.Name });
+            }
+        }
+        private void Log_Fired(object sender, LogEventArgs e)
+        {
+            //System.Diagnostics.Debug.WriteLine(e.FormattedLog);
         }
     }
 }
