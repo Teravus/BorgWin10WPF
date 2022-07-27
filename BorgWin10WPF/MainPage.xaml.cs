@@ -783,17 +783,22 @@ namespace BorgWin10WPF
 
 
             VideoInfo.Width = width * 0.24d;
-            VideoInfo.Height = heightby4;
+            VideoInfo.Height = heightby3;
 
             InfoSpring.Width = widthby2;
-            InfoSpring.Height = height*0.5d;
+            InfoSpring.Height = height* 0.56d ;
 
-            Thickness VideoInfoMargin = new Thickness(leftmargin+20, topmargin, 0, 0);
-            Thickness TricorderFrameMargin = new Thickness(width*0.5 - (InfoSpring.Width * 0.5), height * 0.5+ InfoSpring.Height*0.1, 0, 0);
+            Thickness VideoInfoMargin = new Thickness(0, 0, 0, 10);
+            Thickness TricorderFrameMargin = new Thickness(30, 0, 0, 0);
 
+            VideoInfo.HorizontalAlignment = HorizontalAlignment.Center;
+            VideoInfo.VerticalAlignment = VerticalAlignment.Bottom;
             VideoInfo.Margin = VideoInfoMargin;
+            InfoSpring.HorizontalAlignment = HorizontalAlignment.Center;
+            InfoSpring.VerticalAlignment = VerticalAlignment.Bottom;
             InfoSpring.Margin = TricorderFrameMargin;
-
+            InfoSpring.Stretch = Stretch.Fill;
+            
 
             if (_MainVideoLoaded)
             {
