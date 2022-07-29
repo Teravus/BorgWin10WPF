@@ -16,9 +16,8 @@ using System.Windows.Threading;
 
 namespace BorgWin10WPF
 {
-    public delegate void EndScene(object o, string s, string t);
 
-    public class SupportingPlayer : IDisposable
+    public class VideoAudioPlayer : IDisposable
     {
         public event EndScene SceneComplete;
 
@@ -51,7 +50,7 @@ namespace BorgWin10WPF
         private readonly Queue<VideoQueueItem> _playQueue = null;
 
 
-        public SupportingPlayer(VideoView displayElement, List<SceneDefinition> InfoScenes, List<SceneDefinition> ComputerScenes, List<SceneDefinition> HolodeckScenes, List<HotspotDefinition> ips, LibVLC vlcobject)
+        public VideoAudioPlayer(VideoView displayElement, List<SceneDefinition> InfoScenes, List<SceneDefinition> ComputerScenes, List<SceneDefinition> HolodeckScenes, List<HotspotDefinition> ips, LibVLC vlcobject)
         {
             _displayElement = displayElement;
             _aggregatehotspots = ips;
@@ -210,9 +209,9 @@ namespace BorgWin10WPF
                         case "info":
                             SwitchToInfoVideo();
                             break;
-                        //case "computer":
-                        //    SwitchToComputerVideo();
-                        //    break;
+                            //case "computer":
+                            //    SwitchToComputerVideo();
+                            //    break;
                     }
 
                     _displayElement.MediaPlayer.Time = _currentScene.StartMS;
@@ -222,7 +221,7 @@ namespace BorgWin10WPF
                         _displayElement.MediaPlayer.Play();
                     }
                 }
-                
+
                 if (_displayElement.MediaPlayer.IsPlaying)
                 {
                     _lastPlayheadMS = _displayElement.MediaPlayer.Time;
@@ -343,83 +342,7 @@ namespace BorgWin10WPF
                 }
             }
         }
-        public void MouseClick(int X, int Y)
-        {
-            if (_currentScene == null)
-                return;
-            List<HotspotDefinition> inFrame = new List<HotspotDefinition>();
-
-            //item.Draw(ParentGrid, _displayElement.MediaPlayer.Time, _currentScene);
-            //X += 35;
-            Y += 25;
-            var currtime = _displayElement.MediaPlayer.Time;
-            bool playing = _displayElement.MediaPlayer.IsPlaying;
-            List<HotspotDefinition> hotspotstocheck = _aggregatehotspots;//_currentScene.PausedHotspots;
-            foreach (var hotspot in hotspotstocheck)
-            {
-
-                var FrameStartMS = Utilities.Frames15fpsToMS(hotspot.FrameStart) + _currentScene.OffsetTimeMS;
-                var FrameEndMS = Utilities.Frames15fpsToMS( hotspot.FrameEnd) + _currentScene.OffsetTimeMS;
-                string hotspotInfo = string.Format($"\t[{hotspot.Name}]: {FrameStartMS}:{currtime}:{FrameEndMS}");
-                if (currtime >= FrameStartMS && currtime <= FrameEndMS)
-                {
-                    System.Diagnostics.Debug.WriteLine($"{hotspotInfo} ..|..");
-                }
-                else if (currtime+4000 >= FrameStartMS && currtime <= FrameEndMS)
-                {
-                    System.Diagnostics.Debug.WriteLine($"{hotspotInfo} .<|..");
-                }
-                else if (currtime >= FrameStartMS && currtime+4000 <= FrameEndMS)
-                {
-                    System.Diagnostics.Debug.WriteLine($"{hotspotInfo} ..|.>");
-                }
-                else if (currtime < FrameStartMS)
-                {
-                    //System.Diagnostics.Debug.WriteLine("<.|..");
-                }
-                else if (currtime > FrameEndMS)
-                {
-                    //System.Diagnostics.Debug.WriteLine("..|.>");
-                }
-                if (currtime+2000 >= FrameStartMS && currtime - 2000 <= FrameEndMS)
-                {
-                    inFrame.Add(hotspot);
-                }
-            }
-            for (int i = 0; i < inFrame.Count; i++)
-            {
-                var hittestresults = (inFrame[i].HitTest(X, Y, currtime, _currentScene,false));
-                System.Diagnostics.Debug.WriteLine(string.Format("\t[{0}]: Hit test {1},{2}-{7}.  Box ({3},{4},{5},{6})", inFrame[i].Name + "/" + inFrame[i].ActionVideo, X, Y, inFrame[i].Area[0].TopLeft.X, inFrame[i].Area[0].TopLeft.Y, inFrame[i].Area[0].BottomRight.X, inFrame[i].Area[0].BottomRight.Y, hittestresults));
-                if (hittestresults)
-                {
-                    SceneDefinition clickactionScene = null;
-                    foreach (var clickactionpotential in _InfoSceneOptions)
-                    {
-                        if (clickactionpotential.Name.ToLowerInvariant() == inFrame[i].ActionVideo.ToLowerInvariant())
-                        {
-                            clickactionScene = clickactionpotential;
-                            break;
-                        }
-                    }
-                    _InfoSceneOptions.Where(xy => xy.Name == inFrame[i].ActionVideo).FirstOrDefault();
-                    if (clickactionScene != null)
-                    {
-                        QueueScene(clickactionScene, "info", 0, false);
-                    }
-                }
-            }
-            //10,176-33,193
-
-            if (X >= 10 && X <=33 && Y >=176 && Y <=193)
-            {
-                //Exit button
-                var endscenevent = SceneComplete;
-                if (endscenevent != null)
-                {
-                    endscenevent(this, "ExitButton", "info");
-                }
-            }
-        }
+       
 
         protected virtual void Dispose(bool disposing)
         {
@@ -438,7 +361,7 @@ namespace BorgWin10WPF
         }
 
         // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        ~SupportingPlayer()
+        ~VideoAudioPlayer()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: false);
@@ -450,12 +373,5 @@ namespace BorgWin10WPF
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-    }
-    internal class VideoQueueItem
-    {
-        public SceneDefinition Video { get; set; }
-        public string VideoType { get; set; }
-        public bool loop { get; set; } = false;
-        public long TimecodeMS { get; set; } = 0;
     }
 }

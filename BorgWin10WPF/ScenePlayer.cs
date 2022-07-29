@@ -128,28 +128,35 @@ namespace BorgWin10WPF
                 if (_supportingPlayer == null)
                 {
                     _supportingPlayer = value;
-                    _supportingPlayer.SceneComplete += (o, s, t) =>
+                    _supportingPlayer.SceneComplete += (o, scenename, scenetype) =>
                     {
-                        // We may need specific exceptions for the bomb buttons in V018_0 because they're in the computer video
-                        if (t == "computer")
-                        {
-                            if (s == "BB2" || s == "BB1")
-                            {
-                                ++_bombattemptcount;
-                            }
-                            if (s == "BB3") // Final bomb blast attempt.
-                            {
-                                _bombattemptcount = 1;
-                                _inactionacount = 0;
-                                _ReplayingFromTimeStopVideo = null;
-                                // This is a game reset.
-                                PlayScene(_allSceneOptions[0]);
-                                return;
-                            }
+                        //if (scenetype == "info")
+                        //{
+                        //    if (scenename == "Exit")
+                        //    {
 
-                            if (_displayElement.MediaPlayer.WillPlay)
-                                _displayElement.MediaPlayer.Play();
-                        }
+                        //    }
+                        //}
+                        // We may need specific exceptions for the bomb buttons in V018_0 because they're in the computer video
+                        //if (t == "computer")
+                        //{
+                        //    if (s == "BB2" || s == "BB1")
+                        //    {
+                        //        ++_bombattemptcount;
+                        //    }
+                        //    if (s == "BB3") // Final bomb blast attempt.
+                        //    {
+                        //        _bombattemptcount = 1;
+                        //        _inactionacount = 0;
+                        //        _ReplayingFromTimeStopVideo = null;
+                        //        // This is a game reset.
+                        //        PlayScene(_allSceneOptions[0]);
+                        //        return;
+                        //    }
+
+                        //    if (_displayElement.MediaPlayer.WillPlay)
+                        //        _displayElement.MediaPlayer.Play();
+                        //}
                     };
                 }
             }
@@ -238,7 +245,7 @@ namespace BorgWin10WPF
 
             //  If we play the Logo screen.  We are ending.  Quit now!
             var getLogo = _allSceneOptions.Where(xy => xy.Name == "V_32").FirstOrDefault();
-            var GowronEndsProgram = _allSceneOptions.Where(xy => xy.Name == "V_32").FirstOrDefault();
+            var GowronEndsProgram = _allSceneOptions.Where(xy => xy.Name == "D1Val").FirstOrDefault();
 
             if (_lastScene == getLogo)
             {

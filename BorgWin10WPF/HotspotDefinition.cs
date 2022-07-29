@@ -72,7 +72,7 @@ namespace BorgWin10WPF
             get { return _Scale; }
             set { _Scale = value; }
         }
-        public bool HitTest(int X, int Y, long Milliseconds, SceneDefinition scene)
+        public bool HitTest(int X, int Y, long Milliseconds, SceneDefinition scene, bool OffsetSceneYN = true)
         {
             if (Area == null)
                 return false;
@@ -80,11 +80,16 @@ namespace BorgWin10WPF
             if (Area.Count < 1)
                 return false;
 
-            if (scene.Name.ToLowerInvariant() != RelativeVideoName.ToLowerInvariant())
+            if (OffsetSceneYN && scene.Name.ToLowerInvariant() != RelativeVideoName.ToLowerInvariant())
                 return false;
 
-            long startMS = Utilities.Frames15fpsToMS(FrameStart) + scene.StartMS;
-            long endMS = Utilities.Frames15fpsToMS(FrameEnd) + scene.StartMS;
+            long startMS = Utilities.Frames15fpsToMS(FrameStart);
+            if (OffsetSceneYN)
+                startMS += scene.StartMS;
+
+            long endMS = Utilities.Frames15fpsToMS(FrameEnd);
+            if (OffsetSceneYN)
+                endMS += scene.StartMS;
 
             bool InFrame = Milliseconds >= startMS && Milliseconds <= endMS;
             float clickscale = 1f;

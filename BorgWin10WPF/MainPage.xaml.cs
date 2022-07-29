@@ -35,6 +35,8 @@ namespace BorgWin10WPF
         // If you don't have a second one in the UWP app, the screen gets overwritten by the supporting player and the game crashes!
         private LibVLC _libVLCInfo;
 
+        private LibVLC _libVLCAudio;
+
         // The main video media player.   We keep it because we have to dispose it when closing.
         private LibVLCSharp.Shared.MediaPlayer _mediaPlayerMain;
 
@@ -67,6 +69,8 @@ namespace BorgWin10WPF
         // All the hotspots!
         private List<HotspotDefinition> _hotspots = new List<HotspotDefinition>();
 
+        private List<HotspotDefinition> _infohotspots = new List<HotspotDefinition>();
+
         // This is the visualization of the translated position that you clicked.
         private Rectangle _clickRectangle = null;
 
@@ -97,6 +101,8 @@ namespace BorgWin10WPF
         // This plays sound only videos..   that support the main player.   The main player needs this.  It is precious.
         private SupportingPlayer _supportingPlayer = null;
 
+        private VideoAudioPlayer _videoAudioPlayer = null;
+
         // So..  if the game is expecting input from the user...  Don't allow them to pause the game.
         private bool _actionTime = false;
 
@@ -109,6 +115,8 @@ namespace BorgWin10WPF
 
         // This is the borg cube when the game says User do something.
         BitmapImage CubeCursor = new BitmapImage(new Uri(System.IO.Path.Combine("Assets", "dktahg.gif"), UriKind.Relative));
+
+        private bool TricorderOpen = false;
 
         // We have two VideoViews on the form.   The loading order isn't guaranteed.   So..   we keep track of if we have initialized libVLC with this
         bool _coreVLCInitialized = false;
@@ -159,7 +167,19 @@ namespace BorgWin10WPF
                 // If we have loaded the main video and player..   Tell it a user clickdd!
                 if (_MainVideoLoaded && _mainScenePlayer != null && !string.IsNullOrEmpty(_mainScenePlayer.ScenePlaying))
                 {
-                    _mainScenePlayer.MouseClick(relclickX, relclickY);
+                    if (!TricorderOpen)
+                        _mainScenePlayer.MouseClick(relclickX, relclickY);
+                    else
+                    {
+                        //Original Video: 256x200
+                        double OriginalInfoHeight = 200d;
+                        double OriginalInfoWidth = 256d;
+                        double infoClickAreaWidth = VideoInfo.ActualWidth;
+                        double infoClickAreaHeight = VideoInfo.ActualHeight;
+                        relclickX = (int)(_lastClickPoint.X / (infoClickAreaWidth / OriginalInfoWidth));
+                        relclickY = (int)(_lastClickPoint.Y / (infoClickAreaHeight / OriginalInfoHeight));
+                        _supportingPlayer.MouseClick(relclickX, relclickY);
+                    }
                 }
                 // trnslated click Visualization for the click spot
                 if (_clickRectangle == null)
@@ -362,10 +382,21 @@ namespace BorgWin10WPF
 
                     //// Uncomment this and the line in log_fired to lag the game..   and..  get the reason why libVLC is not happy.
                     ////_libVLCInfo.Log += Log_Fired;
-
+                    _scenes = SceneLoader.LoadScenesFromAsset("scenes.txt");
                     var InfoScenes = _scenes.Where(xy => xy.SceneType == SceneType.Info).ToList();
+                    var _ipsHotspots = HotspotLoader.LoadHotspotsFromAsset("ips.txt");
                     _infoScenes = InfoScenes;
-
+                    for (int i=0;i<_infoScenes.Count; i++)
+                    {
+                        _infoScenes[i].FrameStart += 2;
+                        _infoScenes[i].FrameEnd -= 20;
+                    }
+                    for (int i = 0; i < _ipsHotspots.Count; i++)
+                    {
+                        _ipsHotspots[i].FrameStart -= (int)Utilities.MsTo15fpsFrames(6000);
+                        _ipsHotspots[i].FrameEnd += (int)Utilities.MsTo15fpsFrames(2000);
+                    }
+                        
                     //var ComputerScenes = SceneLoader.LoadSupportingScenesFromAsset("computerscenes.txt");
                     //_computerScenes = ComputerScenes;
                     var HolodeckScenes = SceneLoader.LoadSupportingScenesFromAsset("holodeckscenes.txt");
@@ -373,7 +404,60 @@ namespace BorgWin10WPF
 
                     _holodeckScenes = HolodeckScenes;
                     //_supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, ComputerScenes, HolodeckScenes, _libVLCInfo);
-                    _supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, null, HolodeckScenes, _libVLCInfo);
+                    _supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, null, HolodeckScenes, _ipsHotspots, _libVLCInfo);
+                    //Load_Computer_list(_computerScenes);
+
+                };
+
+                // Only initialize libvlc once.
+                VideoAudio.Loaded += (s2, e2) =>
+                {
+                    if (!_coreVLCInitialized)
+                    {
+                        _coreVLCInitialized = true;
+                        Core.Initialize();
+                        // Command line Options to VLC
+                        List<string> options = new List<string>();
+                        var optionsarray = options.ToArray();
+                        _libVLCMain = new LibVLC(optionsarray);
+                        _libVLCInfo = _libVLCMain;
+                        _libVLCAudio = _libVLCMain;
+                    }
+                    List<string> options2 = new List<string>();
+
+
+                    _libVLCAudio = _libVLCMain;
+
+                    var _mediaPlayerInfo = new LibVLCSharp.Shared.MediaPlayer(_libVLCAudio);
+                    VideoAudio.MediaPlayer = _mediaPlayerInfo;
+                    _mediaPlayerInfo.EnableMouseInput = false;
+                    _mediaPlayerInfo.EnableKeyInput = false;
+
+                    //// Uncomment this and the line in log_fired to lag the game..   and..  get the reason why libVLC is not happy.
+                    ////_libVLCInfo.Log += Log_Fired;
+                    //_scenes = SceneLoader.LoadScenesFromAsset("scenes.txt");
+                    //var InfoScenes = _scenes.Where(xy => xy.SceneType == SceneType.Info).ToList();
+                    //var _ipsHotspots = HotspotLoader.LoadHotspotsFromAsset("ips.txt");
+                    //_infoScenes = InfoScenes;
+                    //for (int i = 0; i < _infoScenes.Count; i++)
+                    //{
+                    //    _infoScenes[i].FrameStart += 2;
+                    //    _infoScenes[i].FrameEnd -= 20;
+                    //}
+                    //for (int i = 0; i < _ipsHotspots.Count; i++)
+                    //{
+                    //    _ipsHotspots[i].FrameStart -= (int)Utilities.MsTo15fpsFrames(6000);
+                    //    _ipsHotspots[i].FrameEnd += (int)Utilities.MsTo15fpsFrames(2000);
+                    //}
+
+                    //var ComputerScenes = SceneLoader.LoadSupportingScenesFromAsset("computerscenes.txt");
+                    //_computerScenes = ComputerScenes;
+                    var HolodeckScenes = SceneLoader.LoadSupportingScenesFromAsset("holodeckscenes.txt");
+                    //var HolodeckScenes = new List<SceneDefinition>();
+
+                    _videoAudioPlayer = new VideoAudioPlayer(VideoAudio, null, null, HolodeckScenes, null, _libVLCAudio);
+                    //_supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, ComputerScenes, HolodeckScenes, _libVLCInfo);
+                    //_supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, null, HolodeckScenes, _ipsHotspots, _libVLCInfo);
                     //Load_Computer_list(_computerScenes);
 
                 };
@@ -447,7 +531,8 @@ namespace BorgWin10WPF
                 _mainScenePlayer.TheSupportingPlayer = _supportingPlayer;
                 WindowResized(this, null);
                 _mainScenePlayer.PlayScene(_scenes[0]);
-
+                TricorderAnimation.CloseTricorder();
+                _supportingPlayer.SceneComplete += _supportingPlayer_SceneComplete;
                 //CurEmulator.Visibility = Visibility.Visible;
 
 
@@ -549,7 +634,7 @@ namespace BorgWin10WPF
             TricorderCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "KlingonHolodeckCur.gif"));
             TricorderCursor.EndInit();
 
-            //new BitmapImage(new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "KlingonHolodeckCur.gif")));
+            
 
 
             // Create the Klingon knife cursor for the action scenes where we demand the user do something!
@@ -621,7 +706,25 @@ namespace BorgWin10WPF
             };
             ClickSurface.Click += (o, cEventArgs) =>
             {
-                var tappedspot = Mouse.GetPosition(ClickSurface);
+                Point tappedspot; 
+                if (!TricorderOpen) 
+                    tappedspot = Mouse.GetPosition(ClickSurface);
+                else 
+                    tappedspot = Mouse.GetPosition(InfoClickSurface);
+
+                tappedspot = new Point(tappedspot.X, tappedspot.Y - _titlebarcurrentsize);// Counter for titlebar.
+                _lastClickPoint = tappedspot;
+
+                lock (_clickTimer)
+                {
+                    _clickTimer.Stop();
+                    _clickTimer.Start();
+                }
+
+            };
+            InfoClickSurface.Click += (o, cEventArgs) =>
+            {
+                var tappedspot = Mouse.GetPosition(InfoClickSurface);
                 tappedspot = new Point(tappedspot.X, tappedspot.Y - _titlebarcurrentsize);// Counter for titlebar.
                 _lastClickPoint = tappedspot;
 
@@ -647,6 +750,21 @@ namespace BorgWin10WPF
                 }
 
             };
+            // You have double clicked!   Huraah.  This one is easy.
+            InfoClickSurface.MouseDoubleClick += (o, cEventArgs) =>
+            {
+                if (!_actionTime) // No pausing during active time.  It is too difficult to separate single and double clicks during some scenes that you need to rapid click.
+                {
+
+                    SwitchGameModeActiveInfo();
+
+                    cEventArgs.Handled = true;
+
+                    lock (_clickTimer)
+                        _clickTimer.Stop();
+                }
+
+            };
             ClickSurface.KeyUp += (o4, s5) =>
             {
                 Keyup(o4, s5);
@@ -655,11 +773,23 @@ namespace BorgWin10WPF
             {
                 Keydown(o4, s5);
             };
+            InfoClickSurface.KeyUp += (o4, s5) =>
+            {
+                Keyup(o4, s5);
+            };
+            InfoClickSurface.KeyDown += (o4, s5) =>
+            {
+                Keydown(o4, s5);
+            };
 
             // All the mouse move event relays!
             // Everything has to have a mouse move event otherwise when the mouse is over
             // that thing that doesn't..  the Cursor Emulator won't move there.
             ClickSurface.MouseMove += (o, cEventArgs) =>
+            {
+                Mouse_Moved();
+            };
+            InfoClickSurface.MouseMove += (o, cEventArgs) =>
             {
                 Mouse_Moved();
             };
@@ -719,13 +849,38 @@ namespace BorgWin10WPF
             {
                 Mouse_Moved();
             };
-
-            Uri uri = new Uri(@"F:\github\Repos\BorgWin10WPF\BorgWin10WPF\bin\x64\Debug\Assets\QTricorderT.gif");
+            
+            Uri uri = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "QTricorderT.gif"));
             AnimationBehavior.SetSourceUri(InfoSpring, uri);
             TricorderAnimation = new TricorderGifAnimationController(InfoSpring);
+            TricorderAnimation.CloseTricorder();
 
         }
-      
+
+        private void _supportingPlayer_SceneComplete(object obj, string scenename, string scenetype)
+        {
+            if (scenetype == "info")
+            {
+                // Special cases for hotspots from the supporting player.
+                switch (scenename)
+                {
+                    case "ExitButton":
+                        if (TricorderOpen)
+                        {
+                            _supportingPlayer.Pause();
+                            _supportingPlayer.ClearQueue();
+                            //VideoInfo.ReleaseMouseCapture();
+                            TricorderOpen = false;
+
+                            VideoInfo.Visibility = Visibility.Collapsed;
+                            TricorderAnimation.CloseTricorder();
+                        }
+                        break;
+                }
+            }
+            var hum = _holodeckScenes[0];
+            _videoAudioPlayer.QueueScene(hum, "holodeck", 0, true);
+        }
 
         private void Mouse_Moved()
         {
@@ -802,6 +957,8 @@ namespace BorgWin10WPF
 
             if (_MainVideoLoaded)
             {
+                InfoClickSurface.Width = VideoInfo.ActualWidth;
+                InfoClickSurface.Height = VideoInfo.ActualHeight;
 
                 ClickSurface.Width = width;
                 ClickSurface.Height = height;
@@ -990,16 +1147,17 @@ namespace BorgWin10WPF
                         if (VideoView.MediaPlayer.IsPlaying)
                         {
                             VideoView.MediaPlayer.Pause();
-                            TricorderAnimation.OpenTricorder();
+                            //TricorderAnimation.OpenTricorder();
                             CurEmulator.Visibility = Visibility.Visible;
-                            VideoInfo.Visibility = Visibility.Visible;
+                            
                             CurEmulator.Source = TricorderCursor;
                             AnimationBehavior.SetSourceUri(CurEmulator, TricorderCursor.UriSource);
 
                             //var beep = _holodeckScenes[0];
                             var hum = _holodeckScenes[0];
                             //_supportingPlayer.QueueScene(beep, "holodeck");
-                            _supportingPlayer.QueueScene(hum, "holodeck", 0, true);
+                            //_supportingPlayer.QueueScene(hum, "holodeck", 0, true);
+                            _videoAudioPlayer.QueueScene(hum, "holodeck", 0, true);
 
                             //var pointerPosition = Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition;
                             //var pos = Window.Current.CoreWindow.PointerPosition;
@@ -1010,16 +1168,22 @@ namespace BorgWin10WPF
                         }
                         else
                         {
-                            _supportingPlayer.Pause();
-                            _supportingPlayer.ClearQueue();
+                            if (TricorderOpen)
+                            {
+                                _supportingPlayer.Pause();
+                                _supportingPlayer.ClearQueue();
+                                //VideoInfo.ReleaseMouseCapture();
+                                TricorderOpen = false;
 
-                            VideoInfo.Visibility = Visibility.Collapsed;
-                            TricorderAnimation.CloseTricorder();
+                                VideoInfo.Visibility = Visibility.Collapsed;
+                                TricorderAnimation.CloseTricorder();
+                            }
                             VideoView.MediaPlayer.Play();
-
+                            
                             CurEmulator.Source = CubeCursor;
                             AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
-                            
+                            _videoAudioPlayer.Pause();
+                            _videoAudioPlayer.ClearQueue();
                             CurEmulator.Visibility = Visibility.Collapsed;
                             _mcurVisible = false;
                         }
@@ -1030,6 +1194,8 @@ namespace BorgWin10WPF
 
         private void Quit()
         {
+            Close();
+            return;
             string FileCheckResult = Utilities.CheckForOriginalMedia();
             if (!string.IsNullOrEmpty(FileCheckResult))
             {
@@ -1074,7 +1240,21 @@ namespace BorgWin10WPF
 
             _scenes = SceneLoader.LoadScenesFromAsset("scenes.txt");
             _hotspots = HotspotLoader.LoadHotspotsFromAsset("hotspots.txt");
+            _infohotspots = HotspotLoader.LoadHotspotsFromAsset("ips.txt");
             _infoScenes = _scenes.Where(xy => xy.SceneType == SceneType.Info).ToList();
+
+            for (int i = 0; i < _infohotspots.Count; i++)
+            {
+                _infohotspots[i].FrameStart -= (int)Utilities.MsTo15fpsFrames(6000);
+                _infohotspots[i].FrameEnd += (int)Utilities.MsTo15fpsFrames(2000);
+            }
+
+
+            for (int i = 0; i < _infoScenes.Count; i++)
+            {
+                _infoScenes[i].FrameStart += 2;
+                _infoScenes[i].FrameEnd -= 20;
+            }
 
             for (int i = 0; i < _hotspots.Count; i++)
             {
@@ -1083,7 +1263,7 @@ namespace BorgWin10WPF
                 {
                     if (hotspot.RelativeVideoName.ToLowerInvariant() == scene.Name.ToLowerInvariant())
                     {
-                        if (hotspot.ActionVideo.ToLowerInvariant().StartsWith("i_"))
+                        if (hotspot.ActionVideo.ToLowerInvariant().StartsWith("i_") || (hotspot.Name.ToLowerInvariant().StartsWith("ip_") && !hotspot.ActionVideo.ToLowerInvariant().StartsWith("D")))
                         {
                             scene.PausedHotspots.Add(hotspot);
                         }
@@ -1095,7 +1275,19 @@ namespace BorgWin10WPF
                     }
                 }
             }
+           
+            for (int i = 0; i < _infohotspots.Count; i++)
+            {
+                var hotspot = _infohotspots[i];
 
+                foreach (var scene in _scenes)
+                {
+                    if (hotspot.RelativeVideoName.ToLowerInvariant() == scene.Name.ToLowerInvariant())
+                    {
+                        scene.PausedHotspots.Add(hotspot);
+                    }
+                }
+            }
             Load_Scene_List(_scenes);
             _mainScenePlayer = new ScenePlayer(VideoView, _scenes);
             Load_Main_Video();
@@ -1126,14 +1318,23 @@ namespace BorgWin10WPF
             };
             _mainScenePlayer.InfoVideoTrigger += (start, end) =>
             {
+                if (!TricorderOpen)
+                {
+                    TricorderOpen = true;
+                    TricorderAnimation.OpenTricorder();
+                    VideoInfo.Visibility = Visibility.Visible;
+                    //VideoInfo.CaptureMouse();
+                }
                 SceneDefinition InfoSceneToPlay = _infoScenes.Where(xy => xy.StartMS >= start && xy.EndMS <= end).FirstOrDefault();
                 // todo write a way to find the scene by start and end.
 
                 if (InfoSceneToPlay != null)
                 {
                     var hum = _holodeckScenes[0];
+                    _videoAudioPlayer.Pause();
+                    _videoAudioPlayer.ClearQueue();
                     _supportingPlayer.QueueScene(InfoSceneToPlay, "info", 0);
-                    _supportingPlayer.QueueScene(hum, "holodeck", 0, true);
+                    
                 }
 
             };
