@@ -967,8 +967,15 @@ namespace BorgWin10WPF
                             }
                             // This is a quit game
                         }
-
+                        
                         long retryms = _lastScene.retryMS;
+                        
+                        if (_currentScene.Name.StartsWith("D") && retryms > 0)
+                        {
+                            retryms = _currentScene.retryMS;
+                        }
+
+
                         if (retryms <= 0)
                         // Special case.  0 is used to determine that nothing bad should happen if you do nothing. 
 
