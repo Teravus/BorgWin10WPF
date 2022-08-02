@@ -1123,11 +1123,13 @@ namespace BorgWin10WPF
                     case Key.Add:
                         _mainScenePlayer.IncreaseVolume();
                         _supportingPlayer.IncreaseVolume();
+                        _videoAudioPlayer.IncreaseVolume();
                         break;
                     case Key.OemMinus:
                     case Key.Subtract:
                         _mainScenePlayer.LowerVolume();
                         _supportingPlayer.LowerVolume();
+                        _videoAudioPlayer.LowerVolume();
                         break;
                     case Key.H:
                         tbHelpText.Visibility = Visibility.Collapsed;

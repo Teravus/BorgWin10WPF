@@ -1209,12 +1209,12 @@ namespace BorgWin10WPF
                     if (videoPathLower.EndsWith("x.mp4"))
                     {
                         // This is most likely the upscaled media
-                        originalMainVideoHeight = 800;
+                        originalMainVideoHeight = 480;
                     }
                     if (videoPathLower.EndsWith("x.avi"))
                     {
                         // This is most likely the upscaled media
-                        originalMainVideoHeight = 200;
+                        originalMainVideoHeight = 232;
                     }
                 }
                 if (originalMainVideoWidth == 0)
@@ -1225,12 +1225,12 @@ namespace BorgWin10WPF
                     if (videoPathLower.EndsWith("x.mp4"))
                     {
                         // This is most likely the upscaled media
-                        originalMainVideoWidth = 1280;
+                        originalMainVideoWidth = 720;
                     }
                     if (videoPathLower.EndsWith("x.avi"))
                     {
                         // This is most likely the upscaled media
-                        originalMainVideoWidth = 320;
+                        originalMainVideoWidth = 312;
                     }
                 }
                 maxVideoMS = media.Duration;

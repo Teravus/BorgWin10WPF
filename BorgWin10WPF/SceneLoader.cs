@@ -47,9 +47,9 @@ namespace BorgWin10WPF
                                 case 7: // Older version that has CDs of above.  No offset.
                                     defs.Add(new SceneDefinition(SceneType.Main, linevals[0], Convert.ToInt32(linevals[1]), Convert.ToInt32(linevals[2]), Convert.ToInt32(linevals[4]),0, Convert.ToInt32(linevals[3]), Convert.ToInt32(linevals[6])));
                                     break;
-                                //case 6:
-                                //    defs.Add(new SceneDefinition(SceneType.Bad, linevals[0], Convert.ToInt32(linevals[2]), Convert.ToInt32(linevals[3]), Convert.ToInt32(linevals[1]), 0, Convert.ToInt32(linevals[4])));
-                                //    break;
+                                case 6:
+                                    defs.Add(new SceneDefinition(SceneType.Bad, linevals[0], Convert.ToInt32(linevals[1]), Convert.ToInt32(linevals[2]), Convert.ToInt32(linevals[3]), 0, 0, Convert.ToInt32(linevals[4])));
+                                    break;
                                 case 5:// Older version of above that has Cds.  No offset.
                                     if (linevals[0].StartsWith("I_"))
                                     {
@@ -77,11 +77,11 @@ namespace BorgWin10WPF
                     }
                 }
             }
-            // Fixup CDs
-            foreach (var scene in defs)
-            {
-                scene.CD = GetCDBySceneName(scene.Name);
-            }
+            //// Fixup CDs
+            //foreach (var scene in defs)
+            //{
+            //    scene.CD = GetCDBySceneName(scene.Name);
+            //}
             return defs;
         }
 
@@ -152,7 +152,7 @@ namespace BorgWin10WPF
                     result = 3;
                     break;
                 default:
-                    result = 1;
+                    result = -1;
                     break;
 
             }

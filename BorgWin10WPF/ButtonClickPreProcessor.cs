@@ -8,6 +8,7 @@ namespace BorgWin10WPF
 {
     public static class ButtonClickPreProcessor
     {
+        private static int Chapter_V_18_CircuitClicks {get;set;} = 0;
         public static bool TryButtonPressTransformAction(string OriginalButton, out string NextScene)
         {
             NextScene = OriginalButton;
@@ -34,7 +35,37 @@ namespace BorgWin10WPF
                     NextScene = "V_06";
                     triggeredaction = true;
                     break;
-
+                case "D8Chi":
+                    NextScene = "V_13";
+                    triggeredaction = true;
+                    break;
+                case "D9Chi":
+                    NextScene = "V_13";
+                    triggeredaction = true;
+                    break;
+                case "D14Ph":
+                    NextScene = "V14A";
+                    triggeredaction = true;
+                    break;
+                case "D14AP":
+                    NextScene = "V_15";
+                    triggeredaction = true;
+                    break;
+                case "D16TI":
+                    NextScene = "V_18";
+                    triggeredaction = true;
+                    break;
+                case "D18TI":
+                    // Click Targus' implant first and Q tries to trick you.
+                    ++Chapter_V_18_CircuitClicks;
+                    if (Chapter_V_18_CircuitClicks >= 2)
+                    {
+                        NextScene = "V_19";
+                        triggeredaction = true;
+                    }
+                    else 
+                        triggeredaction = false;
+                    break;
             }
 
 

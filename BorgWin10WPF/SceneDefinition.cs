@@ -28,6 +28,8 @@ namespace BorgWin10WPF
 
         private SceneType _sceneType { get; set; }
 
+        private int _requiresChoice { get; set; } =  -1;
+
         public SceneDefinition()
         {
 
@@ -62,7 +64,7 @@ namespace BorgWin10WPF
             Name = name;
             CD = cd;
         }
-      
+        
 
         public string Name { get; set; }
 
