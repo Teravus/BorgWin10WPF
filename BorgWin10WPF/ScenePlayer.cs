@@ -19,7 +19,7 @@ namespace BorgWin10WPF
     {
         public delegate void UserActionRequired();
         public delegate void InfoAction(long framestart, long frameend);
-
+        private int _videoEndRiskDuration = 500;
         /// <summary>
         /// We need the user to do something!
         /// </summary>
@@ -91,6 +91,7 @@ namespace BorgWin10WPF
                                                             // This is a bit like queuing it up for the next main scene.
         private string _loadedVideoFile = string.Empty;
         private float hotspotscale = 1.2f;
+        private TurboLiftPuzzle _turboLiftPuzzle;
 
         /// <summary>
         /// The scene file has this special frame to trigger quitting the game.
@@ -176,6 +177,7 @@ namespace BorgWin10WPF
         /// <param name="allScenes">A list of SceneDefinitions from the Scene loader for the main video.</param>
         public ScenePlayer(VideoView displayElement, List<SceneDefinition> allScenes)
         {
+            _turboLiftPuzzle = new TurboLiftPuzzle();
             _displayElement = displayElement;
             _allSceneOptions = allScenes;
             for (int i = 0; i < allScenes.Count; i++)
@@ -196,6 +198,7 @@ namespace BorgWin10WPF
         /// <param name="def">SaveDefinition objects that are created by the Save loader from the user's Save file</param>
         public void LoadSave(SaveDefinition def)
         {
+            _turboLiftPuzzle = new TurboLiftPuzzle();
             string scene = def.SaveScene;
             int frame = def.SaveFrame;
             var loadscene = _allSceneOptions.Where(xy => xy.Name == scene).FirstOrDefault();
@@ -318,7 +321,7 @@ namespace BorgWin10WPF
             }
 
 
-            if (specifictimecode > 0 && _displayElement.MediaPlayer.Media.Duration > specifictimecode)
+            if (specifictimecode > 0 && _displayElement.MediaPlayer.Media.Duration + _videoEndRiskDuration > specifictimecode)
                 _displayElement.MediaPlayer.Time = specifictimecode;
             else
             {
@@ -346,7 +349,7 @@ namespace BorgWin10WPF
                     Task.Delay(50).Wait();
                     // We need to play 'Replaying from timestop X:X:X', so pause the main video until that one is complete and triggers the event handler.
                     _displayElement.MediaPlayer.Pause();
-                    //_supportingPlayer.QueueComputerScene(rts);
+                    //_supportingPlayer.QueueComputerScene(rts); 23395 23714 319 - 24652
                 }
             }
             else
@@ -466,6 +469,37 @@ namespace BorgWin10WPF
 
                                     PlayScene(scene);
                                     return;
+                                }
+                                if (_currentScene.Name == _turboLiftPuzzle.TurboLiftScene)
+                                {
+                                    _displayElement.MediaPlayer.Pause();
+                                    var turboliftresult = _turboLiftPuzzle.Click(inFrame[i].ActionVideo);
+                                    if (turboliftresult.OverrideNeeded)
+                                    {
+
+                                        SceneDefinition jumpToSceneDef = null;
+                                        for (int iteration = 0; iteration < _allSceneOptions.Count; iteration++)
+                                        {
+                                            if (_allSceneOptions[iteration].Name.ToLowerInvariant() == turboliftresult.JumpToScene.ToLowerInvariant())
+                                            {
+                                                jumpToSceneDef = _allSceneOptions[iteration];
+                                                break;
+                                            }
+                                        }
+                                        if (jumpToSceneDef != null)
+                                        {
+                                            PlayScene(jumpToSceneDef);
+                                            _displayElement.MediaPlayer.Play();
+                                            return;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // They clicked the correct turbolift button.   Give them a little more time.
+                                        RollBackFrameWithinChallenge(1000);
+                                        _displayElement.MediaPlayer.Play();
+                                        return;
+                                    }
                                 }
 
                             }
@@ -906,6 +940,30 @@ namespace BorgWin10WPF
                     {
                         System.Diagnostics.Debug.WriteLine(string.Format("\tPlaying Scene Cursor Position {0} exceeds EndPos {1}", _lastPlayheadMS, _challengeEndMS));
                         // What do?
+
+                        if (_currentScene.Name==_turboLiftPuzzle.TurboLiftScene)
+                        {
+                            var turboliftresult = _turboLiftPuzzle.Click("Idle");
+                            if (turboliftresult.OverrideNeeded)
+                            {
+                                
+                                SceneDefinition jumpToSceneDef = null;
+                                for(int i=0;i<_allSceneOptions.Count;i++)
+                                {
+                                    if (_allSceneOptions[i].Name.ToLowerInvariant() == turboliftresult.JumpToScene.ToLowerInvariant())
+                                    {
+                                        jumpToSceneDef = _allSceneOptions[i];
+                                        break;
+                                    }
+                                }
+                                if (jumpToSceneDef != null)
+                                {
+                                    PlayScene(jumpToSceneDef);
+                                    break;
+                                }
+                            }
+                        }
+
                         if (_currentScene.retryMS <= 0)
                         {
                             // Go on to the success frames.
@@ -1095,7 +1153,7 @@ namespace BorgWin10WPF
                         }
                     }
                 }
-                result.MaxVideoMS = media.Duration;
+                result.MaxVideoMS = media.Duration + _videoEndRiskDuration;
 
                 if (result.OriginalMainVideoHeight == 0)
                 {
@@ -1233,7 +1291,7 @@ namespace BorgWin10WPF
                         originalMainVideoWidth = 312;
                     }
                 }
-                maxVideoMS = media.Duration;
+                maxVideoMS = media.Duration + _videoEndRiskDuration;
 
             }
         }

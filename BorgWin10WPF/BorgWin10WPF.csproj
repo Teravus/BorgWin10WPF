@@ -139,6 +139,7 @@
     <Compile Include="ScenePlayer.cs" />
     <Compile Include="SupportingPlayer.cs" />
     <Compile Include="TricorderGifAnimationController.cs" />
+    <Compile Include="TurboLiftPuzzle.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="VideoAudioPlayer.cs" />
     <Page Include="MainPage.xaml">
