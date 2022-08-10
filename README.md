@@ -53,7 +53,7 @@ From the KlingonWin10WPF\CDAssets Folder:
 ---
 Once you have all of those files in the CDAssets folder.  
 Run prepareVideos.bat.   
-It should make X versions of 4 of the videos MAIN_1X.AVI, SS_1X.AVI, MAIN_2X.AVI, and SS_2X.AVI.  
+It should make X versions of 4 of the videos MAIN_1X.AVI, IPX.AVI, MAIN_2X.AVI, and MAIN_3X.AVI.  
 The X versions have the audio re-synchronized.
 
 At that point you should be able to run the game test.
