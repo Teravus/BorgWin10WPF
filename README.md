@@ -16,6 +16,7 @@
   - There is a scene cut sheet that defines the boundaries of chapters within the original media.
   - The cut sheet names scenes with a specific name that it uses later as keys for actions and offsets for frames that define when a hotspot should be active.
   - Hotspots starting and ending frames for the Main media are assumed to be offset from the starting point of the chapter
+  - To reimplement the game, you have enough information when you combine the scene cut-sheet, the hotspot definitions, and the original game video. (This one isn't entirely true with Borg. While many assumptions still apply; There is no scene cut-sheet file in the original media. The scene cut-sheet is actually a compiled-in const array. Also, multi-click seems to be custom handled in Borg instead of 'configured' in the hotspots like in Klingon. Idle scenes are undefined in the cut-sheet and hotspots. Info hotspots are globally timed, not based on chapter.)
 
 ---
  
