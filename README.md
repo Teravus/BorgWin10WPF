@@ -1,5 +1,5 @@
 # BorgWin10WPF
- Unofficial, remake of the Star Trek: Borg game engine in a Windows 10 Compatible executable.  This is a remake, not reimplementation. Contents needed from the original media are missing, therefore, I can't really call it a reimplementation because I can't really deduce how it was made from the contents of the original media.  Semantics aside;
+ Unofficial, remake of the Star Trek: Borg game engine in a Windows 10 Compatible executable.  This is a remake, not reimplementation. (Contents needed from the original media to 'reimplement' the game are missing, therefore, I can't really call it a reimplementation because I can't really deduce how it was made from the contents of the original media.)  Semantics aside;
 
  The goal is to allow you to play the game on newer computers with contents from the original media.
  
