@@ -108,6 +108,6 @@ From: https://en.wikipedia.org/wiki/Simon_%26_Schuster .   In theory, they /coul
 
 The code for the engine is released under the MIT license. It makes use of libvlc and libvlcsharp as a video player which is released under the GNU Lesser GPL license, version 2.1. https://github.com/videolan/libvlcsharp/ 
 
-If you need to contact me about this software or a legal issue regarding this software, please do so at Teravus at gmail dot com.  Or Discord: RebootTech#6247. The intent is to make this engine free to use and distribute however, it only works long as you have the original licensed media.
+If you need to contact me about this software or a legal issue regarding this software, please do so at Teravus at gmail dot com.  Or Discord: RebootTech#6247. The intent is to make this engine free to use and distribute, however, it only works long as you have the original licensed media.
 
 I also tend to stream on Twitch on Thursdays at around 4:30 PM Pacific time under the screen name 'RebootTech'.
