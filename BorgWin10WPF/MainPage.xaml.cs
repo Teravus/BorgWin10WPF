@@ -203,6 +203,7 @@ namespace BorgWin10WPF
                 {
                     _clickRectangle.Margin = new Thickness(relclickX, relclickY, 0, 0);// right - left, bot - top);
                 }
+                
 
             };
 
@@ -902,6 +903,13 @@ namespace BorgWin10WPF
                 WindowResized(this, null);
             }
             // Don't move the cursor emulator if it isn't visible.
+
+            //if (Debug is active, we should show mouse)
+            if ((txtMS.Visibility == Visibility.Visible && txtOffsetMs.Visibility == Visibility.Visible) && !_mcurVisible)
+            {
+                _mcurVisible = true;
+                CurEmulator.Visibility = Visibility.Visible;
+            }
             if (!_mcurVisible)
                 return;
             CurEmulator.Margin = new Thickness(point.X, point.Y + 1, 0, 0);
@@ -1113,7 +1121,7 @@ namespace BorgWin10WPF
                     case Key.Pause:
                     case Key.Play:
                     case Key.MediaPlayPause:
-                        SwitchGameModeActiveInfo();
+                        SwitchGameModeActiveInfo(ea.Key);
                         break;
                     // OemPlus
                     // OemMinus
@@ -1137,9 +1145,9 @@ namespace BorgWin10WPF
                 }
             }
         }
-        private void SwitchGameModeActiveInfo()
+        private void SwitchGameModeActiveInfo(Key k = Key.None)
         {
-            if (!_actionTime) // No pausing during active time.  It is too difficult to separate single and double clicks during some scenes that you need to rapid click.
+            if (!_actionTime || (k == Key.MediaPlayPause && (txtMS.Visibility == Visibility.Visible && txtOffsetMs.Visibility == Visibility.Visible))) // No pausing during active time.  It is too difficult to separate single and double clicks during some scenes that you need to rapid click.
             {
                 if (_MainVideoLoaded)
                 {
@@ -1265,7 +1273,7 @@ namespace BorgWin10WPF
                 {
                     if (hotspot.RelativeVideoName.ToLowerInvariant() == scene.Name.ToLowerInvariant())
                     {
-                        if (hotspot.ActionVideo.ToLowerInvariant().StartsWith("i_") || (hotspot.Name.ToLowerInvariant().StartsWith("ip_") && !hotspot.ActionVideo.ToLowerInvariant().StartsWith("D")))
+                        if (hotspot.ActionVideo.ToLowerInvariant().StartsWith("i_") || (hotspot.Name.ToLowerInvariant().StartsWith("ip_") && !hotspot.ActionVideo.ToLowerInvariant().StartsWith("d")))
                         {
                             scene.PausedHotspots.Add(hotspot);
                         }

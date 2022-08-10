@@ -93,6 +93,8 @@ namespace BorgWin10WPF
         private float hotspotscale = 1.2f;
         private TurboLiftPuzzle _turboLiftPuzzle;
 
+        private string _idleActionVisualizationText = "Idle Action: I dont know yet";
+
         /// <summary>
         /// The scene file has this special frame to trigger quitting the game.
         /// </summary>
@@ -166,6 +168,8 @@ namespace BorgWin10WPF
 
         List<SceneDefinition> DoNothingVideos = new List<SceneDefinition>();
 
+        private Label DoNothingVisualization;
+
         // I'm using the DispatcherTimer so that it is always on the main thread and we can interact with the unmanaged library.
         private DispatcherTimer _PlayHeadTimer = new DispatcherTimer(); // Timer that gets the current position of the play head in Milliseconds from video start and acts on that information.
                                                                         // Triggers TimerTickAction()
@@ -231,6 +235,8 @@ namespace BorgWin10WPF
         /// <param name="specifictimecode">In some special cases, you want to start from a specific point in the scene..  like when loading a game.  This is in Milliseconds from start of video.</param>
         public void PlayScene(SceneDefinition def, long specifictimecode = 0, string ReplayingFromTimeStop = null)
         {
+            
+
             bool _visualizations = _visualizationEnabled;
 
             if (_currentScene != null && _visualizations)
@@ -294,6 +300,7 @@ namespace BorgWin10WPF
             _lastPlayheadMS = 0;
             _PlayHeadTimer.Stop();
             _currentScene = def;
+            _idleActionVisualizationText = "Idle Action: I dont know yet";
 
             // Swap videos if necessary.
             SwitchVideo(def.SceneType, def.CD);
@@ -357,7 +364,14 @@ namespace BorgWin10WPF
                 if (ReplayingFromTimeStop != null)
                     _ReplayingFromTimeStopVideo = ReplayingFromTimeStop;
             }
-
+            if (!_currentScene.InactionBad || _currentScene.retryMS == 0)
+            {
+                _idleActionVisualizationText = "Idle Action: Go on to next scene";
+            }
+            else
+            {
+                _idleActionVisualizationText = "Idle Action: Trigger bad scene";
+            }
 
             System.Diagnostics.Debug.WriteLine(string.Format("\tPlaying Scene {0}", def.Name));
 
@@ -865,6 +879,31 @@ namespace BorgWin10WPF
             foreach (var item in _currentScene.PausedHotspots)
                 item.Draw(ParentGrid, _displayElement.MediaPlayer.Time, _currentScene, VisualizationWidthMultiplier, VisualizationHeightMultiplier);
 
+            if (DoNothingVisualization == null)
+            {
+                Label displayLabel = new Label();
+                displayLabel.Width = ParentGrid.Width;
+                displayLabel.Height = ParentGrid.Height;
+                var frame15fps = Utilities.MsTo15fpsFrames(_lastPlayheadMS);
+                int cdvis = 0;
+                string scenename = String.Empty;
+                if (_currentScene != null)
+                {
+                    cdvis = _currentScene.CD;
+                    scenename = _currentScene.Name;
+                }
+               
+                displayLabel.Content = $"Scene { scenename}, Frame: {frame15fps}, CD: {cdvis}, {_idleActionVisualizationText}";
+                displayLabel.Margin = new Thickness(5, 0, 0, 50);
+                displayLabel.HorizontalAlignment = HorizontalAlignment.Left;
+                displayLabel.Foreground = Brushes.Red;
+                
+                displayLabel.IsHitTestVisible = false;
+                //displayLabel.MouseMove += DisplayLabel_MouseMove;
+                DoNothingVisualization = displayLabel;
+                ParentGrid.Children.Add(DoNothingVisualization);
+            }
+
             _visualizationEnabled = true;
         }
 
@@ -878,6 +917,16 @@ namespace BorgWin10WPF
                 return;
 
             _visualizationEnabled = false;
+
+            if (DoNothingVisualization != null)
+            {
+                var item = DoNothingVisualization;
+                DoNothingVisualization = null;
+                //displayLabel.MouseMove -= DisplayLabel_MouseMove;
+                Grid parentGrid = item.Parent as Grid;
+                parentGrid.Children.Remove(item);
+            }
+
 
             foreach (var item in _currentScene.PlayingHotspots)
                 item.ClearVisualization();
@@ -1091,6 +1140,20 @@ namespace BorgWin10WPF
 
                 foreach (var item in _currentScene.PausedHotspots)
                     item.Draw(ParentGrid, _displayElement.MediaPlayer.Time, _currentScene, VisualizationWidthMultiplier, VisualizationHeightMultiplier);
+
+                if (DoNothingVisualization != null)
+                {
+                    var frame15fps = Utilities.MsTo15fpsFrames(_lastPlayheadMS);
+                    int cdvis = 0;
+                    string scenename = String.Empty;
+                    if (_currentScene != null)
+                    {
+                        cdvis = _currentScene.CD;
+                        scenename = _currentScene.Name;
+                    }
+
+                    DoNothingVisualization.Content = $"Scene {scenename}, Frame:{frame15fps}, CD: {cdvis} {_idleActionVisualizationText}";
+                }
             }
         }
 

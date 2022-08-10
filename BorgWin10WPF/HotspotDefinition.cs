@@ -30,6 +30,7 @@ namespace BorgWin10WPF
         public int FrameEnd { get; set; } = 0;
         public List<Box2d> Area { get; set; }
         public int SourceLine { get; set; }
+        
         public List<MultiAction> multiAction { get; set; } = new List<MultiAction>();
         public HotspotType HType
         {
@@ -205,9 +206,20 @@ namespace BorgWin10WPF
                 VisiRect.Width = right - left;
                 VisiRect.Stroke = new SolidColorBrush(Colors.Pink);
                 VisiRect.StrokeThickness = 2;
+                VisiRect.IsHitTestVisible = false;
 
                 VisualizationControl = VisiRect;
                 parentElement.Children.Add(VisiRect);
+
+                Label displayLabel = new Label();
+                displayLabel.Width = VisiRect.Width;
+                displayLabel.Content = $"{Name}-|{RelativeVideoName}|{ActionVideo}";
+                displayLabel.Margin = VisiRect.Margin;
+                displayLabel.HorizontalAlignment = HorizontalAlignment.Left;
+                displayLabel.IsHitTestVisible = false;
+                //displayLabel.MouseMove += DisplayLabel_MouseMove;
+                VisualizationLabel = displayLabel;
+                parentElement.Children.Add(VisualizationLabel);
 
             }
             else
@@ -215,19 +227,38 @@ namespace BorgWin10WPF
                 VisualizationControl.Margin = new Thickness(left, top, 0, 0);// right - left, bot - top);
                 VisualizationControl.Height = bot - top;
                 VisualizationControl.Width = right - left;
+                VisualizationLabel.Margin = VisualizationControl.Margin;
+                VisualizationLabel.Width = VisualizationControl.Width;
             }
             if (!InFrame)
             {
                 VisualizationControl.Stroke = new SolidColorBrush(Colors.LimeGreen);
                 VisualizationControl.Visibility = Visibility.Collapsed;
+                VisualizationLabel.Visibility = Visibility.Collapsed;
             }
             else
             {
-                VisualizationControl.Stroke = new SolidColorBrush(Colors.Red);
+                if (ActionVideo.ToLowerInvariant().StartsWith("i_") || (Name.ToLowerInvariant().StartsWith("ip_") && !ActionVideo.ToLowerInvariant().StartsWith("d")))
+                    VisualizationControl.Stroke = new SolidColorBrush(Colors.LimeGreen);
+                else
+                    VisualizationControl.Stroke = new SolidColorBrush(Colors.Red);
                 VisualizationControl.Visibility = Visibility.Visible;
+                VisualizationLabel.Foreground = Brushes.Red;
+                VisualizationLabel.Visibility = Visibility.Visible;
             }
 
         }
+
+        private void DisplayLabel_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            //if (VisualizationLabel != null)
+            //{
+            //    Grid parentGrid = VisualizationLabel.Parent as Grid;
+            //    parentGrid.mouse
+            //}
+
+        }
+
         public void ClearVisualization()
         {
             if (VisualizationControl != null)
@@ -238,8 +269,18 @@ namespace BorgWin10WPF
                 parentGrid.Children.Remove(item);
 
             }
+            if (VisualizationLabel != null)
+            {
+                var item = VisualizationLabel;
+                VisualizationLabel = null;
+                //displayLabel.MouseMove -= DisplayLabel_MouseMove;
+                Grid parentGrid = item.Parent as Grid;
+                parentGrid.Children.Remove(item);
+
+            }
         }
         private Rectangle VisualizationControl { get; set; }
+        private Label VisualizationLabel { get; set; }
 
     }
     public class Box2d
