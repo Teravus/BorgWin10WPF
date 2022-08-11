@@ -133,6 +133,7 @@
     <Compile Include="ButtonClickPreProcessor.cs" />
     <Compile Include="HotspotDefinition.cs" />
     <Compile Include="HotspotLoader.cs" />
+    <Compile Include="IdleActionControler.cs" />
     <Compile Include="SaveDefinition.cs" />
     <Compile Include="SceneDefinition.cs" />
     <Compile Include="SceneLoader.cs" />

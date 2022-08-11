@@ -51,6 +51,7 @@ namespace BorgWin10WPF
 
         // The last scene that played.  Some special cases rely on knowing what video we played last.
         private SceneDefinition _lastScene { get; set; }
+        private IdleActionControler _idleController { get; set; } = new IdleActionControler();
 
         // When, in milliseconds, the user is expected to do something.
         private long _challengeStartMS = 0;
@@ -364,13 +365,16 @@ namespace BorgWin10WPF
                 if (ReplayingFromTimeStop != null)
                     _ReplayingFromTimeStopVideo = ReplayingFromTimeStop;
             }
-            if (!_currentScene.InactionBad || _currentScene.retryMS == 0)
+
+            var idleresult = _idleController.IdleActionScene(def);
+
+            if (!idleresult.IdleBad || _currentScene.retryMS == 0)
             {
                 _idleActionVisualizationText = "Idle Action: Go on to next scene";
             }
             else
             {
-                _idleActionVisualizationText = "Idle Action: Trigger bad scene";
+                _idleActionVisualizationText = $"Idle Action: {idleresult.IdleScene}";
             }
 
             System.Diagnostics.Debug.WriteLine(string.Format("\tPlaying Scene {0}", def.Name));
@@ -750,89 +754,107 @@ namespace BorgWin10WPF
         ///     you can still end up here on multi-click buttons
         /// Special case for Bomb Blast.  In bomb blast scene, If you do nothing Gowron is very angry.  Show that video instead of the generic inaction.
         /// </summary>
-        private void TriggerInaction()
+        private void TriggerInaction(IdleActionControler.IdleActionResult result)
         {
             // Multi-action
-            if (_multi_click_count > 0)
+            //if (_multi_click_count > 0)
+            //{
+            //    // Bad options
+            //    string alternatevideo = null;
+            //    if (_multi_click_lastAction != null)
+            //    {
+            //        var multiactions = _multi_click_lastAction.multiAction;
+            //        var noaction = multiactions.Where(xy => xy.ClickIndex == 0).FirstOrDefault();
+            //        if (noaction != null)
+            //        {
+            //            alternatevideo = noaction.ResultVideo;
+            //        }
+            //    }
+
+            //    //var AlternateVideo = _allSceneOptions.Where(xy => xy.Name.ToUpperInvariant() == _multi_click_lastAction.ResultVideo.ToUpperInvariant()).FirstOrDefault();
+            //    //if (AlternateVideo != null)
+            //    //{
+            //    if (alternatevideo != null)
+            //    {
+            //        var AlternateVideo = _allSceneOptions.Where(xy => xy.Name.ToUpperInvariant() == alternatevideo.ToUpperInvariant()).FirstOrDefault();
+            //        if (AlternateVideo != null)
+            //        {
+            //            AlternateVideo.ParentScene = _currentScene;
+            //            PlayScene(AlternateVideo);
+            //            return;
+            //        }
+            //    }
+
+            //    if (alternatevideo == null && _currentScene.Name == "V018_1") // If you pressed at least one button, just explode, don't do inaction failure.
+            //    {
+            //        //++_bombattemptcount;
+            //        var AlternateVideo = _allSceneOptions.Where(xy => xy.Name.ToUpperInvariant() == "V018A").FirstOrDefault();
+            //        if (AlternateVideo != null)
+            //        {
+            //            AlternateVideo.ParentScene = _currentScene;
+            //            PlayScene(AlternateVideo, 0, string.Format("BB{0}", _bombattemptcount));
+            //            return;
+            //        }
+            //    }//
+
+            //    // Success option
+            //    if (alternatevideo == string.Empty)
+            //    {
+            //        var scene = Utilities.FindNextMainScene(_allSceneOptions, _currentScene);
+            //        PlayScene(scene);
+            //        return;
+            //    }
+            //    // Nothing
+            //    if (_inactionacount > DoNothingVideos.Count - 1)
+            //        _inactionacount = DoNothingVideos.Count - 1;
+
+            //    var AlternateVideom = DoNothingVideos[_inactionacount++];
+
+            //    AlternateVideom.ParentScene = _currentScene;
+            //    PlayScene(AlternateVideom);
+
+            //}
+            //else
+            //{
+            //if (_currentScene.Name == "V018_1") // Bomb blast has a special ending for inaction that isn't documented anywhere in the scene or hotspot files
+            //{
+            //    //++_bombattemptcount;
+            //    var AlternateVideo_ = _allSceneOptions.Where(xy => xy.Name.ToUpperInvariant() == "V018B").FirstOrDefault();
+            //    if (AlternateVideo_ != null)
+            //    {
+            //        AlternateVideo_.ParentScene = _currentScene;
+            //        PlayScene(AlternateVideo_, 0, string.Format("BB{0}", _bombattemptcount));
+            //        return;
+            //    }
+            //}//
+
+
+            //if (_inactionacount > DoNothingVideos.Count - 1)
+            //    _inactionacount = DoNothingVideos.Count - 1;
+
+            //var AlternateVideo = DoNothingVideos[_inactionacount++];
+
+            //AlternateVideo.ParentScene = _currentScene;
+            //PlayScene(AlternateVideo);
+            //}
+            if (result.IdleBad)
             {
-                // Bad options
-                string alternatevideo = null;
-                if (_multi_click_lastAction != null)
+                SceneDefinition jumpToSceneDef = null;
+                for (int i = 0; i < _allSceneOptions.Count; i++)
                 {
-                    var multiactions = _multi_click_lastAction.multiAction;
-                    var noaction = multiactions.Where(xy => xy.ClickIndex == 0).FirstOrDefault();
-                    if (noaction != null)
+                    if (_allSceneOptions[i].Name.ToLowerInvariant() == result.IdleScene.ToLowerInvariant())
                     {
-                        alternatevideo = noaction.ResultVideo;
+                        jumpToSceneDef = _allSceneOptions[i];
+                        break;
                     }
                 }
-
-                //var AlternateVideo = _allSceneOptions.Where(xy => xy.Name.ToUpperInvariant() == _multi_click_lastAction.ResultVideo.ToUpperInvariant()).FirstOrDefault();
-                //if (AlternateVideo != null)
-                //{
-                if (alternatevideo != null)
+                if (jumpToSceneDef != null)
                 {
-                    var AlternateVideo = _allSceneOptions.Where(xy => xy.Name.ToUpperInvariant() == alternatevideo.ToUpperInvariant()).FirstOrDefault();
-                    if (AlternateVideo != null)
-                    {
-                        AlternateVideo.ParentScene = _currentScene;
-                        PlayScene(AlternateVideo);
-                        return;
-                    }
-                }
-
-                if (alternatevideo == null && _currentScene.Name == "V018_1") // If you pressed at least one button, just explode, don't do inaction failure.
-                {
-                    //++_bombattemptcount;
-                    var AlternateVideo = _allSceneOptions.Where(xy => xy.Name.ToUpperInvariant() == "V018A").FirstOrDefault();
-                    if (AlternateVideo != null)
-                    {
-                        AlternateVideo.ParentScene = _currentScene;
-                        PlayScene(AlternateVideo, 0, string.Format("BB{0}", _bombattemptcount));
-                        return;
-                    }
-                }//
-
-                // Success option
-                if (alternatevideo == string.Empty)
-                {
-                    var scene = Utilities.FindNextMainScene(_allSceneOptions, _currentScene);
-                    PlayScene(scene);
+                    PlayScene(jumpToSceneDef);
                     return;
                 }
-                // Nothing
-                if (_inactionacount > DoNothingVideos.Count - 1)
-                    _inactionacount = DoNothingVideos.Count - 1;
-
-                var AlternateVideom = DoNothingVideos[_inactionacount++];
-
-                AlternateVideom.ParentScene = _currentScene;
-                PlayScene(AlternateVideom);
-
             }
-            else
-            {
-                if (_currentScene.Name == "V018_1") // Bomb blast has a special ending for inaction that isn't documented anywhere in the scene or hotspot files
-                {
-                    //++_bombattemptcount;
-                    var AlternateVideo_ = _allSceneOptions.Where(xy => xy.Name.ToUpperInvariant() == "V018B").FirstOrDefault();
-                    if (AlternateVideo_ != null)
-                    {
-                        AlternateVideo_.ParentScene = _currentScene;
-                        PlayScene(AlternateVideo_, 0, string.Format("BB{0}", _bombattemptcount));
-                        return;
-                    }
-                }//
-
-
-                if (_inactionacount > DoNothingVideos.Count - 1)
-                    _inactionacount = DoNothingVideos.Count - 1;
-
-                var AlternateVideo = DoNothingVideos[_inactionacount++];
-
-                AlternateVideo.ParentScene = _currentScene;
-                PlayScene(AlternateVideo);
-            }
+            
         }
 
         /// <summary>
@@ -1021,9 +1043,10 @@ namespace BorgWin10WPF
                         }
                         else
                         {
-                            if (_currentScene.InactionBad)
+                            var idleresult = _idleController.IdleActionScene(_currentScene);
+                            if (idleresult.IdleBad)
                             {
-                                TriggerInaction();
+                                TriggerInaction(idleresult);
                             }
                             else
                             {
