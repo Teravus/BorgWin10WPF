@@ -17,7 +17,7 @@ namespace BorgWin10WPF
 
         public override string PuzzleTriggerActiveScene { get; } = "V_21";
 
-        public override SpecialPuzzleResult Click(string ButtonName)
+        public override SpecialPuzzleResult Click(string ButtonName, bool checkonly)
         {
 
             SpecialPuzzleResult result = new SpecialPuzzleResult();
@@ -42,53 +42,54 @@ namespace BorgWin10WPF
 
 
             }
-
-            ++ClicksSoFar;
-            ButtonsPressedSoFar += buttonnumber;
-            if (!BorgComputerButtonSequence.StartsWith(ButtonsPressedSoFar) || ButtonName == "Idle")
+            if (!checkonly)
             {
-                ++FailedCount;
-                //wrong button pressed.
-                switch (FailedCount)
+                ++ClicksSoFar;
+                ButtonsPressedSoFar += buttonnumber;
+                if (!BorgComputerButtonSequence.StartsWith(ButtonsPressedSoFar) || ButtonName == "Idle")
                 {
-                    case 0:
-                        break;
-                    case 1:
-                        result.JumpToScene = "D20B1";
-                        result.SuccessYN = false;
-                        result.OverrideNeeded = true;
-                        Retry();
-                        break;
-                    case 2:
-                        result.JumpToScene = "D20B2";
-                        result.SuccessYN = false;
-                        result.OverrideNeeded = true;
-                        Retry();
-                        break;
-                    case 3:
-                        result.JumpToScene = "D20B3";
-                        result.SuccessYN = false;
+                    ++FailedCount;
+                    //wrong button pressed.
+                    switch (FailedCount)
+                    {
+                        case 0:
+                            break;
+                        case 1:
+                            result.JumpToScene = "D20B1";
+                            result.SuccessYN = false;
+                            result.OverrideNeeded = true;
+                            Retry();
+                            break;
+                        case 2:
+                            result.JumpToScene = "D20B2";
+                            result.SuccessYN = false;
+                            result.OverrideNeeded = true;
+                            Retry();
+                            break;
+                        case 3:
+                            result.JumpToScene = "D20B3";
+                            result.SuccessYN = false;
+                            result.OverrideNeeded = true;
+                            Reset();
+                            break;
+
+                    }
+
+                }
+                else
+                {
+
+                    // We're good. 
+                    if (ButtonsPressedSoFar == BorgComputerButtonSequence)
+                    {
+                        // Pressed the right button.
+                        result.JumpToScene = "V_22";
+                        result.SuccessYN = true;
                         result.OverrideNeeded = true;
                         Reset();
-                        break;
-
-                }
-
-            }
-            else
-            {
-
-                // We're good. 
-                if (ButtonsPressedSoFar == BorgComputerButtonSequence)
-                {
-                    // Pressed the right button.
-                    result.JumpToScene = "V_22";
-                    result.SuccessYN = true;
-                    result.OverrideNeeded = true;
-                    Reset();
+                    }
                 }
             }
-
             return result;
         }
 
@@ -117,7 +118,7 @@ namespace BorgWin10WPF
         public override string PuzzleInputActiveScene { get; } = "V_20";
         public override string PuzzleTriggerActiveScene { get; } = "V_20";
 
-        public override SpecialPuzzleResult Click(string ButtonName)
+        public override SpecialPuzzleResult Click(string ButtonName, bool checkonly)
         {
 
             SpecialPuzzleResult result = new SpecialPuzzleResult();
@@ -142,59 +143,60 @@ namespace BorgWin10WPF
 
 
             }
-
-            ++ClicksSoFar;
-            ButtonsPressedSoFar += buttonnumber;
-            if (!BorgComputerButtonSequence.StartsWith(ButtonsPressedSoFar) || ButtonName == "Idle")
+            if (!checkonly)
             {
-                ++FailedCount;
-                //wrong button pressed.
-                switch (FailedCount)
+                ++ClicksSoFar;
+                ButtonsPressedSoFar += buttonnumber;
+                if (!BorgComputerButtonSequence.StartsWith(ButtonsPressedSoFar) || ButtonName == "Idle")
                 {
-                    case 0:
-                        break;
-                    case 1:
-                        result.JumpToScene = "D20B1";
-                        result.SuccessYN = false;
-                        result.OverrideNeeded = true;
-                        Retry();
-                        break;
-                    case 2:
-                        result.JumpToScene = "D20B2";
-                        result.SuccessYN = false;
-                        result.OverrideNeeded = true;
-                        Retry();
-                        break;
-                    case 3:
-                        result.JumpToScene = "D20B3";
-                        result.SuccessYN = false;
-                        result.OverrideNeeded = true;
-                        Retry();
-                        break;
-                    case 4:
-                        result.JumpToScene = "D20B4";
-                        result.SuccessYN = false;
+                    ++FailedCount;
+                    //wrong button pressed.
+                    switch (FailedCount)
+                    {
+                        case 0:
+                            break;
+                        case 1:
+                            result.JumpToScene = "D20B1";
+                            result.SuccessYN = false;
+                            result.OverrideNeeded = true;
+                            Retry();
+                            break;
+                        case 2:
+                            result.JumpToScene = "D20B2";
+                            result.SuccessYN = false;
+                            result.OverrideNeeded = true;
+                            Retry();
+                            break;
+                        case 3:
+                            result.JumpToScene = "D20B3";
+                            result.SuccessYN = false;
+                            result.OverrideNeeded = true;
+                            Retry();
+                            break;
+                        case 4:
+                            result.JumpToScene = "D20B4";
+                            result.SuccessYN = false;
+                            result.OverrideNeeded = true;
+                            Reset();
+                            break;
+
+                    }
+
+                }
+                else
+                {
+
+                    // We're good. 
+                    if (ButtonsPressedSoFar == BorgComputerButtonSequence)
+                    {
+                        // Pressed the right button.
+                        result.JumpToScene = "V_22";
+                        result.SuccessYN = true;
                         result.OverrideNeeded = true;
                         Reset();
-                        break;
-
-                }
-
-            }
-            else
-            {
-
-                // We're good. 
-                if (ButtonsPressedSoFar == BorgComputerButtonSequence)
-                {
-                    // Pressed the right button.
-                    result.JumpToScene = "V_22";
-                    result.SuccessYN = true;
-                    result.OverrideNeeded = true;
-                    Reset();
+                    }
                 }
             }
-
             return result;
         }
 

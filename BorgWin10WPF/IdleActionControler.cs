@@ -19,7 +19,7 @@ namespace BorgWin10WPF
 
         public IdleActionResult IdleActionScene(SceneDefinition currentScene, bool checkOnly)
         {
-            if (!checkOnly)
+            if (!checkOnly && currentScene.SceneType != SceneType.Bad)
                 ++idleactioncount;
 
             string SdResult = string.Empty;
@@ -40,7 +40,7 @@ namespace BorgWin10WPF
 
             if (UsePuzzleControllerYN)
             {
-                var puzzleResult = puzzleController.Click("Idle");
+                var puzzleResult = puzzleController.Click("Idle", checkOnly);
                 SdResult = puzzleResult.JumpToScene;
                 puzzleOverrideNeeded = puzzleResult.OverrideNeeded;
             }
@@ -64,9 +64,9 @@ namespace BorgWin10WPF
                             case "v_04": // A B C/d/
 
                                 if (idleactioncount % 2 == 0)
-                                    SdResult = "Dp4IdleB";
-                                else
                                     SdResult = "Dp4IdleA";
+                                else
+                                    SdResult = "Dp4IdleB";
 
                                 break;
                             case "v_05": // a b /c/ d

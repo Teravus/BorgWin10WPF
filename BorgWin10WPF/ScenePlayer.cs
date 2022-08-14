@@ -521,7 +521,7 @@ namespace BorgWin10WPF
                                 if (triggeredInputPuzzle != null)
                                 {
                                     // send the input, but don't care about the output
-                                    var inputresult = triggeredInputPuzzle.Click(inFrame[i].ActionVideo);
+                                    var inputresult = triggeredInputPuzzle.Click(inFrame[i].ActionVideo,false);
                                     if (!inputresult.OverrideNeeded)
                                     {
                                         RollBackFrameWithinChallenge(1000);
@@ -542,7 +542,7 @@ namespace BorgWin10WPF
                                 if (triggeredpuzzle != null)
                                 {
                                     _displayElement.MediaPlayer.Pause();
-                                    var specialPuzzleResult = triggeredpuzzle.Click(inFrame[i].ActionVideo);
+                                    var specialPuzzleResult = triggeredpuzzle.Click(inFrame[i].ActionVideo,false);
                                     if (specialPuzzleResult.OverrideNeeded)
                                     {
 

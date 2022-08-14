@@ -20,7 +20,7 @@ namespace BorgWin10WPF
 
         public override string PuzzleTriggerActiveScene { get; } = "V_06";
 
-        public override SpecialPuzzleResult Click(string ButtonName)
+        public override SpecialPuzzleResult Click(string ButtonName, bool checkonly)
         {
 
             SpecialPuzzleResult result = new SpecialPuzzleResult();
@@ -61,58 +61,59 @@ namespace BorgWin10WPF
                     break;
 
             }
-          
-            ++ClicksSoFar;
-            ButtonsPressedSoFar += buttonnumber;
-            if (!ComputerCoreCode.StartsWith(ButtonsPressedSoFar) || ButtonName == "Idle")
+            if (!checkonly)
             {
-                ++FailedCount;
-                //wrong button pressed.
-                switch (FailedCount)
+                ++ClicksSoFar;
+                ButtonsPressedSoFar += buttonnumber;
+                if (!ComputerCoreCode.StartsWith(ButtonsPressedSoFar) || ButtonName == "Idle")
                 {
-                    case 0:
-                        break;
-                    case 1:
-                        result.JumpToScene = "DP6Idle";
-                        result.SuccessYN = false;
-                        result.OverrideNeeded = true;
-                        Retry();
-                        break;
-                    case 2:
-                        result.JumpToScene = "Dp61";
-                        result.SuccessYN = false;
-                        result.OverrideNeeded = true;
-                        Retry();
-                        break;
-                    case 3:
-                        result.JumpToScene = "Dp60";
-                        result.SuccessYN = false;
-                        result.OverrideNeeded = true;
-                        Retry();
-                        break;
-                    case 4:
+                    ++FailedCount;
+                    //wrong button pressed.
+                    switch (FailedCount)
+                    {
+                        case 0:
+                            break;
+                        case 1:
+                            result.JumpToScene = "DP6Idle";
+                            result.SuccessYN = false;
+                            result.OverrideNeeded = true;
+                            Retry();
+                            break;
+                        case 2:
+                            result.JumpToScene = "Dp61";
+                            result.SuccessYN = false;
+                            result.OverrideNeeded = true;
+                            Retry();
+                            break;
+                        case 3:
+                            result.JumpToScene = "Dp60";
+                            result.SuccessYN = false;
+                            result.OverrideNeeded = true;
+                            Retry();
+                            break;
+                        case 4:
+                            result.JumpToScene = "V_07";
+                            result.SuccessYN = true;
+                            result.OverrideNeeded = true;
+                            Reset();
+                            break;
+                    }
+
+                }
+                else
+                {
+
+                    // We're good. 
+                    if (ButtonsPressedSoFar == ComputerCoreCode)
+                    {
+                        // Pressed the right button.
                         result.JumpToScene = "V_07";
                         result.SuccessYN = true;
                         result.OverrideNeeded = true;
                         Reset();
-                        break;
-                }
-
-            }
-            else
-            {
-                
-                // We're good. 
-                if (ButtonsPressedSoFar== ComputerCoreCode)
-                {
-                    // Pressed the right button.
-                    result.JumpToScene = "V_07";
-                    result.SuccessYN = true;
-                    result.OverrideNeeded = true;
-                    Reset();
+                    }
                 }
             }
-
             return result;
         }
 

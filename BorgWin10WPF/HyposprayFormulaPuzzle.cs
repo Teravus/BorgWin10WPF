@@ -39,7 +39,7 @@ namespace BorgWin10WPF
             _combinationScenes.Add(Level3NeuralBlock, "V_30");
         }
 
-        public override SpecialPuzzleResult Click(string ButtonName)
+        public override SpecialPuzzleResult Click(string ButtonName, bool checkonly)
         {
 
             SpecialPuzzleResult result = new SpecialPuzzleResult();
@@ -59,33 +59,34 @@ namespace BorgWin10WPF
                     buttonnumber = "3";
                     break;
             }
-
-            ++ClicksSoFar;
-            ButtonsPressedSoFar += buttonnumber;
-            if (_combinationScenes.ContainsKey(ButtonsPressedSoFar))
+            if (!checkonly)
             {
-                result.JumpToScene = _combinationScenes[ButtonsPressedSoFar];
-                result.SuccessYN = ButtonsPressedSoFar == BijaniAdrenalineFormula ? true:false;
-                result.OverrideNeeded = true;
-                Retry();
-
-            } 
-            else
-            {
-                if (ButtonName == "Idle")
+                ++ClicksSoFar;
+                ButtonsPressedSoFar += buttonnumber;
+                if (_combinationScenes.ContainsKey(ButtonsPressedSoFar))
                 {
+                    result.JumpToScene = _combinationScenes[ButtonsPressedSoFar];
                     result.SuccessYN = ButtonsPressedSoFar == BijaniAdrenalineFormula ? true : false;
                     result.OverrideNeeded = true;
-                    result.JumpToScene = "D30FL";
-                    Reset();
-                    return result; ;
+                    Retry();
+
                 }
-                if (ClicksSoFar >=3 )
+                else
                 {
-                    // Go to a bad scene
+                    if (ButtonName == "Idle")
+                    {
+                        result.SuccessYN = ButtonsPressedSoFar == BijaniAdrenalineFormula ? true : false;
+                        result.OverrideNeeded = true;
+                        result.JumpToScene = "D30FL";
+                        Reset();
+                        return result; ;
+                    }
+                    if (ClicksSoFar >= 3)
+                    {
+                        // Go to a bad scene
+                    }
                 }
             }
-            
 
             return result;
         }
