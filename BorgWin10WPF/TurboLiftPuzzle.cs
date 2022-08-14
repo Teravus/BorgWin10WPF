@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BorgWin10WPF
 {
-    public class TurboLiftPuzzle
+    public class TurboLiftPuzzle : SpecialPuzzleBase
     {
         public string ButtonsPressedSoFar { get; set; } = String.Empty;
         public string ComputerCoreCode { get; set; } = "150619";
@@ -16,12 +16,14 @@ namespace BorgWin10WPF
         public int FailedCount { get; set; } = 0;
         public int ClicksSoFar { get; set; } = 0;
 
-        public string TurboLiftScene { get; } = "V_06";
+        public override string PuzzleInputActiveScene { get; } = "V_06";
 
-        public TurboLiftPuzzleResult Click(string ButtonName)
+        public override string PuzzleTriggerActiveScene { get; } = "V_06";
+
+        public override SpecialPuzzleResult Click(string ButtonName)
         {
 
-            TurboLiftPuzzleResult result = new TurboLiftPuzzleResult();
+            SpecialPuzzleResult result = new SpecialPuzzleResult();
 
             string buttonnumber = "";
             
@@ -114,25 +116,17 @@ namespace BorgWin10WPF
             return result;
         }
 
-        public void Reset()
+        public override void Reset()
         {
             FailedCount = 0;
             ButtonsPressedSoFar = "";
             ClicksSoFar = 0;
         }
-        public void Retry()
+        public override void Retry()
         {
             ButtonsPressedSoFar = "";
             ClicksSoFar = 0;
         }
-        public class TurboLiftPuzzleResult
-        {
-            public bool OverrideNeeded { get; set; } = false;
-            public string JumpToScene { get; set; } = "";
-
-            public bool SuccessYN { get; set; } = false;
-
-
-        }
+       
     }
 }

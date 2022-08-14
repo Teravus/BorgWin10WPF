@@ -51,7 +51,7 @@ namespace BorgWin10WPF
 
         // The last scene that played.  Some special cases rely on knowing what video we played last.
         private SceneDefinition _lastScene { get; set; }
-        private IdleActionControler _idleController { get; set; } = new IdleActionControler();
+        private IdleActionControler _idleController { get; set; }
 
         // When, in milliseconds, the user is expected to do something.
         private long _challengeStartMS = 0;
@@ -93,6 +93,11 @@ namespace BorgWin10WPF
         private string _loadedVideoFile = string.Empty;
         private float hotspotscale = 1.2f;
         private TurboLiftPuzzle _turboLiftPuzzle;
+        private Borg20ComputerPuzzle _borg20ComputerPuzzle;
+        private Borg21ComputerPuzzle _borg21ComputerPuzzle;
+        private HyposprayFormulaPuzzle _hyposprayFormulaPuzzle;
+
+        private List<SpecialPuzzleBase> _puzzlesToCheck = new List<SpecialPuzzleBase>();
 
         private string _idleActionVisualizationText = "Idle Action: I dont know yet";
 
@@ -183,6 +188,17 @@ namespace BorgWin10WPF
         public ScenePlayer(VideoView displayElement, List<SceneDefinition> allScenes)
         {
             _turboLiftPuzzle = new TurboLiftPuzzle();
+            _borg20ComputerPuzzle = new Borg20ComputerPuzzle();
+            _borg21ComputerPuzzle = new Borg21ComputerPuzzle();
+            _hyposprayFormulaPuzzle = new HyposprayFormulaPuzzle();
+
+            _puzzlesToCheck.Add(_turboLiftPuzzle);
+            _puzzlesToCheck.Add(_borg20ComputerPuzzle);
+            _puzzlesToCheck.Add(_borg21ComputerPuzzle);
+            _puzzlesToCheck.Add(_hyposprayFormulaPuzzle);
+
+            _idleController = new IdleActionControler(_puzzlesToCheck);
+
             _displayElement = displayElement;
             _allSceneOptions = allScenes;
             for (int i = 0; i < allScenes.Count; i++)
@@ -366,7 +382,7 @@ namespace BorgWin10WPF
                     _ReplayingFromTimeStopVideo = ReplayingFromTimeStop;
             }
 
-            var idleresult = _idleController.IdleActionScene(def);
+            var idleresult = _idleController.IdleActionScene(def,true);
 
             if (!idleresult.IdleBad || _currentScene.retryMS == 0)
             {
@@ -488,17 +504,52 @@ namespace BorgWin10WPF
                                     PlayScene(scene);
                                     return;
                                 }
-                                if (_currentScene.Name == _turboLiftPuzzle.TurboLiftScene)
+
+                                SpecialPuzzleBase triggeredInputPuzzle = null;
+                                _displayElement.MediaPlayer.Pause();
+                                foreach (var pzzl in _puzzlesToCheck)
+                                {
+                                    if (_currentScene.Name.ToLowerInvariant() == pzzl.PuzzleInputActiveScene.ToLowerInvariant() && pzzl.PuzzleInputActiveScene.ToLowerInvariant() != pzzl.PuzzleTriggerActiveScene.ToLowerInvariant())
+                                    {
+                                        triggeredInputPuzzle = pzzl;
+                                        break;
+                                    }
+
+
+                                    
+                                }
+                                if (triggeredInputPuzzle != null)
+                                {
+                                    // send the input, but don't care about the output
+                                    var inputresult = triggeredInputPuzzle.Click(inFrame[i].ActionVideo);
+                                    if (!inputresult.OverrideNeeded)
+                                    {
+                                        RollBackFrameWithinChallenge(1000);
+                                        FrameActionVideo = null;
+                                    }
+                                }
+                                SpecialPuzzleBase triggeredpuzzle = null;
+
+                                foreach (var pzzl in _puzzlesToCheck)
+                                {
+                                    if (_currentScene.Name.ToLowerInvariant() == pzzl.PuzzleTriggerActiveScene.ToLowerInvariant())
+                                    {
+                                        triggeredpuzzle = pzzl;
+                                        break;
+                                    }
+                                }
+                                _displayElement.MediaPlayer.Play();
+                                if (triggeredpuzzle != null)
                                 {
                                     _displayElement.MediaPlayer.Pause();
-                                    var turboliftresult = _turboLiftPuzzle.Click(inFrame[i].ActionVideo);
-                                    if (turboliftresult.OverrideNeeded)
+                                    var specialPuzzleResult = triggeredpuzzle.Click(inFrame[i].ActionVideo);
+                                    if (specialPuzzleResult.OverrideNeeded)
                                     {
 
                                         SceneDefinition jumpToSceneDef = null;
                                         for (int iteration = 0; iteration < _allSceneOptions.Count; iteration++)
                                         {
-                                            if (_allSceneOptions[iteration].Name.ToLowerInvariant() == turboliftresult.JumpToScene.ToLowerInvariant())
+                                            if (_allSceneOptions[iteration].Name.ToLowerInvariant() == specialPuzzleResult.JumpToScene.ToLowerInvariant())
                                             {
                                                 jumpToSceneDef = _allSceneOptions[iteration];
                                                 break;
@@ -520,182 +571,7 @@ namespace BorgWin10WPF
                                     }
                                 }
 
-                            }
-                            //else
-                            //{
-                            //    string playMulti_TriggerVideo = null;
-                            //    bool MainAlternateYN = true;
-                            //    _displayElement.MediaPlayer.Pause();
-                            //    ++_multi_click_count;
-                            //    if (_multi_click_lastAction == null)
-                            //    {
-                            //        _multi_click_lastAction = inFrame[i];
-                            //        _multi_click_Item_Sequence_id = _multi_click_count;
-                            //        var debugsequence = _multi_click_lastAction.multiAction.Where(xy => xy.ClickIndex == _multi_click_Item_Sequence_id).FirstOrDefault();
-                            //        string debugclicksequence = string.Empty;
-
-                            //        if (debugsequence != null)
-                            //            debugclicksequence = string.Join(",", debugsequence.NextButtonSequence.Select(x => x.ToString()).ToArray());
-
-                            //        if (!string.IsNullOrEmpty(inFrame[i].ActionVideo))
-                            //            _special_case_multi_action = _multi_click_lastAction.multiAction.Where(xy => xy.ClickIndex == _multi_click_Item_Sequence_id).FirstOrDefault();
-
-                            //        System.Diagnostics.Debug.WriteLine(string.Format("\t\tFirst action in Multi-Click. Starting with {0}. ClickAction:{1}. SequenceText: {2}", _multi_click_lastAction.Name, _multi_click_count, debugclicksequence));
-                            //    }
-
-                                // 1,0/-2/V016A,2/-2/V016A,3/-2/,4/-2/V016D
-
-                                //1,4/4/4/3/-2/V019,2/-2/V018A,3/-2/V018A,4/0/-2/V018A,0/-2/V018A
-
-                            //    var buttonid = inFrame[i].Area.Last().ActionId;
-                            //    MultiAction activesequence = null;
-
-
-                            //    if (_special_case_multi_action != null)
-                            //    {
-                            //        RollBackFrameWithinChallenge(500);
-                            //    }
-
-                            //    if (",green button,orange button,red button,blue button,yellow button,".IndexOf("," + inFrame[i].Name + ",") > -1)
-                            //    {
-                            //        //_supportingPlayer.QueueComputerScene(string.Format("B{0}", buttonid));
-                            //    }
-
-                            //    // Special case to feed to the Hotspot processor.  This is only for the green button hotspot right now.
-
-                            //    var idCheck = buttonid;
-                            //    if (_special_case_multi_action != null)
-                            //        idCheck = _multi_click_Item_Sequence_id;
-
-                            //    activesequence = _multi_click_lastAction.multiAction.Where(xy => xy.ClickIndex == idCheck).FirstOrDefault();
-                            //    if (_special_case_multi_action != null && _multi_click_count == 1)
-                            //    {
-                            //        activesequence = null;
-
-                            //    }
-                            //    else if (_special_case_multi_action != null)
-                            //    {
-                            //        activesequence = _special_case_multi_action;
-
-                            //    }
-
-                            //    if (activesequence != null) // Some click actions won't exist and those are the 'correct' ones with no immediate action. sometimes.  Other times, the correct action is a sequence that exists.
-                            //    {
-                            //        // This is minus 2 because the click array starts at 1, and by the time we get here, we've already clicked once to get the start button in _multi_click_lastAction, so we're automatically on the second click.
-                            //        if (activesequence.NextButtonSequence[_multi_click_count - 2] == buttonid)
-                            //        {
-                            //            if (activesequence.NextButtonSequence.Count == _multi_click_count - 1) // we have reached the end of the sequence
-                            //            {
-                            //                playMulti_TriggerVideo = activesequence.ResultVideo;
-                            //                if (playMulti_TriggerVideo.Length == 5)
-                            //                    MainAlternateYN = false;
-                            //                System.Diagnostics.Debug.WriteLine(string.Format("\t\tClicked through to the end of the sequence. Playing {0}", playMulti_TriggerVideo));
-                            //            }
-                            //            // If it isn't the end, don't trigger anything else.  Just accumulate clicks to move through the button sequence.
-                            //            // Give them some more time to click within the challenge time.
-                            //            RollBackFrameWithinChallenge(100);
-                            //        }
-                            //        else // They pressed a button that isn't in the sequence, Reset!
-                            //        {
-
-                            //            _multi_click_Item_Sequence_id = buttonid;
-
-                            //            if (_special_case_multi_action != null)
-                            //            {
-                            //                _multi_click_lastAction = inFrame[i];
-                            //                _multi_click_count = 1;
-                            //                activesequence = _multi_click_lastAction.multiAction.Where(xy => xy.ClickIndex == _multi_click_Item_Sequence_id).FirstOrDefault();
-                            //            }
-                            //            else
-                            //            {
-                            //                activesequence = _multi_click_lastAction.multiAction.Where(xy => xy.ClickIndex == _multi_click_Item_Sequence_id).FirstOrDefault();
-                            //            }
-                            //            System.Diagnostics.Debug.WriteLine(string.Format("\t\tPressed a button that isnt in sequence, resetting to {0}. Sequence has clickindex?{1}?{2}", _multi_click_lastAction.Name, _multi_click_Item_Sequence_id, activesequence != null));
-
-                            //            if (activesequence != null && activesequence.NextButtonSequence.Count == _multi_click_count) // we have reached the end of the sequence
-                            //            {
-                            //                playMulti_TriggerVideo = activesequence.ResultVideo;
-                            //                if (playMulti_TriggerVideo.Length == 5)
-                            //                    MainAlternateYN = false;
-                            //                System.Diagnostics.Debug.WriteLine(string.Format("\t\tIncorrect button, but alternate.. Clicked through to the end of the sequence. Playing {0}", playMulti_TriggerVideo));
-                            //            }
-
-
-                            //            if (playMulti_TriggerVideo == null)
-                            //            {
-                            //                var defaultvideo = _multi_click_lastAction.multiAction.Where(xy => xy.ClickIndex == -1).FirstOrDefault();
-                            //                if (defaultvideo != null)
-                            //                {
-                            //                    playMulti_TriggerVideo = defaultvideo.ResultVideo;
-                            //                    if (playMulti_TriggerVideo.Length == 5)
-                            //                        MainAlternateYN = false;
-                            //                    System.Diagnostics.Debug.WriteLine(string.Format("\t\tDefault (-1 state). Playing {0}", playMulti_TriggerVideo));
-                            //                }
-
-                            //            }
-                            //        }
-
-
-                            //    }
-                            //    else
-                            //    {
-                            //        skipFrameActionVideodefault = true;
-                            //    }
-                            //    // We've done some housekeeping but now we have to deal with when there is a -1(default)
-                            //    if (playMulti_TriggerVideo == null)
-                            //    {
-                            //        var defaultvideo = _multi_click_lastAction.multiAction.Where(xy => xy.ClickIndex == -1).FirstOrDefault();
-                            //        if (defaultvideo != null)
-                            //        {
-                            //            playMulti_TriggerVideo = defaultvideo.ResultVideo;
-                            //            if (playMulti_TriggerVideo.Length == 5)
-                            //                MainAlternateYN = false;
-                            //            System.Diagnostics.Debug.WriteLine(string.Format("\t\tDefault (-1 state). Playing {0}", playMulti_TriggerVideo));
-                            //        }
-
-                            //    }
-                            //    if (playMulti_TriggerVideo != null)
-                            //    {
-                            //        string PlayTimeStopVideo = null;
-
-                            //        if (playMulti_TriggerVideo == "V018A")
-                            //        {
-                            //            PlayTimeStopVideo = string.Format("BB{0}", _bombattemptcount);
-                            //        }
-
-                            //        if (playMulti_TriggerVideo == string.Empty)
-                            //        {
-                            //            var scene = Utilities.FindNextMainScene(_allSceneOptions, _currentScene);
-                            //            System.Diagnostics.Debug.WriteLine(string.Format("\t\tSuccess State. Playing {0}", scene.Name));
-                            //            _displayElement.MediaPlayer.Play();
-                            //            PlayScene(scene, 0, PlayTimeStopVideo);
-
-                            //            return;
-                            //        }
-                            //        else
-                            //        {
-                            //            var multi_scene = _allSceneOptions.Where(sc => sc.Name.ToUpperInvariant() == playMulti_TriggerVideo.ToUpperInvariant()).FirstOrDefault();
-                            //            if (multi_scene != null)
-                            //            {
-                            //                System.Diagnostics.Debug.WriteLine(string.Format("\t\tClick Triggered scene change. Playing {0}", multi_scene.Name));
-                            //                _currentScene.LastHotspotTrigger = inFrame[i];
-                            //                _displayElement.MediaPlayer.Play();
-                            //                if (MainAlternateYN)
-                            //                    PlayScene(multi_scene);
-                            //                else
-                            //                    PlayScene(multi_scene, 0, PlayTimeStopVideo);//, _currentScene);
-                            //                return;
-                            //            }
-
-
-                            //        }
-                            //    }
-                            //    _displayElement.MediaPlayer.Play();
-
-                            //}
-
-
-                            //}
+                            } 
                             string _PlayTimeStopVideo = null;
                             //if (FrameActionVideo == "V018A")
                             //{
@@ -837,6 +713,10 @@ namespace BorgWin10WPF
             //AlternateVideo.ParentScene = _currentScene;
             //PlayScene(AlternateVideo);
             //}
+            if (result.KeepPlaying)
+            {
+                return;
+            }
             if (result.IdleBad)
             {
                 SceneDefinition jumpToSceneDef = null;
@@ -850,7 +730,12 @@ namespace BorgWin10WPF
                 }
                 if (jumpToSceneDef != null)
                 {
-                    PlayScene(jumpToSceneDef);
+                    int specialtimecode = 0;
+                    if (result.JumpToFrame > 0)
+                        specialtimecode = result.JumpToFrame;
+
+                    PlayScene(jumpToSceneDef,specialtimecode);
+                    
                     return;
                 }
             }
@@ -914,8 +799,11 @@ namespace BorgWin10WPF
                     cdvis = _currentScene.CD;
                     scenename = _currentScene.Name;
                 }
-               
-                displayLabel.Content = $"Scene { scenename}, Frame: {frame15fps}, CD: {cdvis}, {_idleActionVisualizationText}";
+                if (_displayElement.MediaPlayer.IsPlaying) // I don't want it to update the content if we're not playing because it will set the frame to zero.
+                {
+                    string friendlytime = GetReadableTimeByMs(_lastPlayheadMS);
+                    displayLabel.Content = $"Scene { scenename}, Frame: {frame15fps}, CD: {cdvis}, {_idleActionVisualizationText}. ({friendlytime})";
+                }
                 displayLabel.Margin = new Thickness(5, 0, 0, 50);
                 displayLabel.HorizontalAlignment = HorizontalAlignment.Left;
                 displayLabel.Foreground = Brushes.Red;
@@ -928,7 +816,14 @@ namespace BorgWin10WPF
 
             _visualizationEnabled = true;
         }
-
+        public string GetReadableTimeByMs(long ms)
+        {
+            TimeSpan t = TimeSpan.FromMilliseconds(ms);
+            if (t.Hours > 0) return $"{t.Hours}h:{t.Minutes}m:{t.Seconds}s";
+            else if (t.Minutes > 0) return $"{t.Minutes}m:{t.Seconds}s";
+            else if (t.Seconds > 0) return $"{t.Seconds}s:{t.Milliseconds}ms";
+            else return $"{t.Milliseconds}ms";
+        }
 
         /// <summary>
         /// Remove the squares that represent the hotspot positions.
@@ -1012,28 +907,28 @@ namespace BorgWin10WPF
                         System.Diagnostics.Debug.WriteLine(string.Format("\tPlaying Scene Cursor Position {0} exceeds EndPos {1}", _lastPlayheadMS, _challengeEndMS));
                         // What do?
 
-                        if (_currentScene.Name==_turboLiftPuzzle.TurboLiftScene)
-                        {
-                            var turboliftresult = _turboLiftPuzzle.Click("Idle");
-                            if (turboliftresult.OverrideNeeded)
-                            {
+                        //if (_currentScene.Name==_turboLiftPuzzle.PuzzleActiveScene)
+                        //{
+                        //    var turboliftresult = _turboLiftPuzzle.Click("Idle");
+                        //    if (turboliftresult.OverrideNeeded)
+                        //    {
                                 
-                                SceneDefinition jumpToSceneDef = null;
-                                for(int i=0;i<_allSceneOptions.Count;i++)
-                                {
-                                    if (_allSceneOptions[i].Name.ToLowerInvariant() == turboliftresult.JumpToScene.ToLowerInvariant())
-                                    {
-                                        jumpToSceneDef = _allSceneOptions[i];
-                                        break;
-                                    }
-                                }
-                                if (jumpToSceneDef != null)
-                                {
-                                    PlayScene(jumpToSceneDef);
-                                    break;
-                                }
-                            }
-                        }
+                        //        SceneDefinition jumpToSceneDef = null;
+                        //        for(int i=0;i<_allSceneOptions.Count;i++)
+                        //        {
+                        //            if (_allSceneOptions[i].Name.ToLowerInvariant() == turboliftresult.JumpToScene.ToLowerInvariant())
+                        //            {
+                        //                jumpToSceneDef = _allSceneOptions[i];
+                        //                break;
+                        //            }
+                        //        }
+                        //        if (jumpToSceneDef != null)
+                        //        {
+                        //            PlayScene(jumpToSceneDef);
+                        //            break;
+                        //        }
+                        //    }
+                        //}
 
                         if (_currentScene.retryMS <= 0)
                         {
@@ -1043,8 +938,8 @@ namespace BorgWin10WPF
                         }
                         else
                         {
-                            var idleresult = _idleController.IdleActionScene(_currentScene);
-                            if (idleresult.IdleBad)
+                            var idleresult = _idleController.IdleActionScene(_currentScene,false);
+                            if (idleresult.IdleBad || idleresult.KeepPlaying)
                             {
                                 TriggerInaction(idleresult);
                             }
@@ -1079,14 +974,15 @@ namespace BorgWin10WPF
 
 
 
-                    bool BombBlastCase_ShortEnd = _currentScene.Name == "V018A" && _bombattemptcount <= 2;
-                    // special case for bomb blast.  If we're not on the third strike..   there are more tries so don't play Gowron's "We're all dead scene".
+                    //bool BombBlastCase_ShortEnd = _currentScene.Name == "V018A" && _bombattemptcount <= 2;
+                    //// special case for bomb blast.  If we're not on the third strike..   there are more tries so don't play Gowron's "We're all dead scene".
 
-                    if ((_lastPlayheadMS >= _currentScene.EndMS && _lastScene != null) || (BombBlastCase_ShortEnd && _lastPlayheadMS >= (_currentScene.EndMS - 17000) && _lastScene != null))
+                    //if ((_lastPlayheadMS >= _currentScene.EndMS && _lastScene != null) || (BombBlastCase_ShortEnd && _lastPlayheadMS >= (_currentScene.EndMS - 17000) && _lastScene != null))
+                    //{
+
+                    //    _PlayHeadTimer.Stop(); // Stop the timer so we don't get ReplayingFromTimeStop Twice.
+                    if (_lastPlayheadMS >= _currentScene.EndMS && _lastScene != null)
                     {
-
-                        _PlayHeadTimer.Stop(); // Stop the timer so we don't get ReplayingFromTimeStop Twice.
-
                         if (_currentScene.retryMS == Utilities.Frames15fpsToMS(GAME_END_FRAME_ID))
                         {
                             // Trigger even to quit game.
@@ -1097,20 +993,45 @@ namespace BorgWin10WPF
                             }
                             // This is a quit game
                         }
-                        
+
                         long retryms = _lastScene.retryMS;
-                        
+
                         if (_currentScene.Name.StartsWith("D") && retryms > 0)
                         {
                             retryms = _currentScene.retryMS;
                         }
-
 
                         if (retryms <= 0)
                         // Special case.  0 is used to determine that nothing bad should happen if you do nothing. 
 
                         {
                             retryms = Utilities.Frames15fpsToMS(_currentScene.OriginalRetryFrames - 2) + _lastScene.OffsetTimeMS;
+                        }
+                        bool controllerTriggeredScene = false;
+
+                        var idleresult = _idleController.IdleActionScene(_currentScene, false);
+                        if (idleresult.IdleBad)
+                        {
+                            if (idleresult.EndGame)
+                            {
+                                // Trigger even to quit game.
+                                UserActionRequired userAction = QuitGame;
+                                if (userAction != null)
+                                {
+                                    userAction();
+                                    return;
+                                }
+
+                            }
+
+                            
+                            TriggerInaction(idleresult);
+                        }
+                        else
+                        {
+                         
+                            PlayScene(_lastScene, retryms, null);
+
                         }
 
                         //string ReplayFromTimeStop = Utilities.GetReplayingAudioFromSceneName(_lastScene.Name);
@@ -1119,8 +1040,7 @@ namespace BorgWin10WPF
                         //    ReplayFromTimeStop = _ReplayingFromTimeStopVideo;
                         //}
                         //PlayScene(_lastScene, retryms, ReplayFromTimeStop);
-                        PlayScene(_lastScene, retryms, null);
-                        return;
+
                     }
                     break;
                 case SceneType.Inaction:
@@ -1175,7 +1095,11 @@ namespace BorgWin10WPF
                         scenename = _currentScene.Name;
                     }
 
-                    DoNothingVisualization.Content = $"Scene {scenename}, Frame:{frame15fps}, CD: {cdvis} {_idleActionVisualizationText}";
+                    if (_displayElement.MediaPlayer.IsPlaying) // I don't want it to update the content if we're not playing because it will set the frame to zero.
+                    {
+                        string friendlytime = GetReadableTimeByMs(_lastPlayheadMS);
+                        DoNothingVisualization.Content = $"Scene { scenename}, Frame: {frame15fps}, CD: {cdvis}, {_idleActionVisualizationText}. ({friendlytime})";
+                    }
                 }
             }
         }

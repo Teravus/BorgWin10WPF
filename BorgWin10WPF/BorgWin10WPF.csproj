@@ -130,18 +130,25 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="AspectRatioMaxResult.cs" />
+    <Compile Include="BorgComputerPuzzle.cs" />
     <Compile Include="ButtonClickPreProcessor.cs" />
     <Compile Include="HotspotDefinition.cs" />
     <Compile Include="HotspotLoader.cs" />
+    <Compile Include="HyposprayFormulaPuzzle.cs" />
     <Compile Include="IdleActionControler.cs" />
     <Compile Include="SaveDefinition.cs" />
     <Compile Include="SceneDefinition.cs" />
     <Compile Include="SceneLoader.cs" />
     <Compile Include="ScenePlayer.cs" />
+    <Compile Include="SpecialPuzzleBase.cs" />
+    <Compile Include="SpecialPuzzleResult.cs" />
     <Compile Include="SupportingPlayer.cs" />
     <Compile Include="TricorderGifAnimationController.cs" />
     <Compile Include="TurboLiftPuzzle.cs" />
     <Compile Include="Utilities.cs" />
+    <Compile Include="UtilitiesWindow.xaml.cs">
+      <DependentUpon>UtilitiesWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="VideoAudioPlayer.cs" />
     <Page Include="MainPage.xaml">
       <SubType>Designer</SubType>
@@ -155,6 +162,10 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="UtilitiesWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

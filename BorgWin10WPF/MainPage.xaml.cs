@@ -457,6 +457,9 @@ namespace BorgWin10WPF
                     //var HolodeckScenes = new List<SceneDefinition>();
 
                     _videoAudioPlayer = new VideoAudioPlayer(VideoAudio, null, null, HolodeckScenes, null, _libVLCAudio);
+                    _videoAudioPlayer.LowerVolume();
+                    _videoAudioPlayer.LowerVolume();
+                    _videoAudioPlayer.LowerVolume();
                     //_supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, ComputerScenes, HolodeckScenes, _libVLCInfo);
                     //_supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, null, HolodeckScenes, _ipsHotspots, _libVLCInfo);
                     //Load_Computer_list(_computerScenes);
@@ -851,10 +854,7 @@ namespace BorgWin10WPF
                 Mouse_Moved();
             };
             
-            Uri uri = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "QTricorderT.gif"));
-            AnimationBehavior.SetSourceUri(InfoSpring, uri);
-            TricorderAnimation = new TricorderGifAnimationController(InfoSpring);
-            TricorderAnimation.CloseTricorder();
+
 
         }
 
@@ -1038,6 +1038,13 @@ namespace BorgWin10WPF
                         if (txtMS.Visibility == Visibility.Visible && txtOffsetMs.Visibility == Visibility.Visible) // Only if debug is visible
                         {
                             VideoView.MediaPlayer.Time -= 15000;
+                        }
+                        break;
+                    case Key.J:
+                        if (txtMS.Visibility == Visibility.Visible && txtOffsetMs.Visibility == Visibility.Visible) // Only if debug is visible
+                        {
+                            Window w = new UtilitiesWindow();
+                            w.Show();
                         }
                         break;
                     case Key.M:
@@ -1328,6 +1335,7 @@ namespace BorgWin10WPF
             };
             _mainScenePlayer.InfoVideoTrigger += (start, end) =>
             {
+                InfoSpring.Visibility = Visibility.Visible;
                 if (!TricorderOpen)
                 {
                     TricorderOpen = true;
@@ -1348,6 +1356,11 @@ namespace BorgWin10WPF
                 }
 
             };
+            Uri uri = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "QTricorderT.gif"));
+            AnimationBehavior.SetSourceUri(InfoSpring, uri);
+            TricorderAnimation = new TricorderGifAnimationController(InfoSpring);
+            TricorderAnimation.CloseTricorder();
+            InfoSpring.Visibility = Visibility.Collapsed;
             VideoInfo.Visibility = Visibility.Collapsed;
             ClickSurface.Focus();
         }

@@ -9,50 +9,112 @@ namespace BorgWin10WPF
     public class IdleActionControler
     {
         private int idleactioncount = 0;
-        public IdleActionResult IdleActionScene(SceneDefinition currentScene)
-        {
-            ++idleactioncount;
-            string SdResult = string.Empty;
-            switch (currentScene.Name.ToLowerInvariant())
-            {
-                case "v_01": // Phaser/Tricorder
-                    SdResult = "D1Idle";
-                    break;
-                case "v_02": // Phaser/Tricorder
-                    SdResult = "D2Idle";
-                    break;
-                case "v_03": // Console/Borg/Targus
-                    SdResult = "D3Idle";
-                    break;
-                case "v_04": // A B C/d/
-                    
-                    if (idleactioncount % 2 == 0)
-                        SdResult = "Dp4IdleB";
-                    else
-                        SdResult = "Dp4IdleA";
 
+        private List<SpecialPuzzleBase> _specialPuzzles = new List<SpecialPuzzleBase>();
+
+        public IdleActionControler(List<SpecialPuzzleBase> specialpuzzles)
+        {
+            _specialPuzzles = specialpuzzles;
+        }
+
+        public IdleActionResult IdleActionScene(SceneDefinition currentScene, bool checkOnly)
+        {
+            if (!checkOnly)
+                ++idleactioncount;
+
+            string SdResult = string.Empty;
+            bool UsePuzzleControllerYN = false;
+            SpecialPuzzleBase puzzleController = null;
+
+            bool puzzleOverrideNeeded = false;
+
+            foreach (var pzzu in _specialPuzzles)
+            {
+                if (currentScene.Name.ToLowerInvariant() == pzzu.PuzzleInputActiveScene.ToLowerInvariant())
+                {
+                    UsePuzzleControllerYN = true;
+                    puzzleController = pzzu;
                     break;
-                case "v_05": // a b /c/ d
-                    SdResult = "Dp5Idle";
-                    break;
-                case "v_06":
-                    SdResult = "PuzzleControler";
-                    break;
-                case "v_07": // Borg Implant
-                    SdResult = "";
-                    break;
-                case "v_88":
-                case "v_08":
-                    SdResult = "D8Idle";
-                    break;
-                case "v_09":
-                    SdResult = "D8Idle";
-                    break;
-                
+                }
+            }
+
+            if (UsePuzzleControllerYN)
+            {
+                var puzzleResult = puzzleController.Click("Idle");
+                SdResult = puzzleResult.JumpToScene;
+                puzzleOverrideNeeded = puzzleResult.OverrideNeeded;
+            }
+
+            if (!puzzleOverrideNeeded)
+            {
+                switch (currentScene.SceneType)
+                {
+                    case SceneType.Main:
+                        switch (currentScene.Name.ToLowerInvariant())
+                        {
+                            case "v_01": // Phaser/Tricorder
+                                SdResult = "D1Idle";
+                                break;
+                            case "v_02": // Phaser/Tricorder
+                                SdResult = "D2Idle";
+                                break;
+                            case "v_03": // Console/Borg/Targus
+                                SdResult = "D3Idle";
+                                break;
+                            case "v_04": // A B C/d/
+
+                                if (idleactioncount % 2 == 0)
+                                    SdResult = "Dp4IdleB";
+                                else
+                                    SdResult = "Dp4IdleA";
+
+                                break;
+                            case "v_05": // a b /c/ d
+                                SdResult = "Dp5Idle";
+                                break;
+                            case "v_06":
+                                SdResult = "PuzzleControler";
+                                break;
+                            case "v_07": // Borg Implant, do nothing.
+                                SdResult = "";
+                                break;
+                            case "v_88":
+                            case "v_08":
+                                SdResult = "D8Idle";
+                                break;
+                            case "v_09":
+                                SdResult = "D8Idle";
+                                break;
+                            case "v319":
+                                SdResult = "v_21";
+                                break;
+                            case "v_26":
+                                SdResult = "Keep Playing";
+
+                                break;
+                            case "v_27":
+                                SdResult = "D27BS";
+                                break;
+
+
+                        }
+                        break;
+                    case SceneType.Bad:
+                        break;
+
+                    case SceneType.Inaction:
+                        break;
+                }
 
             }
 
-            return new IdleActionResult() { IdleScene = SdResult, IdleBad = !string.IsNullOrEmpty(SdResult) };
+
+            return new IdleActionResult()
+            {
+                IdleScene = SdResult,
+                IdleBad = !string.IsNullOrEmpty(SdResult) && SdResult != "Keep Playing",
+                KeepPlaying = SdResult == "Keep Playing" ? true : false
+            };
             
         }
         public class IdleActionResult
@@ -60,8 +122,9 @@ namespace BorgWin10WPF
             public bool IdleBad { get; set; } = false;
             public string IdleScene { get; set; } = string.Empty;
             public bool EndGame { get; set; } = false;
-
-            
+            public bool KeepPlaying { get; set; } = false;
+            public int NewEndFrame { get; set; } = 0;
+            public int JumpToFrame { get; set; } = 0;
 
         }
     }
