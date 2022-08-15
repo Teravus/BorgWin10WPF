@@ -9,6 +9,9 @@ namespace BorgWin10WPF
     public static class ButtonClickPreProcessor
     {
         private static int Chapter_V_18_CircuitClicks {get;set;} = 0;
+
+        private static bool _visitedBorgifiedScenev_12 { get; set; } = false;
+
         public static bool TryButtonPressTransformAction(string OriginalButton, out string NextScene)
         {
             NextScene = OriginalButton;
@@ -39,6 +42,28 @@ namespace BorgWin10WPF
                     NextScene = "V_13";
                     triggeredaction = true;
                     break;
+                case "D8RHn":
+                    if (_visitedBorgifiedScenev_12)
+                    {
+                        NextScene = "D8RH";
+                        triggeredaction = true;
+                    }
+                    _visitedBorgifiedScenev_12 = true;
+                    break;
+                case "D8LHn":
+                    if (_visitedBorgifiedScenev_12)
+                    {
+                        NextScene = "D8LH";
+                        triggeredaction = true;
+                    }
+                    _visitedBorgifiedScenev_12 = true;
+                    break;
+                //case "D9RN":
+
+                //    break;
+                //case "D9LN":
+
+                //    break;
                 case "D9Chi":
                     NextScene = "V_13";
                     triggeredaction = true;

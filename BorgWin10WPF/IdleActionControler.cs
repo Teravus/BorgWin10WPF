@@ -100,6 +100,28 @@ namespace BorgWin10WPF
                         }
                         break;
                     case SceneType.Bad:
+                        switch (currentScene.Name.ToLowerInvariant())
+                        {
+                            case "d8idle":
+                                SdResult = "V_11";
+                                break;
+
+                            case "d8rhn":
+                            case "d8lhn":
+                                SdResult = "V_10";
+                                break;
+                            case "d8rh":
+                            case "d8lh":
+                                SdResult = "V_88";
+                                break;
+
+                            case "d10sf":
+                                SdResult = "V_11";
+                                break;
+                            //case "d12cc": d12cc is a shoot you scene, not a borg you scene.
+                            //    SdResult = "V_11";
+                            //    break;
+                        }
                         break;
 
                     case SceneType.Inaction:
