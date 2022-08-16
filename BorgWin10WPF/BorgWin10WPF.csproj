@@ -196,6 +196,9 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="Assets\BorgCubeCursor.gif">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Assets\BORG_Intro_screen_output.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -220,6 +223,9 @@
     </Content>
     <Content Include="Assets\QTricorderT.gif">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\TricorderHolodeckCur.gif">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="CDAssets\borgs.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

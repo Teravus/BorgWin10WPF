@@ -111,10 +111,10 @@ namespace BorgWin10WPF
         private SelectionChangedEventHandler lstSceneChanged = null;
 
         // This is the tricorder cursor for when the game is paused.
-        BitmapImage TricorderCursor = new BitmapImage(new Uri(System.IO.Path.Combine("Assets", "KlingonHolodeckCur.gif"), UriKind.Relative));
+        BitmapImage TricorderCursor = new BitmapImage(new Uri(System.IO.Path.Combine("Assets", "TricorderHolodeckCur.gif"), UriKind.Relative));
 
         // This is the borg cube when the game says User do something.
-        BitmapImage CubeCursor = new BitmapImage(new Uri(System.IO.Path.Combine("Assets", "dktahg.gif"), UriKind.Relative));
+        BitmapImage CubeCursor = new BitmapImage(new Uri(System.IO.Path.Combine("Assets", "BorgCubeCursor.gif"), UriKind.Relative));
 
         private bool TricorderOpen = false;
 
@@ -635,7 +635,7 @@ namespace BorgWin10WPF
             // Create the Spinning klingon logo cursor to show the user when the game is paused.
             TricorderCursor = new BitmapImage();
             TricorderCursor.BeginInit();
-            TricorderCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "KlingonHolodeckCur.gif"));
+            TricorderCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "TricorderHolodeckCur.gif"));
             TricorderCursor.EndInit();
 
             
@@ -645,7 +645,7 @@ namespace BorgWin10WPF
             CubeCursor = new BitmapImage();
             CubeCursor.BeginInit();
 
-            CubeCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "dktahg.gif"));// new BitmapImage(new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "dktahg.gif")));
+            CubeCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "BorgCubeCursor.gif"));// new BitmapImage(new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "dktahg.gif")));
             CubeCursor.EndInit();
             // You clicked the clickable surface!   Start a timer..  to see if you only single clickd or double clicked.  
             // If the timer fires..  you have single clickddd.  If it doesn't fire you have double clickdd.
@@ -1360,6 +1360,7 @@ namespace BorgWin10WPF
             AnimationBehavior.SetSourceUri(InfoSpring, uri);
             TricorderAnimation = new TricorderGifAnimationController(InfoSpring);
             TricorderAnimation.CloseTricorder();
+            AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
             InfoSpring.Visibility = Visibility.Collapsed;
             VideoInfo.Visibility = Visibility.Collapsed;
             ClickSurface.Focus();

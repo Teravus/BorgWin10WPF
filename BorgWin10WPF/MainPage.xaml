@@ -121,7 +121,7 @@
                     </Grid>
                 </Canvas>
                 
-                <Image x:Name="CurEmulator" Source="/Assets/dktahg.gif" Width="82" Height="96" HorizontalAlignment="Left" VerticalAlignment="Top" gif:AnimationBehavior.SourceUri="{Binding SelectedImage}" gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}" />
+                <Image x:Name="CurEmulator" Source="/Assets/BorgCubeCursor.gif" Width="82" Height="96" HorizontalAlignment="Left" VerticalAlignment="Top" gif:AnimationBehavior.SourceUri="{Binding SelectedImage}" gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}" />
               
             </Grid>
 

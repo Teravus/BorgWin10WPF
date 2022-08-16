@@ -348,3 +348,6 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/BorgWin10WPF/Assets/DAIN/BorgCubeCursor_output
+/BorgWin10WPF/Assets/BorgCubeCursor_output.gif
+/BorgWin10WPF/Assets/BorgCubeCursor_orig.gif
