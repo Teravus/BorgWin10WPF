@@ -85,6 +85,13 @@ namespace BorgWin10WPF
                             case "v_09":
                                 SdResult = "D8Idle";
                                 break;
+                            case "v_11":
+                                SdResult = "D11Idle";
+                                break;
+                            case "v_14":
+                            case "v14a":
+                                SdResult = "D13Idle";
+                                break;
                             case "v319":
                                 SdResult = "v_21";
                                 break;
@@ -112,12 +119,21 @@ namespace BorgWin10WPF
                                 break;
                             case "d8rh":
                             case "d8lh":
+                            case "d11sp":
+                            case "d12cc":
+                            case "d12bb":
+                            case "d12es":
+                            case "d11idle":
+                            case "d12idle":
                                 SdResult = "V_88";
                                 break;
-
+                            case "d13idle":
+                                SdResult = "V_14";
+                                break;
                             case "d10sf":
                                 SdResult = "V_11";
                                 break;
+
                             //case "d12cc": d12cc is a shoot you scene, not a borg you scene.
                             //    SdResult = "V_11";
                             //    break;
