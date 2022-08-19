@@ -20,6 +20,13 @@ namespace BorgWin10WPF
 
         public override string PuzzleTriggerActiveScene { get; } = "V_06";
 
+        public override bool PuzzleTriggersOnScene(string SceneName)
+        {
+            if (SceneName.ToLowerInvariant() == PuzzleTriggerActiveScene.ToLowerInvariant())
+                return true;
+            return false;
+        }
+
         public override SpecialPuzzleResult Click(string ButtonName, bool checkonly)
         {
 

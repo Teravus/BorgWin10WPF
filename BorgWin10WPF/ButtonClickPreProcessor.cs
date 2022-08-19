@@ -12,6 +12,8 @@ namespace BorgWin10WPF
 
         private static bool _visitedBorgifiedScenev_12 { get; set; } = false;
 
+        private static int Chapter_V_16_ComputerCoreClicks { get; set; } = 0;
+
         public static bool TryButtonPressTransformAction(string OriginalButton, out string NextScene)
         {
             NextScene = OriginalButton;
@@ -84,6 +86,14 @@ namespace BorgWin10WPF
                     NextScene = "V_18";
                     triggeredaction = true;
                     break;
+                case "D16CS":
+                    ++Chapter_V_18_CircuitClicks;
+                    if (Chapter_V_18_CircuitClicks >= 2)
+                    {
+                        NextScene = "D16CSb";
+                        triggeredaction = true;
+                    }
+                    break;
                 case "D18TI":
                     // Click Targus' implant first and Q tries to trick you.
                     ++Chapter_V_18_CircuitClicks;
@@ -95,10 +105,18 @@ namespace BorgWin10WPF
                     else 
                         triggeredaction = false;
                     break;
-                case "D19BC":
-                    NextScene = "V_20";
+                case "D23TA":
+                    NextScene = "V23b";
                     triggeredaction = true;
                     break;
+                //case "D19BC":
+                //    NextScene = "V_20";
+                //    triggeredaction = true;
+                //    break;
+                //case "D19BQ":
+                //    NextScene = "V_20";
+                //    triggeredaction = true;
+                //    break;
 
             }
 

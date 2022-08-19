@@ -23,6 +23,7 @@ namespace BorgWin10WPF
                 ++idleactioncount;
 
             string SdResult = string.Empty;
+            int jumptoframe = 0;
             bool UsePuzzleControllerYN = false;
             SpecialPuzzleBase puzzleController = null;
 
@@ -92,8 +93,30 @@ namespace BorgWin10WPF
                             case "v14a":
                                 SdResult = "D13Idle";
                                 break;
+                            //case "v319":
+                            //    SdResult = "v_21";
+                            //    break;
+                            case "v_16":
+                            case "v_17":
+                                SdResult = "D17Idle";
+                                break;
+                            case "v_18":
+                                SdResult = "D18Idle";
+                                break;
                             case "v319":
-                                SdResult = "v_21";
+                                SdResult = "V_21";
+                                break;
+                            case "v_19c":
+                                SdResult = "V319";
+                                break;
+                            case "v_21":
+                                SdResult = "D19BC";
+                                break;
+                            case "v_23":
+                                SdResult = "D23Idle";
+                                break;
+                            case "v_24":
+                                SdResult = "D24Idle";
                                 break;
                             case "v_26":
                                 SdResult = "Keep Playing";
@@ -133,7 +156,38 @@ namespace BorgWin10WPF
                             case "d10sf":
                                 SdResult = "V_11";
                                 break;
-
+                            case "v_19c":
+                                SdResult = "V319";
+                                break;
+                            case "d19bq":
+                            case "d19bc":
+                                SdResult = "V_19c";
+                                break;
+                            case "d20b1":
+                                SdResult = "V_21";
+                                break;
+                            case "d20b2":
+                            case "d20b3":
+                                SdResult = "V319";
+                                break;                                
+                            case "d20b4":
+                                SdResult = "V_20";
+                                break;
+                            case "d22bd":
+                                SdResult = "V_24";
+                                break;
+                            case "d23idle":
+                                SdResult = "V_24";
+                                break;
+                            case "d24fl":
+                                SdResult = "D24BI";
+                                jumptoframe = 11670;
+                                break;
+                            case "d22cr":
+                            case "d24bi":
+                                SdResult = "V_22";
+                                jumptoframe = 8348;
+                                break;
                             //case "d12cc": d12cc is a shoot you scene, not a borg you scene.
                             //    SdResult = "V_11";
                             //    break;
@@ -151,7 +205,8 @@ namespace BorgWin10WPF
             {
                 IdleScene = SdResult,
                 IdleBad = !string.IsNullOrEmpty(SdResult) && SdResult != "Keep Playing",
-                KeepPlaying = SdResult == "Keep Playing" ? true : false
+                KeepPlaying = SdResult == "Keep Playing" ? true : false,
+                JumpToFrame = jumptoframe
             };
             
         }

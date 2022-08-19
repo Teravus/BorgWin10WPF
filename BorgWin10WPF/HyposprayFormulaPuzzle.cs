@@ -27,7 +27,12 @@ namespace BorgWin10WPF
 
         public override string PuzzleInputActiveScene { get; } = "V_25";
         public override string PuzzleTriggerActiveScene { get; } = "V_26";
-
+        public override bool PuzzleTriggersOnScene(string SceneName)
+        {
+            if (SceneName.ToLowerInvariant() == PuzzleTriggerActiveScene.ToLowerInvariant())
+                return true;
+            return false;
+        }
         public HyposprayFormulaPuzzle()
         {
             _combinationScenes.Add(BijaniAdrenalineFormula, "V_30");

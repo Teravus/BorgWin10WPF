@@ -93,8 +93,8 @@ namespace BorgWin10WPF
         private string _loadedVideoFile = string.Empty;
         private float hotspotscale = 1.2f;
         private TurboLiftPuzzle _turboLiftPuzzle;
-        private Borg20ComputerPuzzle _borg20ComputerPuzzle;
-        private Borg21ComputerPuzzle _borg21ComputerPuzzle;
+        private BorgComputerPuzzle _borgComputerPuzzle;
+        
         private HyposprayFormulaPuzzle _hyposprayFormulaPuzzle;
 
         private List<SpecialPuzzleBase> _puzzlesToCheck = new List<SpecialPuzzleBase>();
@@ -188,13 +188,12 @@ namespace BorgWin10WPF
         public ScenePlayer(VideoView displayElement, List<SceneDefinition> allScenes)
         {
             _turboLiftPuzzle = new TurboLiftPuzzle();
-            _borg20ComputerPuzzle = new Borg20ComputerPuzzle();
-            _borg21ComputerPuzzle = new Borg21ComputerPuzzle();
+            _borgComputerPuzzle = new BorgComputerPuzzle();
+            
             _hyposprayFormulaPuzzle = new HyposprayFormulaPuzzle();
 
             _puzzlesToCheck.Add(_turboLiftPuzzle);
-            _puzzlesToCheck.Add(_borg20ComputerPuzzle);
-            _puzzlesToCheck.Add(_borg21ComputerPuzzle);
+            _puzzlesToCheck.Add(_borgComputerPuzzle);
             _puzzlesToCheck.Add(_hyposprayFormulaPuzzle);
 
             _idleController = new IdleActionControler(_puzzlesToCheck);
@@ -532,7 +531,7 @@ namespace BorgWin10WPF
 
                                 foreach (var pzzl in _puzzlesToCheck)
                                 {
-                                    if (_currentScene.Name.ToLowerInvariant() == pzzl.PuzzleTriggerActiveScene.ToLowerInvariant())
+                                    if (pzzl.PuzzleTriggersOnScene(_currentScene.Name.ToLowerInvariant()))
                                     {
                                         triggeredpuzzle = pzzl;
                                         break;
@@ -730,9 +729,9 @@ namespace BorgWin10WPF
                 }
                 if (jumpToSceneDef != null)
                 {
-                    int specialtimecode = 0;
+                    long specialtimecode = 0;
                     if (result.JumpToFrame > 0)
-                        specialtimecode = result.JumpToFrame;
+                        specialtimecode = Utilities.Frames15fpsToMS(result.JumpToFrame);
 
                     PlayScene(jumpToSceneDef,specialtimecode);
                     
