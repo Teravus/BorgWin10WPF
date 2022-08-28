@@ -195,6 +195,7 @@ namespace BorgWin10WPF
             _puzzlesToCheck.Add(_turboLiftPuzzle);
             _puzzlesToCheck.Add(_borgComputerPuzzle);
             _puzzlesToCheck.Add(_hyposprayFormulaPuzzle);
+            _puzzlesToCheck.Add(new DisableBorgPhonePadPuzzle());
 
             _idleController = new IdleActionControler(_puzzlesToCheck);
 
@@ -269,7 +270,7 @@ namespace BorgWin10WPF
             _multi_click_Item_Sequence_id = -2;
 
             //  If we play the Logo screen.  We are ending.  Quit now!
-            var getLogo = _allSceneOptions.Where(xy => xy.Name == "V_32").FirstOrDefault();
+            var getLogo = _allSceneOptions.Where(xy => xy.Name == "DQUIT").FirstOrDefault();
             var GowronEndsProgram = _allSceneOptions.Where(xy => xy.Name == "D1Val").FirstOrDefault();
 
             if (_lastScene == getLogo)
@@ -520,11 +521,31 @@ namespace BorgWin10WPF
                                 if (triggeredInputPuzzle != null)
                                 {
                                     // send the input, but don't care about the output
-                                    var inputresult = triggeredInputPuzzle.Click(inFrame[i].ActionVideo,false);
+                                    var inputresult = triggeredInputPuzzle.Click(inFrame[i].ActionVideo, false);
                                     if (!inputresult.OverrideNeeded)
                                     {
                                         RollBackFrameWithinChallenge(1000);
                                         FrameActionVideo = null;
+                                        _displayElement.MediaPlayer.Play();
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        SceneDefinition jumpToSceneDef = null;
+                                        for (int iteration = 0; iteration < _allSceneOptions.Count; iteration++)
+                                        {
+                                            if (_allSceneOptions[iteration].Name.ToLowerInvariant() == inputresult.JumpToScene.ToLowerInvariant())
+                                            {
+                                                jumpToSceneDef = _allSceneOptions[iteration];
+                                                break;
+                                            }
+                                        }
+                                        if (jumpToSceneDef != null)
+                                        {
+                                            PlayScene(jumpToSceneDef);
+                                            _displayElement.MediaPlayer.Play();
+                                            return;
+                                        }
                                     }
                                 }
                                 SpecialPuzzleBase triggeredpuzzle = null;
@@ -1163,7 +1184,7 @@ namespace BorgWin10WPF
                     }
                 }
                 result.MaxVideoMS = media.Duration + _videoEndRiskDuration;
-
+                
                 if (result.OriginalMainVideoHeight == 0)
                 {
                     System.Diagnostics.Debug.WriteLine("[WARN]: Unable to determine media height. Making some guesses.");
@@ -1172,7 +1193,7 @@ namespace BorgWin10WPF
                     if (videoPathLower.EndsWith("x.mp4"))
                     {
                         // This is most likely the upscaled media
-                        result.OriginalMainVideoHeight = 800;
+                        result.OriginalMainVideoHeight = 960;
                     }
                     if (videoPathLower.EndsWith("x.avi"))
                     {
@@ -1188,7 +1209,7 @@ namespace BorgWin10WPF
                     if (videoPathLower.EndsWith("x.mp4"))
                     {
                         // This is most likely the upscaled media
-                        result.OriginalMainVideoWidth = 1280;
+                        result.OriginalMainVideoWidth = 1440;
                     }
                     if (videoPathLower.EndsWith("x.avi"))
                     {
@@ -1197,9 +1218,9 @@ namespace BorgWin10WPF
                     }
                 }
                 result.Loaded = true;
-
+                
             }
-
+            
             return result;
         }
 

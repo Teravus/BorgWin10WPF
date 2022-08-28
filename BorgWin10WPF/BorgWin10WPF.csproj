@@ -132,6 +132,7 @@
     <Compile Include="AspectRatioMaxResult.cs" />
     <Compile Include="BorgComputerPuzzle.cs" />
     <Compile Include="ButtonClickPreProcessor.cs" />
+    <Compile Include="DisableBorgPhonePadPuzzle.cs" />
     <Compile Include="HotspotDefinition.cs" />
     <Compile Include="HotspotLoader.cs" />
     <Compile Include="HyposprayFormulaPuzzle.cs" />
@@ -202,6 +203,9 @@
     <Content Include="Assets\BORG_Intro_screen_output.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\BridgeHum.wav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Assets\ips.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -224,6 +228,9 @@
     <Content Include="Assets\QTricorderT.gif">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Assets\QTricorderT20frame.gif">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Content Include="Assets\TricorderHolodeckCur.gif">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

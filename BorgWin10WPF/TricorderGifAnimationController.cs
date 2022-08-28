@@ -14,10 +14,12 @@ using System.Diagnostics;
 
 namespace BorgWin10WPF
 {
+    public delegate void TricorderOpen(long StartEventframe, long EndEventframe);
     public class TricorderGifAnimationController : DependencyObject
     {
         private Animator _animator;
         public event PropertyChangedEventHandler PropertyChanged;
+        public event TricorderOpen OnTricorderOpen;
         private bool _autoStart = true;
         private RepeatBehavior _repeatBehavior;
         private bool _completed;
@@ -31,7 +33,8 @@ namespace BorgWin10WPF
         private int _pauseFrame = 40;
         private bool _OpeningYN = true;
         private int _maxFrame = 50;
-        
+        private long _triggerEventStartFrame = -1;
+        private long _triggerEventEndFrame = -1;
 
         private ObservableCollection<string> _images;
         private TimeSpan? _lastRunTime;
@@ -79,8 +82,22 @@ namespace BorgWin10WPF
             } 
         }
 
-        public void OpenTricorder()
+        public void OpenTricorder(long startframe = -1, long endframe = -1)
         {
+            // If the gif doesn't load for some reason, we still want to fire the event to show the video frame
+            if (BoundControl == null || _animator == null)
+            {
+                TricorderOpen openevt = OnTricorderOpen;
+                if (openevt != null)
+                {
+                    openevt(startframe, endframe);
+                    return;
+                }
+            }
+
+            _triggerEventStartFrame = startframe;
+            _triggerEventEndFrame = endframe;
+
             if (BoundControl == null)
                 return;
             if (_animator == null)
@@ -264,6 +281,11 @@ namespace BorgWin10WPF
                             _animator.Pause();
                             _playing = false;
                             _OpeningYN = false;
+                            TricorderOpen openevt = OnTricorderOpen;
+                            if (openevt != null)
+                            {
+                                openevt(_triggerEventStartFrame, _triggerEventEndFrame);
+                            }
                         }
                     }
                     else

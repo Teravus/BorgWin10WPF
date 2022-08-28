@@ -34,7 +34,7 @@ namespace BorgWin10WPF
         private DispatcherTimer _PlayHeadTimer = new DispatcherTimer();
         private string _info_videopath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "CDAssets", "IP.AVI");
         private string _computer_videopath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "CDAssets", "computer.avi");
-        private string _holodeck_videopath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "CDAssets", "holodeck.avi");
+        private string _holodeck_videopath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "BridgeHum.wav");
         private List<HotspotDefinition> _aggregatehotspots = new List<HotspotDefinition>();
         private LibVLC _libVLCInfo = null;
         private bool _InfoVideoLoaded;

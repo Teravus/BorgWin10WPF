@@ -109,6 +109,16 @@ namespace BorgWin10WPF
                     NextScene = "V23b";
                     triggeredaction = true;
                     break;
+                case "D31KS":
+                    NextScene = "V_32";
+                    triggeredaction = true;
+                    break;
+                //case "D25B1":
+                //case "D25B2":
+                //case "D25B3":
+                //    NextScene = "V_26";
+                //    triggeredaction = true;
+                //    break;
                 //case "D19BC":
                 //    NextScene = "V_20";
                 //    triggeredaction = true;

@@ -8,7 +8,7 @@
       xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="Star Trek : Borg Win 10 Remake" Height="830" Width="1285" MinHeight="210" MinWidth="360" WindowStyle="None" ShowInTaskbar="False">
+      Title="Star Trek : Borg Win 10 Remake" Height="939" Width="1236" MinHeight="939" MinWidth="1236" WindowStyle="None" ShowInTaskbar="False">
 
     <Grid Width="1280" Height="800" HorizontalAlignment="Left" VerticalAlignment="Top" x:Name="VideoViewGrid" Background="Black">
         <Grid.RowDefinitions>
@@ -18,14 +18,14 @@
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
          <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoAudio" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" RenderTransformOrigin="0,0"/>
-        <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoInfo" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" RenderTransformOrigin="0,0">
+        <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoInfo" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="534.25" Height="426.29069999999996" RenderTransformOrigin="0,0"  Background="Black" Margin="0,0,0,138">
             <Button x:Name="InfoClickSurface" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" Opacity="0.01" />
         </vlc:VideoView>
         <Image x:Name="ImgStartMain" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="Auto" Height="Auto" RenderTransformOrigin="0,0" Source="Assets/BORG_Intro_screen_output.png" Stretch="Fill"/>
 
         <vlc:VideoView x:Name="VideoView"  HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" IsHitTestVisible="False">
             <Grid x:Name="VVGrid">
-                <Image x:Name="InfoSpring" Source="/Assets/QTricorderT.gif" Width="628" Height="442" HorizontalAlignment="Left" VerticalAlignment="Top" gif:AnimationBehavior.SourceUri="{Binding SelectedImage}" gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}" />
+                <Image x:Name="InfoSpring" Source="/Assets/QTricorderT20frame.gif" Margin="250,0,0,0" Width="1057.25" Height="939.3004" HorizontalAlignment="Center" VerticalAlignment="Bottom" Stretch="Fill" gif:AnimationBehavior.SourceUri="{Binding SelectedImage}" gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}" />
 
                 <Button x:Name="ClickSurface" HorizontalAlignment="Left" VerticalAlignment="Top" Width="1280" Height="800" Opacity="0.01" />
                 <TextBlock Name="tbDebugTextBlock" Visibility="Collapsed" Grid.Row="0" Margin="537,554,0,0" Foreground="Red" Background="White" Opacity="0.80" Height="200" Width="500" IsHitTestVisible="False">Debug Mode. <LineBreak />Hotspot Visualizations Enabled. <LineBreak />Press C to get to the next interaction. <LineBreak />Press M to move forward 10 seconds.<LineBreak />Press N to move backward 10 seconds.<LineBreak /> <LineBreak /> Debug Mode breaks some states in the game when you use it<LineBreak /> especially during interactions and bad-alternate endings.<LineBreak />Use it sparingly through an actual playthrough.</TextBlock>

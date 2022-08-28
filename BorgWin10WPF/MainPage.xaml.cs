@@ -118,6 +118,8 @@ namespace BorgWin10WPF
 
         private bool TricorderOpen = false;
 
+        private bool SwapDisplay = false;
+
         // We have two VideoViews on the form.   The loading order isn't guaranteed.   So..   we keep track of if we have initialized libVLC with this
         bool _coreVLCInitialized = false;
 
@@ -266,6 +268,9 @@ namespace BorgWin10WPF
                     }
                     _mediaPlayerMain = new LibVLCSharp.Shared.MediaPlayer(_libVLCMain);
                     VideoView.MediaPlayer = _mediaPlayerMain;
+                    VideoView.MediaPlayer.Scale = 0;
+                    VideoView.MediaPlayer.AspectRatio = "4:3";
+                    SwapDisplay = !SwapDisplay;
                     // If you want console spam.  Uncomment this and the line in log_fired to lag the game..   and..  get the reason why libVLC is not happy.
                     // _libVLCMain.Log += Log_Fired;
 
@@ -919,7 +924,12 @@ namespace BorgWin10WPF
         // We have resized the window.  Adjust all the maths!
         private void WindowResized(object o, SizeChangedEventArgs e)
         {
+            
+            WindowResized(e);
+        }
 
+        private void WindowResized( SizeChangedEventArgs e)
+        {
             var width = this.ActualWidth;
             var height = this.ActualHeight;
 
@@ -934,34 +944,49 @@ namespace BorgWin10WPF
             VideoViewGrid.Width = width;
             VideoViewGrid.Height = height;
 
-            double widthby2 = ((double)width * 0.5d);
-            double widthby3 = ((double)width * 0.3333d);
-            double heightby3 = ((double)height * 0.3333d);
-            double heightby4 = ((double)height * 0.25d);
-            double infowidthby2 = widthby3 * 0.5d;
+            //double widthby2 = ((double)width * 0.5d);
+            //double widthby3 = ((double)width * 0.3333d);
+            //double widthby4 = ((double)width * 0.25d);
+            //double heightby3 = ((double)height * 0.3333d);
+            //double heightby4 = ((double)height * 0.25d);
+            //double infowidthby2 = widthby3 * 0.5d;
+            //double widthby23 = ((double)width * 0.48d);
+            //double leftmargin = widthby2 - infowidthby2;
+            //double topmargin = heightby4 * 3d;
 
-            double leftmargin = widthby2 - infowidthby2;
-            double topmargin = heightby4 * 3d;
-            
 
 
-            VideoInfo.Width = width * 0.24d;
-            VideoInfo.Height = heightby3;
+            //VideoInfo.Width = width * 0.24d;
+            //VideoInfo.Height = heightby3;
 
-            InfoSpring.Width = widthby2;
-            InfoSpring.Height = height* 0.56d ;
+            //InfoSpring.Width = widthby23;
+            //InfoSpring.Height = height* 0.56d ;
 
-            Thickness VideoInfoMargin = new Thickness(0, 0, 0, 10);
-            Thickness TricorderFrameMargin = new Thickness(30, 0, 0, 0);
 
-            VideoInfo.HorizontalAlignment = HorizontalAlignment.Center;
-            VideoInfo.VerticalAlignment = VerticalAlignment.Bottom;
-            VideoInfo.Margin = VideoInfoMargin;
-            InfoSpring.HorizontalAlignment = HorizontalAlignment.Center;
-            InfoSpring.VerticalAlignment = VerticalAlignment.Bottom;
-            InfoSpring.Margin = TricorderFrameMargin;
-            InfoSpring.Stretch = Stretch.Fill;
-            
+
+            //VideoInfo.HorizontalAlignment = HorizontalAlignment.Center;
+            //VideoInfo.VerticalAlignment = VerticalAlignment.Bottom;
+            //VideoInfo.Margin = VideoInfoMargin;
+            ////VideoInfo.MediaPlayer.Scale = 0;
+            //InfoSpring.HorizontalAlignment = HorizontalAlignment.Center;
+            //InfoSpring.VerticalAlignment = VerticalAlignment.Bottom;
+            //InfoSpring.Margin = TricorderFrameMargin;
+            //VideoInfo.HorizontalAlignment = HorizontalAlignment.Center;
+            //VideoInfo.VerticalAlignment = VerticalAlignment.Bottom;
+            //VideoInfo.Height = 426.29069999999996;
+            //VideoInfo.Width = 534.25;
+            //Thickness VideoInfoMargin = new Thickness(0, 0, 0, 138);
+            //Thickness TricorderFrameMargin = new Thickness(250, 0, 0, 0);
+            //VideoInfo.Margin = VideoInfoMargin;
+            //InfoSpring.Margin = TricorderFrameMargin;
+            ////VideoInfo.Background = Colors.Black;
+
+            //InfoSpring.Height = 939.3004;
+            //InfoSpring.Width = 1057.25;
+            //InfoSpring.HorizontalAlignment = HorizontalAlignment.Center;
+            //InfoSpring.VerticalAlignment = VerticalAlignment.Bottom;
+            //InfoSpring.Stretch = Stretch.Fill;
+
 
             if (_MainVideoLoaded)
             {
@@ -1061,6 +1086,19 @@ namespace BorgWin10WPF
                             {
                                 _mainScenePlayer.JumpToChallenge();
                             }
+                        }
+                        break;
+                    case Key.A:
+                        SwapDisplay = !SwapDisplay;
+                        if (SwapDisplay)
+                        {
+                            VideoView.MediaPlayer.Scale = 0;
+                            VideoView.MediaPlayer.AspectRatio = "4:3";
+                        }
+                        else
+                        {
+                            VideoView.MediaPlayer.Scale = 0;
+                            VideoView.MediaPlayer.AspectRatio = "16:9";
                         }
                         break;
                     case Key.Enter:
@@ -1333,38 +1371,53 @@ namespace BorgWin10WPF
 
                 Close();
             };
-            _mainScenePlayer.InfoVideoTrigger += (start, end) =>
-            {
-                InfoSpring.Visibility = Visibility.Visible;
-                if (!TricorderOpen)
-                {
-                    TricorderOpen = true;
-                    TricorderAnimation.OpenTricorder();
-                    VideoInfo.Visibility = Visibility.Visible;
-                    //VideoInfo.CaptureMouse();
-                }
-                SceneDefinition InfoSceneToPlay = _infoScenes.Where(xy => xy.StartMS >= start && xy.EndMS <= end).FirstOrDefault();
-                // todo write a way to find the scene by start and end.
+            _mainScenePlayer.InfoVideoTrigger += InfoVideoTriggerShowFrame;
 
-                if (InfoSceneToPlay != null)
-                {
-                    var hum = _holodeckScenes[0];
-                    _videoAudioPlayer.Pause();
-                    _videoAudioPlayer.ClearQueue();
-                    _supportingPlayer.QueueScene(InfoSceneToPlay, "info", 0);
-                    
-                }
-
-            };
-            Uri uri = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "QTricorderT.gif"));
+            Uri uri = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "QTricorderT20frame.gif"));
             AnimationBehavior.SetSourceUri(InfoSpring, uri);
             TricorderAnimation = new TricorderGifAnimationController(InfoSpring);
             TricorderAnimation.CloseTricorder();
+            TricorderAnimation.OnTricorderOpen += InfoVideoPlayTimeSpan;
             AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
             InfoSpring.Visibility = Visibility.Collapsed;
             VideoInfo.Visibility = Visibility.Collapsed;
+            WindowResized(null);
             ClickSurface.Focus();
         }
+
+
+        private void InfoVideoTriggerShowFrame(long start, long end)
+        {
+            VideoInfo.MediaPlayer.Scale = 2;
+            InfoSpring.Visibility = Visibility.Visible;
+            if (!TricorderOpen)
+            {
+                TricorderOpen = true;
+                TricorderAnimation.OpenTricorder(start, end);
+                
+                //VideoInfo.CaptureMouse();
+            }
+            
+        }
+
+        private void InfoVideoPlayTimeSpan(long start, long end)
+        {
+            if (start <= 0 || end <= 0)
+                return;
+            VideoInfo.Visibility = Visibility.Visible;
+            SceneDefinition InfoSceneToPlay = _infoScenes.Where(xy => xy.StartMS >= start && xy.EndMS <= end).FirstOrDefault();
+            // todo write a way to find the scene by start and end.
+
+            if (InfoSceneToPlay != null)
+            {
+                var hum = _holodeckScenes[0];
+                _videoAudioPlayer.Pause();
+                _videoAudioPlayer.ClearQueue();
+                _supportingPlayer.QueueScene(InfoSceneToPlay, "info", 0);
+
+            }
+        }
+
         private void ShowCursor()
         {
             CurEmulator.Visibility = Visibility.Visible;
@@ -1388,7 +1441,7 @@ namespace BorgWin10WPF
             var result = _mainScenePlayer.Load_Main_Video(_libVLCMain);
             _OriginalMainVideoHeight = result.OriginalMainVideoHeight;
             _OriginalMainVideoWidth = result.OriginalMainVideoWidth;
-
+            
             _MainVideoLoaded = result.Loaded;
 
         }

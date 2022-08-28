@@ -119,14 +119,29 @@ namespace BorgWin10WPF
                                 SdResult = "D24Idle";
                                 break;
                             case "v_26":
-                                SdResult = "Keep Playing";
-
+                                SdResult = "V_28";
                                 break;
                             case "v_27":
                                 SdResult = "D27BS";
                                 break;
-
-
+                            case "v_28":
+                                SdResult = "D30FL";
+                                break;
+                            case "v_29":
+                                SdResult = "V_25";
+                                break;
+                            case "v_30":
+                                SdResult = "D30Idle";
+                                break;
+                            case "v_31":
+                                SdResult = "V_32";
+                                break;
+                            case "v_32":
+                                SdResult = "D32K9";
+                                break;
+                            case "v_31b":
+                                SdResult = "DQUIT";
+                                break;
                         }
                         break;
                     case SceneType.Bad:
@@ -188,9 +203,38 @@ namespace BorgWin10WPF
                                 SdResult = "V_22";
                                 jumptoframe = 8348;
                                 break;
-                            //case "d12cc": d12cc is a shoot you scene, not a borg you scene.
-                            //    SdResult = "V_11";
-                            //    break;
+                            case "d26qn":
+                                SdResult = "V_27";
+                                break;
+                            case "d27bd":
+                                SdResult = "V_25";
+                                break;
+                            case "d30qm":
+                                SdResult = "V_29";
+                                break;
+                            case "d30fl":
+                                SdResult = "V_28";
+                                break;
+                            case "d30qf":
+                                SdResult = "V_29";
+                                break;
+                            case "d32k1":
+                                SdResult = "V_25";
+                                break;
+                         
+                            case "d32k5":
+                            case "d32k6":
+                            case "d32k7":
+                                SdResult = "v_31";
+                                break;
+                            case "d32k9":
+                                SdResult = "v_31";
+                                jumptoframe = 30535;
+                                break;
+
+                                //case "d12cc": d12cc is a shoot you scene, not a borg you scene.
+                                //    SdResult = "V_11";
+                                //    break;
                         }
                         break;
 
