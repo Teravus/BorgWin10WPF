@@ -144,6 +144,7 @@
     <Compile Include="SpecialPuzzleBase.cs" />
     <Compile Include="SpecialPuzzleResult.cs" />
     <Compile Include="SupportingPlayer.cs" />
+    <Compile Include="PlayerBreadCrumbTrail.cs" />
     <Compile Include="TricorderGifAnimationController.cs" />
     <Compile Include="TurboLiftPuzzle.cs" />
     <Compile Include="Utilities.cs" />

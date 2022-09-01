@@ -30,6 +30,7 @@ namespace BorgWin10WPF
 
         private Grid _VisualizationGrid { get; set; }
 
+        private PlayerBreadCrumbTrail InfoBreadcrumb = new PlayerBreadCrumbTrail();
 
 
         private bool _visualizationEnabled = false;
@@ -171,7 +172,7 @@ namespace BorgWin10WPF
             }
             _displayElement.MediaPlayer.Volume = vol;
         }
-        private void PlayScene(SceneDefinition def, string type, long specifictimecode, bool loop)
+        private void PlayScene(SceneDefinition def, string type, long specifictimecode, bool loop, bool FromBreadcrumb = false)
         {
             _PlayHeadTimer.Stop();
             switch (type)
@@ -205,7 +206,10 @@ namespace BorgWin10WPF
             if (_displayElement.MediaPlayer.WillPlay)
                 _displayElement.MediaPlayer.Play();
             _PlayHeadTimer.Start();
-
+            //if (!FromBreadcrumb)
+            //{
+                
+            //}
             System.Diagnostics.Debug.WriteLine(string.Format("\tSPlaying {1} Scene {0}", def.Name, type));
         }
         public string ScenePlaying
@@ -264,6 +268,7 @@ namespace BorgWin10WPF
 
                 if (_lastPlayheadMS >= _sceneEndMS - _timerMS)
                 {
+                    InfoBreadcrumb.VisitedScene(_currentScene);
                     VideoQueueItem itemtoplay = null;
                     // Move on to next
                     lock (_playQueue)
@@ -434,6 +439,61 @@ namespace BorgWin10WPF
                 }
             }
         }
+
+        private void BackClicked()
+        {
+            if (InfoBreadcrumb.HistoryCount > 0)
+            {
+                SceneDefinition backScene = InfoBreadcrumb.Back();
+                if (backScene != null)
+                {
+                    _playQueue.Clear();
+                    _displayElement.MediaPlayer.Pause();
+                    PlayScene(backScene, "info", 0, false, true);
+                }
+            }
+        }
+        private void ForwardClicked()
+        {
+            if (InfoBreadcrumb.ForwardCount > 0)
+            {
+                SceneDefinition backScene = InfoBreadcrumb.Forward();
+                if (backScene != null)
+                {
+                    _playQueue.Clear();
+                    _displayElement.MediaPlayer.Pause();
+
+                    PlayScene(backScene, "info", 0, false, true);
+                }
+            }
+        }
+
+        private void NextSceneClicked()
+        {
+            if (!_displayElement.MediaPlayer.IsPlaying && _currentScene != null)
+            {
+                int foundinListIterator = 0;
+                for (int i=0;i< _InfoSceneOptions.Count;i++)
+                {
+                    if (_currentScene.Name == _InfoSceneOptions[i].Name)
+                    {
+                        foundinListIterator = i;
+                    }
+                }
+                if (_InfoSceneOptions.Count > foundinListIterator)
+                {
+                    var def = _InfoSceneOptions[foundinListIterator + 1];
+                    if (def != null)
+                    {
+                        _playQueue.Clear();
+                        _displayElement.MediaPlayer.Pause();
+
+                        PlayScene(def, "info", 0, false, false);
+                    }
+                }
+            }
+        }
+
         public void MouseClick(int X, int Y)
         {
             if (_currentScene == null)
@@ -510,11 +570,29 @@ namespace BorgWin10WPF
             if (X >= 24 && X <=45 && Y >=178 && Y <=194)
             {
                 //Exit button
+                InfoBreadcrumb.VisitedScene(_currentScene);
                 var endscenevent = SceneComplete;
                 if (endscenevent != null)
                 {
                     endscenevent(this, "ExitButton", "info");
                 }
+            }
+            if (X >= 24 && X <= 43 && Y >= 84 && Y <= 101)
+            {
+                //Back Button 25,84,44,94
+
+                BackClicked();
+            }
+            if (X >= 24 && X <= 43 && Y >= 102 && Y <= 116)
+            {
+                //Forward Button 24,97,38,116, 23,157,45,176
+                ForwardClicked();
+
+            }
+            if (X >= 24 && X <= 157 && Y >= 102 && Y <= 176)
+            {
+
+                NextSceneClicked();
             }
         }
         /// <summary>

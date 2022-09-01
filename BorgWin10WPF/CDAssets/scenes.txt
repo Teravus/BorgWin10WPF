@@ -158,7 +158,7 @@ I_14 18560 19105 0 ip_cardassianraidstorture
 I_15 4350 4960 0 ip_neuralstimulationtreatment
 I_16 4979 5604 0 ip_biraka
 I_17 5606 5916 0 ip_quintmd
-I_18 5918 6805 0 ip_sprint0
+I_18 5918 6809 0 ip_sprint0
 I_19 6825 7206 0 ip_cardassianraids
 I_20 7208 7652 0 ip_andropov
 I_21 19107 20753 0 ip_securityconsole
@@ -185,7 +185,7 @@ I_42 22975 23310 0 ip_shipokudagram
 I_44 9572 9993 0 ip_turbolift
 I_45 9995 10332 0 ip_isolinearchips
 I_46 10338 10604 0 ip_comptrcoreconsole
-I_47 10601 10932 0 ip_borgimplant
+I_47 10601 10928 0 ip_borgimplant
 I_48 10934 11277 0 ip_cuttingtool
 I_49 11279 11522 0 ip_sensingtool
 I_50 21233 21358 0 ip_hyposprayhumanblk
