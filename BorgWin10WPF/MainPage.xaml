@@ -19,7 +19,9 @@
         </Grid.ColumnDefinitions>
          <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoAudio" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" RenderTransformOrigin="0,0"/>
         <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoInfo" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="534.25" Height="426.29069999999996" RenderTransformOrigin="0,0"  Background="Black" Margin="0,0,0,138">
-            <Button x:Name="InfoClickSurface" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" Opacity="0.01" />
+            <Grid x:Name="VVGridInfo">
+                <Button x:Name="InfoClickSurface" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" Opacity="0.01" />
+            </Grid>
         </vlc:VideoView>
         <Image x:Name="ImgStartMain" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="Auto" Height="Auto" RenderTransformOrigin="0,0" Source="Assets/BORG_Intro_screen_output.png" Stretch="Fill"/>
 

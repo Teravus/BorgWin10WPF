@@ -119,7 +119,8 @@ namespace BorgWin10WPF
                     item.HotspotScale = value;
 
                 foreach (var item in _currentScene.PausedHotspots)
-                    item.HotspotScale = value;
+                    if (!item.RelativeVideoName.ToLowerInvariant().StartsWith("i_"))
+                        item.HotspotScale = value;
             }
         }
 

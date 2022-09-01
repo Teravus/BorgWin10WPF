@@ -399,8 +399,8 @@ namespace BorgWin10WPF
                     }
                     for (int i = 0; i < _ipsHotspots.Count; i++)
                     {
-                        _ipsHotspots[i].FrameStart -= (int)Utilities.MsTo15fpsFrames(6000);
-                        _ipsHotspots[i].FrameEnd += (int)Utilities.MsTo15fpsFrames(2000);
+                        _ipsHotspots[i].FrameStart -= (int)Utilities.MsTo15fpsFrames(0060);
+                        _ipsHotspots[i].FrameEnd += (int)Utilities.MsTo15fpsFrames(0000);
                     }
                         
                     //var ComputerScenes = SceneLoader.LoadSupportingScenesFromAsset("computerscenes.txt");
@@ -590,7 +590,7 @@ namespace BorgWin10WPF
                     ComboBoxItem citem = item as ComboBoxItem;
                     string scenename = citem.Content.ToString();
                     SceneDefinition founddef = null;
-                    foreach (var scenedef in _computerScenes)
+                    foreach (var scenedef in _scenes)
                     {
                         if (scenedef.Name == scenename)
                         {
@@ -601,7 +601,8 @@ namespace BorgWin10WPF
                     if (founddef != null && _MainVideoLoaded)
                     {
                         _supportingPlayer.DebugSetEvents(false);
-                        _supportingPlayer.QueueScene(founddef, "computer"); // I'm treating these like info regardless of the actual type so it doesn't affect the main video when testing.
+                        InfoVideoTriggerShowFrame(founddef.StartMS, founddef.EndMS);
+                        //_supportingPlayer.QueueScene(founddef, "computer"); // I'm treating these like info regardless of the actual type so it doesn't affect the main video when testing.
                     }
                 }
             };
@@ -1125,6 +1126,7 @@ namespace BorgWin10WPF
                             CurEmulator.Visibility = Visibility.Collapsed;
                             tbDebugTextBlock.Visibility = Visibility.Collapsed;
                             _mainScenePlayer.VisualizeRemoveHotspots();
+                            _supportingPlayer.VisualizeRemoveHotspots();
                             if (_clickRectangle != null) _clickRectangle.Visibility = Visibility.Collapsed;
                             _mcurVisible = false;
                         }
@@ -1137,6 +1139,9 @@ namespace BorgWin10WPF
                             CurEmulator.Visibility = Visibility.Visible;
                             tbDebugTextBlock.Visibility = Visibility.Visible;
                             if (_clickRectangle != null) _clickRectangle.Visibility = Visibility.Visible;
+                            //VideoView.Visibility = Visibility.Collapsed;
+                            //InfoSpring.Visibility = Visibility.Collapsed;
+
                             // Unhook the scene changed event because we don't want it to restart the scene
                             lstScene.SelectionChanged -= lstSceneChanged;
                             var sp = _mainScenePlayer.ScenePlaying;
@@ -1156,6 +1161,8 @@ namespace BorgWin10WPF
                             //CurEmulator.Margin = new Thickness(pos.X - Window.Current.Bounds.X, pos.Y - Window.Current.Bounds.Y + 1, 0, 0);
                             ShowCursor();
                             _mainScenePlayer.VisualizeHotspots(VVGrid);// VideoViewGrid);
+                            //_supportingPlayer.HotspotScale = 4;
+                            _supportingPlayer.VisualizeHotspots(VVGridInfo);// VideoViewGrid);
                             _mcurVisible = true;
                         }
                         break;
@@ -1300,8 +1307,10 @@ namespace BorgWin10WPF
 
             for (int i = 0; i < _infohotspots.Count; i++)
             {
-                _infohotspots[i].FrameStart -= (int)Utilities.MsTo15fpsFrames(6000);
-                _infohotspots[i].FrameEnd += (int)Utilities.MsTo15fpsFrames(2000);
+                _infohotspots[i].FrameStart -= (int)Utilities.MsTo15fpsFrames(000);
+                _infohotspots[i].FrameEnd += (int)Utilities.MsTo15fpsFrames(000);
+                _infohotspots[i].Area[0].TopLeft = new System.Drawing.Point(_infohotspots[i].Area[0].TopLeft.X, _infohotspots[i].Area[0].TopLeft.Y + 5);
+                _infohotspots[i].Area[0].BottomRight = new System.Drawing.Point(_infohotspots[i].Area[0].BottomRight.X, _infohotspots[i].Area[0].BottomRight.Y + 5);
             }
 
 
@@ -1397,6 +1406,10 @@ namespace BorgWin10WPF
                 
                 //VideoInfo.CaptureMouse();
             }
+            else
+            {
+                InfoVideoPlayTimeSpan(start, end);
+            }
             
         }
 
@@ -1453,7 +1466,10 @@ namespace BorgWin10WPF
             {
                 if (def.SceneType == SceneType.Main || def.SceneType == SceneType.Inaction || def.SceneType == SceneType.Bad)
                     lstScene.Items.Add(new ComboBoxItem() { Content = def.Name });
-            }
+                else if (def.SceneType == SceneType.Info)
+                    lstComputer.Items.Add(new ComboBoxItem() { Content = def.Name });
+            }      
+
         }
         private void Log_Fired(object sender, LogEventArgs e)
         {

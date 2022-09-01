@@ -28,6 +28,13 @@ namespace BorgWin10WPF
         private List<SceneDefinition> _InfoSceneOptions { get; set; }
         private List<SceneDefinition> _HolodeckSceneOptions { get; set; }
 
+        private Grid _VisualizationGrid { get; set; }
+
+
+
+        private bool _visualizationEnabled = false;
+        public double VisualizationWidthMultiplier = 1d;
+        public double VisualizationHeightMultiplier = 1d;
 
         private int _timerMS = 10;
         private int _sceneEndMS = 0;
@@ -49,7 +56,26 @@ namespace BorgWin10WPF
         private bool _debugEventsOff = false;
 
         private readonly Queue<VideoQueueItem> _playQueue = null;
+        private string _idleActionVisualizationText = string.Empty;
+        private Label DoNothingVisualization;
+        private float hotspotscale = 4f;
+        // This resizes the visualization for the hotspots.   It's funky.  Don't mess with it.
+        public float HotspotScale
+        {
+            get { return hotspotscale; }
+            set
+            {
+                hotspotscale = value;
+                if (_currentScene == null)
+                    return;
+                foreach (var item in _currentScene.PlayingHotspots)
+                    item.HotspotScale = value;
 
+                foreach (var item in _currentScene.PausedHotspots)
+                    item.HotspotScale = value;
+                
+            }
+        }
 
         public SupportingPlayer(VideoView displayElement, List<SceneDefinition> InfoScenes, List<SceneDefinition> ComputerScenes, List<SceneDefinition> HolodeckScenes, List<HotspotDefinition> ips, LibVLC vlcobject)
         {
@@ -104,12 +130,15 @@ namespace BorgWin10WPF
                 playImmediately = true;
             }
 
+
             if (!playImmediately && _displayElement.MediaPlayer.IsPlaying) // We don't want Info items to queue up. They should play immediately
             {
-                lock (_playQueue)
-                {
-                    _playQueue.Enqueue(new VideoQueueItem() { Video = def, VideoType = type, TimecodeMS = specifictimecode, loop = vloop });
-                }
+                // Don't double queue the same scene.
+                if (_currentScene.Name != def.Name)
+                    lock (_playQueue)
+                    {
+                        _playQueue.Enqueue(new VideoQueueItem() { Video = def, VideoType = type, TimecodeMS = specifictimecode, loop = vloop });
+                    }
             }
             else
             {
@@ -210,9 +239,9 @@ namespace BorgWin10WPF
                         case "info":
                             SwitchToInfoVideo();
                             break;
-                        //case "computer":
-                        //    SwitchToComputerVideo();
-                        //    break;
+                            //case "computer":
+                            //    SwitchToComputerVideo();
+                            //    break;
                     }
 
                     _displayElement.MediaPlayer.Time = _currentScene.StartMS;
@@ -222,7 +251,7 @@ namespace BorgWin10WPF
                         _displayElement.MediaPlayer.Play();
                     }
                 }
-                
+
                 if (_displayElement.MediaPlayer.IsPlaying)
                 {
                     _lastPlayheadMS = _displayElement.MediaPlayer.Time;
@@ -294,9 +323,71 @@ namespace BorgWin10WPF
 
             }
 
+            if (_visualizationEnabled)
+            {
+                Grid ParentGrid = _VisualizationGrid as Grid;
+                if (_currentScene == null)
+                    return;
+                List<HotspotDefinition> hotspotstocheck = _aggregatehotspots;//_currentScene.PausedHotspots;
+                List<HotspotDefinition> inFrame = new List<HotspotDefinition>();
+                var currtime = _displayElement.MediaPlayer.Time;
+                bool playing = _displayElement.MediaPlayer.IsPlaying;
+                foreach (var hotspot in hotspotstocheck)
+                {
 
+                    var FrameStartMS = Utilities.Frames15fpsToMS(hotspot.FrameStart) + _currentScene.OffsetTimeMS;
+                    var FrameEndMS = Utilities.Frames15fpsToMS(hotspot.FrameEnd) + _currentScene.OffsetTimeMS;
+                    //if (currtime >= FrameStartMS && currtime <= FrameEndMS)
+                    //{
+                    //    System.Diagnostics.Debug.WriteLine($"{hotspotInfo} ..|..");
+                    //}
+                    //else if (currtime + 4000 >= FrameStartMS && currtime <= FrameEndMS)
+                    //{
+                    //    System.Diagnostics.Debug.WriteLine($"{hotspotInfo} .<|..");
+                    //}
+                    //else if (currtime >= FrameStartMS && currtime + 4000 <= FrameEndMS)
+                    //{
+                    //    System.Diagnostics.Debug.WriteLine($"{hotspotInfo} ..|.>");
+                    //}
+                    //else if (currtime < FrameStartMS)
+                    //{
+                    //    //System.Diagnostics.Debug.WriteLine("<.|..");
+                    //}
+                    //else if (currtime > FrameEndMS)
+                    //{
+                    //    //System.Diagnostics.Debug.WriteLine("..|.>");
+                    //}
+                    if (currtime + 3000 >= FrameStartMS && currtime - 3000 <= FrameEndMS)
+                    {
+                        inFrame.Add(hotspot);
+                    }
+                
+                }
+
+                    
+
+                foreach (var item in inFrame)
+                    item.Draw(ParentGrid, _displayElement.MediaPlayer.Time, _currentScene, VisualizationWidthMultiplier, VisualizationHeightMultiplier);
+
+                if (DoNothingVisualization != null)
+                {
+                    var frame15fps = Utilities.MsTo15fpsFrames(_lastPlayheadMS);
+                    int cdvis = 0;
+                    string scenename = String.Empty;
+                    if (_currentScene != null)
+                    {
+                        cdvis = _currentScene.CD;
+                        scenename = _currentScene.Name;
+                    }
+
+                    if (_displayElement.MediaPlayer.IsPlaying) // I don't want it to update the content if we're not playing because it will set the frame to zero.
+                    {
+                        string friendlytime = GetReadableTimeByMs(_lastPlayheadMS);
+                        DoNothingVisualization.Content = $"Scene { scenename}, Frame: {frame15fps}, CD: {cdvis}, {_idleActionVisualizationText}. ({friendlytime})";
+                    }
+                }
+            }
         }
-
         private void SwitchToInfoVideo()
         {
             SwitchVideo(_info_videopath);
@@ -350,8 +441,9 @@ namespace BorgWin10WPF
             List<HotspotDefinition> inFrame = new List<HotspotDefinition>();
 
             //item.Draw(ParentGrid, _displayElement.MediaPlayer.Time, _currentScene);
-            //X += 35;
-            Y += 25;
+            X += 5;
+            //X += 10;
+            Y += 6;
             var currtime = _displayElement.MediaPlayer.Time;
             bool playing = _displayElement.MediaPlayer.IsPlaying;
             List<HotspotDefinition> hotspotstocheck = _aggregatehotspots;//_currentScene.PausedHotspots;
@@ -389,7 +481,7 @@ namespace BorgWin10WPF
             for (int i = 0; i < inFrame.Count; i++)
             {
                 var hittestresults = (inFrame[i].HitTest(X, Y, currtime, _currentScene,false));
-                System.Diagnostics.Debug.WriteLine(string.Format("\t[{0}]: Hit test {1},{2}-{7}.  Box ({3},{4},{5},{6})", inFrame[i].Name + "/" + inFrame[i].ActionVideo, X, Y, inFrame[i].Area[0].TopLeft.X, inFrame[i].Area[0].TopLeft.Y, inFrame[i].Area[0].BottomRight.X, inFrame[i].Area[0].BottomRight.Y, hittestresults));
+                System.Diagnostics.Debug.WriteLine(string.Format("\t[{0}]: Hit test {1},{2}-{7}.  Box (X:{3}-{4},Y:{5}-{6})", inFrame[i].Name + "/" + inFrame[i].ActionVideo, X, Y, inFrame[i].Area[0].TopLeft.X, inFrame[i].Area[0].BottomRight.X, inFrame[i].Area[0].TopLeft.Y, inFrame[i].Area[0].BottomRight.Y, hittestresults));
                 if (hittestresults)
                 {
                     SceneDefinition clickactionScene = null;
@@ -405,12 +497,17 @@ namespace BorgWin10WPF
                     if (clickactionScene != null)
                     {
                         QueueScene(clickactionScene, "info", 0, false);
+                        System.Diagnostics.Debug.WriteLine($"Fired off {inFrame[i].ActionVideo}.");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"We are supposed to fire off {inFrame[i].ActionVideo} but we could not find it.");
                     }
                 }
             }
             //10,176-33,193
 
-            if (X >= 10 && X <=33 && Y >=176 && Y <=193)
+            if (X >= 24 && X <=45 && Y >=178 && Y <=194)
             {
                 //Exit button
                 var endscenevent = SceneComplete;
@@ -419,6 +516,89 @@ namespace BorgWin10WPF
                     endscenevent(this, "ExitButton", "info");
                 }
             }
+        }
+        /// <summary>
+        /// Add squares around the clickable hotspots
+        /// </summary>
+        /// <param name="ParentGrid"></param>
+        public void VisualizeHotspots(Grid ParentGrid)
+        {
+            if (_visualizationEnabled)
+                return;
+            if (_currentScene == null)
+                return;
+            foreach (var item in _aggregatehotspots)
+                item.Draw(ParentGrid, _displayElement.MediaPlayer.Time, _currentScene, VisualizationWidthMultiplier, VisualizationHeightMultiplier);
+            //foreach (var item in _currentScene.PlayingHotspots)
+            //    
+
+            //foreach (var item in _currentScene.PausedHotspots)
+            //    item.Draw(ParentGrid, _displayElement.MediaPlayer.Time, _currentScene, VisualizationWidthMultiplier, VisualizationHeightMultiplier);
+
+            if (DoNothingVisualization == null)
+            {
+                _VisualizationGrid = ParentGrid;
+                Label displayLabel = new Label();
+                displayLabel.Width = ParentGrid.Width;
+                displayLabel.Height = ParentGrid.Height;
+                var frame15fps = Utilities.MsTo15fpsFrames(_lastPlayheadMS);
+                int cdvis = 0;
+                string scenename = String.Empty;
+                if (_currentScene != null)
+                {
+                    cdvis = _currentScene.CD;
+                    scenename = _currentScene.Name;
+                }
+                if (_displayElement.MediaPlayer.IsPlaying) // I don't want it to update the content if we're not playing because it will set the frame to zero.
+                {
+                    string friendlytime = GetReadableTimeByMs(_lastPlayheadMS);
+                    displayLabel.Content = $"Scene { scenename}, Frame: {frame15fps}, CD: {cdvis}, {_idleActionVisualizationText}. ({friendlytime})";
+                }
+                displayLabel.Margin = new Thickness(5, 0, 0, 50);
+                displayLabel.HorizontalAlignment = HorizontalAlignment.Left;
+                displayLabel.Foreground = Brushes.Red;
+
+                displayLabel.IsHitTestVisible = false;
+                //displayLabel.MouseMove += DisplayLabel_MouseMove;
+                DoNothingVisualization = displayLabel;
+                ParentGrid.Children.Add(DoNothingVisualization);
+            }
+            
+            _visualizationEnabled = true;
+        }
+        public string GetReadableTimeByMs(long ms)
+        {
+            TimeSpan t = TimeSpan.FromMilliseconds(ms);
+            if (t.Hours > 0) return $"{t.Hours}h:{t.Minutes}m:{t.Seconds}s";
+            else if (t.Minutes > 0) return $"{t.Minutes}m:{t.Seconds}s";
+            else if (t.Seconds > 0) return $"{t.Seconds}s:{t.Milliseconds}ms";
+            else return $"{t.Milliseconds}ms";
+        }
+
+        /// <summary>
+        /// Remove the squares that represent the hotspot positions.
+        /// </summary>
+        public void VisualizeRemoveHotspots()
+        {
+            if (!_visualizationEnabled)
+                return;
+
+            _visualizationEnabled = false;
+
+            if (DoNothingVisualization != null)
+            {
+                var item = DoNothingVisualization;
+                DoNothingVisualization = null;
+                //displayLabel.MouseMove -= DisplayLabel_MouseMove;
+                Grid parentGrid = item.Parent as Grid;
+                parentGrid.Children.Remove(item);
+            }
+
+            foreach (var item in _aggregatehotspots)
+                item.ClearVisualization();
+            
+
+
         }
 
         protected virtual void Dispose(bool disposing)

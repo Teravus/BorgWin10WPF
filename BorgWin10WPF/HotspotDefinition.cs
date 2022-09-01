@@ -94,6 +94,10 @@ namespace BorgWin10WPF
 
             bool InFrame = Milliseconds >= startMS && Milliseconds <= endMS;
             float clickscale = 1f;
+            if (scene.Name.ToLowerInvariant().StartsWith("i_"))
+            {
+                InFrame = (Milliseconds + 2000 >= Utilities.Frames15fpsToMS(FrameStart) && Milliseconds - 200 <= Utilities.Frames15fpsToMS(FrameEnd));
+            }
             switch (HType)
             {
                 case HotspotType.Diagnal:
@@ -141,7 +145,7 @@ namespace BorgWin10WPF
             if (Area.Count < 1)
                 return;
 
-            if (scene.Name.ToLowerInvariant() != RelativeVideoName.ToLowerInvariant())
+            if (scene.Name.ToLowerInvariant() != RelativeVideoName.ToLowerInvariant() && !scene.Name.ToLowerInvariant().StartsWith("i_"))
                 return;
 
             long startMS = Utilities.Frames15fpsToMS(FrameStart) + scene.StartMS;
@@ -149,17 +153,23 @@ namespace BorgWin10WPF
 
             bool InFrame = Milliseconds >= startMS && Milliseconds <= endMS;
 
+            if (scene.Name.ToLowerInvariant().StartsWith("i_"))
+            {
+                InFrame =  (Milliseconds + 2000 >= Utilities.Frames15fpsToMS(FrameStart) && Milliseconds - 200 <= Utilities.Frames15fpsToMS(FrameEnd));
+            }
+
             switch (HType)
             {
                 case HotspotType.Diagnal:
                 case HotspotType.Interpolate:
                 case HotspotType.Multi:
                     if (Area.Count == 1)
+                    {
                         left = (int)(Area[0].TopLeft.X * (_Scale * visualizationWidthMultiplier));
-                    top = (int)(Area[0].TopLeft.Y * (_Scale * visualizationHeightMultiplier));
-                    right = (int)(Area[0].BottomRight.X * (_Scale * visualizationWidthMultiplier));
-                    bot = (int)(Area[0].BottomRight.Y * (_Scale * visualizationHeightMultiplier));
-
+                        top = (int)(Area[0].TopLeft.Y * (_Scale * visualizationHeightMultiplier));
+                        right = (int)(Area[0].BottomRight.X * (_Scale * visualizationWidthMultiplier));
+                        bot = (int)(Area[0].BottomRight.Y * (_Scale * visualizationHeightMultiplier));
+                    }
 
 
                     if (Area.Count > 1)
@@ -227,6 +237,13 @@ namespace BorgWin10WPF
                 VisualizationControl.Margin = new Thickness(left, top, 0, 0);// right - left, bot - top);
                 VisualizationControl.Height = bot - top;
                 VisualizationControl.Width = right - left;
+
+                if (scene.Name.ToLowerInvariant().StartsWith("i_"))
+                {
+                    VisualizationControl.Margin = new Thickness(left*2, top*2, 0, 0);
+                    VisualizationControl.Width = (right - left) *6;
+                    VisualizationControl.Height = (bot - top) *2;
+                }
                 VisualizationLabel.Margin = VisualizationControl.Margin;
                 VisualizationLabel.Width = VisualizationControl.Width;
             }
