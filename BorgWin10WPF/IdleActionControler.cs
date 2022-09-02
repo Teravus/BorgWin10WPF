@@ -97,6 +97,8 @@ namespace BorgWin10WPF
                             //    SdResult = "v_21";
                             //    break;
                             case "v_16":
+                                SdResult = "D16Idle";
+                                break;
                             case "v_17":
                                 SdResult = "D17Idle";
                                 break;
@@ -147,6 +149,10 @@ namespace BorgWin10WPF
                     case SceneType.Bad:
                         switch (currentScene.Name.ToLowerInvariant())
                         {
+                            case "d7itr":
+                                SdResult = "V_07";
+                                jumptoframe = 21177;
+                                break;
                             case "d8idle":
                                 SdResult = "V_11";
                                 break;
@@ -167,6 +173,14 @@ namespace BorgWin10WPF
                                 break;
                             case "d13idle":
                                 SdResult = "V_14";
+                                break;
+                            case "d16idle":
+                                SdResult = "V_16";
+
+                                break;
+                            case "d17Idle":
+                                SdResult = "V_17";
+                                jumptoframe = 16336;
                                 break;
                             case "d10sf":
                                 SdResult = "V_11";
@@ -221,7 +235,9 @@ namespace BorgWin10WPF
                             case "d32k1":
                                 SdResult = "V_25";
                                 break;
-                         
+                            case "d32k4":
+                                SdResult = "V_25";
+                                break;
                             case "d32k5":
                             case "d32k6":
                             case "d32k7":

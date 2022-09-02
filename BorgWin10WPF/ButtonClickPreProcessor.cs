@@ -10,6 +10,8 @@ namespace BorgWin10WPF
     {
         private static int Chapter_V_18_CircuitClicks {get;set;} = 0;
 
+        private static int Chapter_V_17_ComputerCoreClicks { get; set; } = 0;
+
         private static bool _visitedBorgifiedScenev_12 { get; set; } = false;
 
         private static int Chapter_V_16_ComputerCoreClicks { get; set; } = 0;
@@ -87,8 +89,16 @@ namespace BorgWin10WPF
                     triggeredaction = true;
                     break;
                 case "D16CS":
-                    ++Chapter_V_18_CircuitClicks;
-                    if (Chapter_V_18_CircuitClicks >= 2)
+                    ++Chapter_V_17_ComputerCoreClicks;
+                    if (Chapter_V_17_ComputerCoreClicks >= 2)
+                    {
+                        NextScene = "D16CSb";
+                        triggeredaction = true;
+                    }
+                    break;
+                case "D17CS":
+                    ++Chapter_V_17_ComputerCoreClicks;
+                    if (Chapter_V_17_ComputerCoreClicks >= 2)
                     {
                         NextScene = "D16CSb";
                         triggeredaction = true;
