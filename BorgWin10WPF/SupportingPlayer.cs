@@ -53,6 +53,8 @@ namespace BorgWin10WPF
         private bool _loopVid = false;
         private string _videotype = string.Empty;
         private bool disposedValue;
+        private bool _isOriginalVideo = true;
+        private int _volume = 100;
 
         private bool _debugEventsOff = false;
 
@@ -61,6 +63,65 @@ namespace BorgWin10WPF
         private Label DoNothingVisualization;
         private float hotspotscale = 4f;
         // This resizes the visualization for the hotspots.   It's funky.  Don't mess with it.
+
+        private void UnsetEQ()
+        {
+            _displayElement.MediaPlayer.UnsetEqualizer();
+        }
+
+        /// <summary>
+        /// It looks like in some of the videos, they purposely injected noise to make the audio play poorly in other players.
+        /// This cuts the noise down to barely noticable. It does drop the frequency of John de Lancie's voice..  but it is a 
+        /// compromise that I can live with for the noise reduction and better understandability of his voice with the reduced noise.
+        /// </summary>
+        private void SetEQ()
+        {
+            if (_isOriginalVideo)
+            {
+                using (var _libvlcsharpEQ = new Equalizer())
+                {
+                    _libvlcsharpEQ.SetPreamp(11.9f);
+
+
+                    // Adjustment that we're going for 
+                    //   | | | | | | | | | |
+                    //         __
+                    //   -----/  \
+                    //            \
+                    //             |______
+                    //
+
+                    for (uint bandid = 0; bandid < _libvlcsharpEQ.BandCount; bandid++)
+                    {
+                        var freq = _libvlcsharpEQ.BandFrequency(bandid);
+                        switch (freq)
+                        {
+                            case 500:
+
+                                _libvlcsharpEQ.SetAmp(3.0f, bandid);
+                                break;
+                            case 1000:
+                                _libvlcsharpEQ.SetAmp(-3.2f, bandid);
+                                break;
+                            case 4000:
+                                _libvlcsharpEQ.SetAmp(-8.1f, bandid);
+                                break;
+                            case 8000:
+                            case 12000:
+                            case 14000:
+                            case 16000:
+                                _libvlcsharpEQ.SetAmp(-19.9f, bandid);
+                                break;
+                        }
+                    }
+
+                    _displayElement.MediaPlayer.UnsetEqualizer();
+                    _displayElement.MediaPlayer.SetEqualizer(_libvlcsharpEQ);
+                }
+            }
+
+        }
+
         public float HotspotScale
         {
             get { return hotspotscale; }
@@ -93,7 +154,12 @@ namespace BorgWin10WPF
                 TimerTickAction();
 
             };
+           
+            _volume = displayElement.MediaPlayer.Volume;
+            
         }
+
+       
 
         public void ClearQueue()
         {
@@ -107,14 +173,22 @@ namespace BorgWin10WPF
         {
             _PlayHeadTimer.Stop();
             if (_displayElement.MediaPlayer.IsPlaying)
+            {
                 _displayElement.MediaPlayer.Pause();
+                UnsetEQ();
+            }
+            
         }
         public void Resume()
         {
             if (!_displayElement.MediaPlayer.IsPlaying && _displayElement.MediaPlayer.WillPlay)
+            {
+                SetEQ();
                 _displayElement.MediaPlayer.Play();
+            }
             _PlayHeadTimer.Start();
         }
+
         /// <summary>
         /// Play a scene.  Start from the beginning of the scene or optionally have a time
         /// </summary>
@@ -153,24 +227,24 @@ namespace BorgWin10WPF
         }
         public void LowerVolume()
         {
-            var vol = _displayElement.MediaPlayer.Volume;
-            vol -= 15;
-            if (vol < 0)
+
+            _volume -= 15;
+            if (_volume < 0)
             {
-                vol = 0;
+                _volume = 0;
             }
-            _displayElement.MediaPlayer.Volume = vol;
+            _displayElement.MediaPlayer.Volume = _volume;
         }
 
         public void IncreaseVolume()
         {
-            var vol = _displayElement.MediaPlayer.Volume;
-            vol += 15;
-            if (vol > 100)
+           
+            _volume += 15;
+            if (_volume > 100)
             {
-                vol = 100;
+                _volume = 100;
             }
-            _displayElement.MediaPlayer.Volume = vol;
+            _displayElement.MediaPlayer.Volume = _volume;
         }
         private void PlayScene(SceneDefinition def, string type, long specifictimecode, bool loop, bool FromBreadcrumb = false)
         {
@@ -204,7 +278,10 @@ namespace BorgWin10WPF
             }
 
             if (_displayElement.MediaPlayer.WillPlay)
+            {
+                SetEQ();
                 _displayElement.MediaPlayer.Play();
+            }
             _PlayHeadTimer.Start();
             //if (!FromBreadcrumb)
             //{
@@ -252,6 +329,7 @@ namespace BorgWin10WPF
                     Task.Delay(30).Wait();
                     if (!_displayElement.MediaPlayer.IsPlaying)
                     {
+                        SetEQ();
                         _displayElement.MediaPlayer.Play();
                     }
                 }
@@ -303,6 +381,7 @@ namespace BorgWin10WPF
                                 _displayElement.MediaPlayer.Time = _currentScene.StartMS;
                                 if (!_displayElement.MediaPlayer.IsPlaying)
                                 {
+                                    SetEQ();
                                     _displayElement.MediaPlayer.Play();
                                 }
                             }
@@ -317,6 +396,7 @@ namespace BorgWin10WPF
                         else // Not looping, no video to play.  Pause
                         {
                             _displayElement.MediaPlayer.Pause();
+                            UnsetEQ();
 
                             EndScene evt = SceneComplete;
                             if (evt != null && !_debugEventsOff)
@@ -395,12 +475,21 @@ namespace BorgWin10WPF
         }
         private void SwitchToInfoVideo()
         {
-            SwitchVideo(_info_videopath);
+            SwitchVideo(GetMP4OrAVI(_info_videopath));
             _InfoVideoLoaded = true;
             _ComputerVideoLoaded = false;
             _holodeckVideoLoaded = false;
         }
-
+        public string GetMP4OrAVI(string input)
+        {
+            string mp4name = input.Replace("X.AVI", "X.mp4");
+            if (System.IO.File.Exists(mp4name))
+            {
+                _isOriginalVideo = false;
+                return mp4name;
+            }
+            return input;
+        }
         //private void SwitchToComputerVideo()
         //{
         //    SwitchVideo(_computer_videopath);
@@ -449,6 +538,7 @@ namespace BorgWin10WPF
                 {
                     _playQueue.Clear();
                     _displayElement.MediaPlayer.Pause();
+                    UnsetEQ();
                     PlayScene(backScene, "info", 0, false, true);
                 }
             }
@@ -462,7 +552,7 @@ namespace BorgWin10WPF
                 {
                     _playQueue.Clear();
                     _displayElement.MediaPlayer.Pause();
-
+                    UnsetEQ();
                     PlayScene(backScene, "info", 0, false, true);
                 }
             }
@@ -487,7 +577,7 @@ namespace BorgWin10WPF
                     {
                         _playQueue.Clear();
                         _displayElement.MediaPlayer.Pause();
-
+                        UnsetEQ();
                         PlayScene(def, "info", 0, false, false);
                     }
                 }

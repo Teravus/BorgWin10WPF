@@ -8,7 +8,7 @@
       xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="Star Trek : Borg Win 10 Remake" Height="939" Width="1236" MinHeight="939" MinWidth="1236" WindowStyle="None" ShowInTaskbar="False">
+      Title="Star Trek : Borg Win 10 Remake" Height="939" Width="1236" MinHeight="939" MinWidth="1236" WindowStyle="None" ShowInTaskbar="True">
 
     <Grid Width="1280" Height="800" HorizontalAlignment="Left" VerticalAlignment="Top" x:Name="VideoViewGrid" Background="Black">
         <Grid.RowDefinitions>
@@ -27,6 +27,7 @@
 
         <vlc:VideoView x:Name="VideoView"  HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" IsHitTestVisible="False">
             <Grid x:Name="VVGrid">
+                <Image x:Name="VideoPixelGrid" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="Fill"  IsHitTestVisible="False" Visibility="Collapsed" />
                 <Image x:Name="InfoSpring" Source="/Assets/QTricorderT20frame.gif" Margin="250,0,0,0" Width="1057.25" Height="939.3004" HorizontalAlignment="Center" VerticalAlignment="Bottom" Stretch="Fill" gif:AnimationBehavior.SourceUri="{Binding SelectedImage}" gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}" />
 
                 <Button x:Name="ClickSurface" HorizontalAlignment="Left" VerticalAlignment="Top" Width="1280" Height="800" Opacity="0.01" />

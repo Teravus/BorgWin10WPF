@@ -77,16 +77,10 @@ namespace BorgWin10WPF
 
         // internal game progress counters
         private int _inactionacount = 0;
-        private int _bombattemptcount = 1;
 
 
         private LibVLC _vlcInstance = null;
 
-        private int _multi_click_count = 0;
-        private HotspotDefinition _multi_click_lastAction = null;
-        private int _multi_click_Item_Sequence_id = -2;
-
-        private MultiAction _special_case_multi_action = null;
         private SupportingPlayer _supportingPlayer = null;
         private string _ReplayingFromTimeStopVideo = null;  // We can't play these unless it is a main video, but we need to be able to control the fact that they should be played when playing an alternate.
                                                             // This is a bit like queuing it up for the next main scene.
@@ -105,6 +99,8 @@ namespace BorgWin10WPF
         /// The scene file has this special frame to trigger quitting the game.
         /// </summary>
         private const int GAME_END_FRAME_ID = 999999;
+
+        private bool _isDefaultVideo = true;
 
         // This resizes the visualization for the hotspots.   It's funky.  Don't mess with it.
         public float HotspotScale
@@ -180,7 +176,35 @@ namespace BorgWin10WPF
         // I'm using the DispatcherTimer so that it is always on the main thread and we can interact with the unmanaged library.
         private DispatcherTimer _PlayHeadTimer = new DispatcherTimer(); // Timer that gets the current position of the play head in Milliseconds from video start and acts on that information.
                                                                         // Triggers TimerTickAction()
+        internal void ApplyGrid(string file, int opacity)
+        {
+            if (_displayElement == null)
+                return;
+            if (_displayElement.MediaPlayer == null)
+                return;
 
+            
+
+            if (opacity > 255)
+                opacity = 255;
+            if (opacity < 0)
+                opacity = 0;
+            if (!string.IsNullOrEmpty(file))
+            {
+                if (!System.IO.File.Exists(file))
+                    throw new InvalidOperationException("GridFile does not exist!");
+                _displayElement.MediaPlayer.SetLogoString(VideoLogoOption.File, file);
+                _displayElement.MediaPlayer.SetLogoInt(VideoLogoOption.X, 0);
+                _displayElement.MediaPlayer.SetLogoInt(VideoLogoOption.Y, 0);
+                _displayElement.MediaPlayer.SetLogoInt(VideoLogoOption.Repeat, 1);
+                _displayElement.MediaPlayer.SetLogoInt(VideoLogoOption.Opacity, opacity);
+                _displayElement.MediaPlayer.SetLogoInt(VideoLogoOption.Enable, 1);
+            }
+            else
+            {
+                _displayElement.MediaPlayer.SetLogoInt(VideoLogoOption.Enable, 0);
+            }
+        }
         /// <summary>
         /// Create a new main scene player.  This should only be called once.  And..  Should contain a reference to the main video player on the form.
         /// </summary>
@@ -214,6 +238,12 @@ namespace BorgWin10WPF
 
             };
         }
+
+        internal bool IsDefaultVideo
+        {
+            get { return _isDefaultVideo; }
+        }
+
         /// <summary>
         /// Loads a save.
         /// </summary>
@@ -266,9 +296,7 @@ namespace BorgWin10WPF
                 userAction();
             }
 
-            _multi_click_count = 0;
-            _multi_click_lastAction = null;
-            _multi_click_Item_Sequence_id = -2;
+           
 
             //  If we play the Logo screen.  We are ending.  Quit now!
             var getLogo = _allSceneOptions.Where(xy => xy.Name == "DQUIT").FirstOrDefault();
@@ -976,10 +1004,7 @@ namespace BorgWin10WPF
                     if (_lastPlayheadMS >= _challengeStartMS && !_challengeSectionNotificationComplete)
                     {
                         _challengeSectionNotificationComplete = true;
-                        _multi_click_count = 0;
-                        _multi_click_lastAction = null;
-                        _multi_click_Item_Sequence_id = -2;
-                        _special_case_multi_action = null;
+                        
 
                         System.Diagnostics.Debug.WriteLine(string.Format("\tIn Challenge time {0} End {1}", _lastPlayheadMS, _challengeEndMS));
                         UserActionRequired userAction = ActionOn;
@@ -1134,7 +1159,10 @@ namespace BorgWin10WPF
         {
             string mp4name = input.Replace("X.AVI", "X.mp4");
             if (System.IO.File.Exists(mp4name))
+            {
+                _isDefaultVideo = false;
                 return mp4name;
+            }
             return input;
         }
         /// <summary>

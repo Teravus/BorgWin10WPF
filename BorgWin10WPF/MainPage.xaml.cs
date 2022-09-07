@@ -116,6 +116,12 @@ namespace BorgWin10WPF
         // This is the borg cube when the game says User do something.
         BitmapImage CubeCursor = new BitmapImage(new Uri(System.IO.Path.Combine("Assets", "BorgCubeCursor.gif"), UriKind.Relative));
 
+        private int _gridCursor = 1;
+
+        private List<Tuple<string, string, int>> OverlayGrids;
+
+
+
         private bool TricorderOpen = false;
 
         private bool SwapDisplay = false;
@@ -128,7 +134,37 @@ namespace BorgWin10WPF
         public MainPage()
         {
             InitializeComponent();
-
+            
+            var currentdir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            OverlayGrids = new List<Tuple<string, string, int>>() {
+                new Tuple<string, string, int>("No Grid", null, 0)
+                ,new Tuple<string, string, int>("Original Grid 240p 100%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x2x1-240p_100.png"), 255)
+                ,new Tuple<string, string, int>("Original Grid 420p 100%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x2x1-480p_100.png"), 255)
+                ,new Tuple<string, string, int>("Irregular Wide Pixel 420p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x2x1-480p_50.png"), 255)
+                ,new Tuple<string, string, int>("Irregular Wide Pixel 420p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x2x1-480p_50.png"), 127)
+                ,new Tuple<string, string, int>("Irregular Wide Pixel 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x2x1-240p_50.png"), 255)
+                ,new Tuple<string, string, int>("Irregular Wide Pixel 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x2x1-240p_50.png"), 127)
+                ,new Tuple<string, string, int>("Wide Pixel 420p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-480p_50.png"), 255)
+                ,new Tuple<string, string, int>("Wide Pixel 420p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-480p_50.png"), 127)
+                ,new Tuple<string, string, int>("Wide Pixel 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-240p_50.png"), 255)
+                ,new Tuple<string, string, int>("Wide Pixel 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-240p_50.png"), 127)
+                ,new Tuple<string, string, int>("Irregular Tall Pixel 420p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x1x2-480p_50.png"), 255)
+                ,new Tuple<string, string, int>("Irregular Tall Pixel 420p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x1x2-480p_50.png"), 127)
+                ,new Tuple<string, string, int>("Irregular Tall Pixel 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x1x2-240p_50.png"), 255)
+                ,new Tuple<string, string, int>("Irregular Tall Pixel 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x1x2-240p_50.png"), 127)
+                ,new Tuple<string, string, int>("Tall Pixel 420p 50%", System.IO.Path.Combine(currentdir, "Assets", "tg2x1x2-480p_50.png"), 255)
+                ,new Tuple<string, string, int>("Tall Pixel 420p 25%", System.IO.Path.Combine(currentdir, "Assets", "tg2x1x2-480p_50.png"), 127)
+                ,new Tuple<string, string, int>("Tall Pixel 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tg2x1x2-240p_50.png"), 255)
+                ,new Tuple<string, string, int>("Tall Pixel 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tg2x1x2-240p_50.png"), 127)
+                ,new Tuple<string, string, int>("Wide Pixel Grid 420p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgr1x2x1-480p_50.png"), 255)
+                ,new Tuple<string, string, int>("Wide Pixel Grid 420p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgr1x2x1-480p_50.png"), 127)
+                ,new Tuple<string, string, int>("Wide Pixel Grid 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgr1x2x1-240p_50.png"), 255)
+                ,new Tuple<string, string, int>("Wide Pixel Grid 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgr1x2x1-240p_50.png"), 127)
+                ,new Tuple<string, string, int>("4 Pixel Square Grid 420p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x2x1-480p_50.png"), 255)
+                ,new Tuple<string, string, int>("4 Pixel Square Grid 420p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x2x1-480p_50.png"), 127)
+                ,new Tuple<string, string, int>("4 Pixel Square Grid 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x2x1-240p_50.png"), 255)
+                ,new Tuple<string, string, int>("4 Pixel Square Grid 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x2x1-240p_50.png"), 127)
+            };
             this.KeyUp += (ob, ea) =>
             {
                 Keyup(ob, ea);
@@ -881,6 +917,7 @@ namespace BorgWin10WPF
 
                             VideoInfo.Visibility = Visibility.Collapsed;
                             TricorderAnimation.CloseTricorder();
+                            VideoPixelGrid.Visibility = Visibility.Visible;
                         }
                         break;
                 }
@@ -1194,9 +1231,36 @@ namespace BorgWin10WPF
                     case Key.H:
                         tbHelpText.Visibility = Visibility.Collapsed;
                         break;
+                    case Key.G:
+                        NextGrid();
+                        break;
                 }
             }
         }
+
+        private void NextGrid()
+        {
+            ++_gridCursor;
+            if (_gridCursor >= OverlayGrids.Count)
+                _gridCursor = 0;
+
+            var newgrid = OverlayGrids[_gridCursor];
+            //_mainScenePlayer.ApplyGrid(newgrid.Item2, newgrid.Item3);
+            if (!string.IsNullOrEmpty(newgrid.Item2))
+            {
+                if (System.IO.File.Exists(newgrid.Item2))
+                {
+                    VideoPixelGrid.Source = new BitmapImage(new Uri(newgrid.Item2, UriKind.Absolute));
+                    VideoPixelGrid.Visibility = Visibility.Visible;
+                }
+            }
+            else
+            {
+                VideoPixelGrid.Visibility = Visibility.Collapsed;
+            }
+
+        }
+
         private void SwitchGameModeActiveInfo(Key k = Key.None)
         {
             if (!_actionTime || (k == Key.MediaPlayPause && (txtMS.Visibility == Visibility.Visible && txtOffsetMs.Visibility == Visibility.Visible))) // No pausing during active time.  It is too difficult to separate single and double clicks during some scenes that you need to rapid click.
@@ -1239,6 +1303,8 @@ namespace BorgWin10WPF
 
                                 VideoInfo.Visibility = Visibility.Collapsed;
                                 TricorderAnimation.CloseTricorder();
+                                VideoPixelGrid.Visibility = Visibility.Visible;
+
                             }
                             VideoView.MediaPlayer.Play();
                             
@@ -1391,23 +1457,35 @@ namespace BorgWin10WPF
             InfoSpring.Visibility = Visibility.Collapsed;
             VideoInfo.Visibility = Visibility.Collapsed;
             WindowResized(null);
+            if (_mainScenePlayer.IsDefaultVideo)
+            {
+                NextGrid();
+            }
+            else
+            {
+                _gridCursor = 0;
+            }
+            //var gridoverlay = OverlayGrids[_gridCursor];
+            //_mainScenePlayer.ApplyGrid(gridoverlay.Item2, gridoverlay.Item3);
             ClickSurface.Focus();
         }
 
 
         private void InfoVideoTriggerShowFrame(long start, long end)
         {
-            VideoInfo.MediaPlayer.Scale = 2;
+            VideoInfo.MediaPlayer.Scale = 0;
+            VideoInfo.MediaPlayer.AspectRatio = "4:3";
             InfoSpring.Visibility = Visibility.Visible;
             if (!TricorderOpen)
             {
                 TricorderOpen = true;
                 TricorderAnimation.OpenTricorder(start, end);
-                
+                VideoPixelGrid.Visibility = Visibility.Collapsed;
                 //VideoInfo.CaptureMouse();
             }
             else
             {
+                VideoPixelGrid.Visibility = Visibility.Collapsed;
                 InfoVideoPlayTimeSpan(start, end);
             }
             
