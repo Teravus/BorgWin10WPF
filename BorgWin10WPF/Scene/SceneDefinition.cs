@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BorgWin10WPF.Hotspot;
 
-namespace BorgWin10WPF
+namespace BorgWin10WPF.Scene
 {
 
     public enum SceneType

@@ -12,7 +12,7 @@ using Microsoft.Win32;
 using XamlAnimatedGif;
 using System.Diagnostics;
 
-namespace BorgWin10WPF
+namespace BorgWin10WPF.Animators
 {
 
     public class TricorderCursorSpinAnimationController : DependencyObject

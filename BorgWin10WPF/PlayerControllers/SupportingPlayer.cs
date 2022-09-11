@@ -13,8 +13,10 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using BorgWin10WPF.Hotspot;
+using BorgWin10WPF.Scene;
 
-namespace BorgWin10WPF
+namespace BorgWin10WPF.PlayerControllers
 {
     public delegate void EndScene(object o, string s, string t);
 

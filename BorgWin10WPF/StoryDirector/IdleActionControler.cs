@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BorgWin10WPF.Puzzles;
+using BorgWin10WPF.Scene;
 
-namespace BorgWin10WPF
+namespace BorgWin10WPF.StoryDirector
 {
     public class IdleActionControler
     {

@@ -19,6 +19,11 @@ using LibVLCSharp.Shared;
 using System.Windows.Threading;
 using XamlAnimatedGif;
 using System.Runtime.InteropServices;
+using BorgWin10WPF.Animators;
+using BorgWin10WPF.Hotspot;
+using BorgWin10WPF.PlayerControllers;
+using BorgWin10WPF.Scene;
+using BorgWin10WPF.Save;
 
 namespace BorgWin10WPF
 {

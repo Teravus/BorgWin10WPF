@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BorgWin10WPF
+namespace BorgWin10WPF.Scene
 {
     public static class SceneLoader
     {

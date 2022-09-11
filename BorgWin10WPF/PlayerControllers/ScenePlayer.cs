@@ -13,7 +13,13 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-namespace BorgWin10WPF
+using BorgWin10WPF.Hotspot;
+using BorgWin10WPF.Puzzles;
+using BorgWin10WPF.Save;
+using BorgWin10WPF.Scene;
+using BorgWin10WPF.StoryDirector;
+
+namespace BorgWin10WPF.PlayerControllers
 {
     public class ScenePlayer
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BorgWin10WPF
+namespace BorgWin10WPF.StoryDirector
 {
     public static class ButtonClickPreProcessor
     {

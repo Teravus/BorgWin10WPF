@@ -95,7 +95,7 @@
     <StartupObject>BorgWin10WPF.App</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Borg.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\Borg.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="LibVLCSharp, Version=3.6.6.0, Culture=neutral, processorArchitecture=MSIL">
@@ -148,29 +148,29 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="AspectRatioMaxResult.cs" />
-    <Compile Include="TricorderCursorSpinAnimationController.cs" />
-    <Compile Include="BorgComputerPuzzle.cs" />
-    <Compile Include="ButtonClickPreProcessor.cs" />
-    <Compile Include="DisableBorgPhonePadPuzzle.cs" />
-    <Compile Include="HotspotDefinition.cs" />
-    <Compile Include="HotspotLoader.cs" />
-    <Compile Include="HyposprayFormulaPuzzle.cs" />
-    <Compile Include="IdleActionControler.cs" />
-    <Compile Include="SaveDefinition.cs" />
-    <Compile Include="SceneDefinition.cs" />
-    <Compile Include="SceneLoader.cs" />
-    <Compile Include="ScenePlayer.cs" />
-    <Compile Include="SpecialPuzzleBase.cs" />
-    <Compile Include="SpecialPuzzleResult.cs" />
-    <Compile Include="SupportingPlayer.cs" />
-    <Compile Include="PlayerBreadCrumbTrail.cs" />
-    <Compile Include="TricorderGifAnimationController.cs" />
-    <Compile Include="TurboLiftPuzzle.cs" />
+    <Compile Include="Animators\TricorderCursorSpinAnimationController.cs" />
+    <Compile Include="Puzzles\BorgComputerPuzzle.cs" />
+    <Compile Include="StoryDirector\ButtonClickPreProcessor.cs" />
+    <Compile Include="Puzzles\DisableBorgPhonePadPuzzle.cs" />
+    <Compile Include="Hotspot\HotspotDefinition.cs" />
+    <Compile Include="Hotspot\HotspotLoader.cs" />
+    <Compile Include="Puzzles\HyposprayFormulaPuzzle.cs" />
+    <Compile Include="StoryDirector\IdleActionControler.cs" />
+    <Compile Include="Save\SaveDefinition.cs" />
+    <Compile Include="Scene\SceneDefinition.cs" />
+    <Compile Include="Scene\SceneLoader.cs" />
+    <Compile Include="PlayerControllers\ScenePlayer.cs" />
+    <Compile Include="Puzzles\SpecialPuzzleBase.cs" />
+    <Compile Include="Puzzles\SpecialPuzzleResult.cs" />
+    <Compile Include="PlayerControllers\SupportingPlayer.cs" />
+    <Compile Include="PlayerControllers\PlayerBreadCrumbTrail.cs" />
+    <Compile Include="Animators\TricorderGifAnimationController.cs" />
+    <Compile Include="Puzzles\TurboLiftPuzzle.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="UtilitiesWindow.xaml.cs">
       <DependentUpon>UtilitiesWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="VideoAudioPlayer.cs" />
+    <Compile Include="PlayerControllers\VideoAudioPlayer.cs" />
     <Page Include="MainPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -307,7 +307,7 @@
     <Content Include="Assets\TricorderHolodeckCur.gif">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Resource Include="Borg.ico" />
+    <Resource Include="Assets\Borg.ico" />
     <Content Include="CDAssets\borgs.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

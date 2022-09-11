@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BorgWin10WPF
+namespace BorgWin10WPF.Hotspot
 {
     public static class HotspotLoader
     {

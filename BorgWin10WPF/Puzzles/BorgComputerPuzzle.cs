@@ -4,26 +4,28 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BorgWin10WPF
+namespace BorgWin10WPF.Puzzles
 {
-    public class DisableBorgPhonePadPuzzle : SpecialPuzzleBase
+  
+    public class BorgComputerPuzzle : SpecialPuzzleBase
     {
         public string ButtonsPressedSoFar { get; set; } = String.Empty;
-        public string ComputerCoreCode { get; set; } = "61330";
-       
+        public string BorgComputerButtonSequence { get; set; } = "133422";
         public int FailedCount { get; set; } = 0;
         public int ClicksSoFar { get; set; } = 0;
 
-        public override string PuzzleInputActiveScene { get; } = "V_32";
+        public override string PuzzleInputActiveScene { get; } = "V_20";
+        public override string PuzzleTriggerActiveScene { get; } = "V_20";
 
-        public override string PuzzleTriggerActiveScene { get; } = "V_32";
-
+        private string PuzzleTriggerActiveScene2 = "V_21";
         public override bool PuzzleTriggersOnScene(string SceneName)
         {
-            if (SceneName.ToLowerInvariant() == PuzzleTriggerActiveScene.ToLowerInvariant())
+            if (SceneName.ToLowerInvariant() == PuzzleTriggerActiveScene.ToLowerInvariant() || SceneName.ToLowerInvariant() == PuzzleTriggerActiveScene2.ToLowerInvariant())
                 return true;
             return false;
         }
+
+  
 
         public override SpecialPuzzleResult Click(string ButtonName, bool checkonly)
         {
@@ -34,43 +36,27 @@ namespace BorgWin10WPF
 
             switch (ButtonName)
             {
-                case "D32K0":
-                    buttonnumber = "0";
-                    break;
-                case "D32K1":
+
+                case "D20B1":
                     buttonnumber = "1";
                     break;
-                case "D32K2":
+                case "D20B2":
                     buttonnumber = "2";
                     break;
-                case "D32K3":
+                case "D20B3":
                     buttonnumber = "3";
                     break;
-                case "D32K4":
+                case "D20B4":
                     buttonnumber = "4";
                     break;
-                case "D32K5":
-                    buttonnumber = "5";
-                    break;
-                case "D32K6":
-                    buttonnumber = "6";
-                    break;
-                case "D32K7":
-                    buttonnumber = "7";
-                    break;
-                case "D32K8":
-                    buttonnumber = "8";
-                    break;
-                case "D32K9":
-                    buttonnumber = "9";
-                    break;
+
 
             }
             if (!checkonly)
             {
                 ++ClicksSoFar;
                 ButtonsPressedSoFar += buttonnumber;
-                if (!ComputerCoreCode.StartsWith(ButtonsPressedSoFar) || ButtonName == "Idle")
+                if (!BorgComputerButtonSequence.StartsWith(ButtonsPressedSoFar) || ButtonName == "Idle")
                 {
                     ++FailedCount;
                     //wrong button pressed.
@@ -79,12 +65,30 @@ namespace BorgWin10WPF
                         case 0:
                             break;
                         case 1:
-                            result.JumpToScene = "D32K9";
+                            result.JumpToScene = "D20B2";
                             result.SuccessYN = false;
                             result.OverrideNeeded = true;
                             Retry();
                             break;
-                      
+                        case 2:
+                            result.JumpToScene = "D19BC";
+                            result.SuccessYN = false;
+                            result.OverrideNeeded = true;
+                            Retry();
+                            break;
+                        case 3:
+                            result.JumpToScene = "D19BQ";
+                            result.SuccessYN = false;
+                            result.OverrideNeeded = true;
+                            Retry();
+                            break;
+                        case 4:
+                            result.JumpToScene = "D20B4";
+                            result.SuccessYN = false;
+                            result.OverrideNeeded = true;
+                            Reset();
+                            break;
+
                     }
 
                 }
@@ -92,10 +96,10 @@ namespace BorgWin10WPF
                 {
 
                     // We're good. 
-                    if (ButtonsPressedSoFar == ComputerCoreCode)
+                    if (ButtonsPressedSoFar == BorgComputerButtonSequence)
                     {
                         // Pressed the right button.
-                        result.JumpToScene = "V_31b";
+                        result.JumpToScene = "V_22";
                         result.SuccessYN = true;
                         result.OverrideNeeded = true;
                         Reset();
@@ -116,6 +120,6 @@ namespace BorgWin10WPF
             ButtonsPressedSoFar = "";
             ClicksSoFar = 0;
         }
-
     }
 }
+

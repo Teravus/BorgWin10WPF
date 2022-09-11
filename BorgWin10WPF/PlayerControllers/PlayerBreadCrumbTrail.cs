@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BorgWin10WPF
+using BorgWin10WPF.Scene;
+
+namespace BorgWin10WPF.PlayerControllers
 {
     public class PlayerBreadCrumbTrail
     {

@@ -1,4 +1,4 @@
-﻿namespace BorgWin10WPF
+﻿namespace BorgWin10WPF.Puzzles
 {
     public abstract class SpecialPuzzleBase
     {
