@@ -669,19 +669,19 @@ namespace BorgWin10WPF.PlayerControllers
                     endscenevent(this, "ExitButton", "info");
                 }
             }
-            if (X >= 24 && X <= 43 && Y >= 84 && Y <= 101)
+            if (X >= 24 && X <= 45 && Y >= 84 && Y <= 101)
             {
                 //Back Button 25,84,44,94
 
                 BackClicked();
             }
-            if (X >= 24 && X <= 43 && Y >= 102 && Y <= 116)
+            if (X >= 24 && X <= 45 && Y >= 102 && Y <= 116)
             {
                 //Forward Button 24,97,38,116, 23,157,45,176
                 ForwardClicked();
 
             }
-            if (X >= 24 && X <= 157 && Y >= 102 && Y <= 176)
+            if (X >= 24 && X <= 45 && Y >= 102 && Y <= 176)
             {
 
                NextSceneClicked();

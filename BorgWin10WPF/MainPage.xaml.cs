@@ -1280,14 +1280,7 @@ namespace BorgWin10WPF
                     case Key.G:
                         NextGrid();
                         break;
-                    case Key.Y:
-                        lock (TricorderSpinner)
-                            TricorderSpinner.Start();
-                        break;
-                    case Key.U:
-                        lock (TricorderSpinner)
-                            TricorderSpinner.Stop();
-                        break;
+                   
                 }
             }
         }
