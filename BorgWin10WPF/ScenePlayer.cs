@@ -478,10 +478,11 @@ namespace BorgWin10WPF
         /// </summary>
         /// <param name="X">Left position of Mouse in Original Video size coordinates.  You must Scale prior to calling this!</param>
         /// <param name="Y">Top position of Mouse in Original Video size coordinates.  You must Scale Prior to calling this!</param>
-        public void MouseClick(int X, int Y)
+        public bool MouseClick(int X, int Y, bool triggerOrTestOnlyYN)
         {
+            bool result = false;
             if (_currentScene == null)
-                return;
+                return result;
             List<HotspotDefinition> inFrame = new List<HotspotDefinition>();
 
             //item.Draw(ParentGrid, _displayElement.MediaPlayer.Time, _currentScene);
@@ -507,138 +508,18 @@ namespace BorgWin10WPF
                 for (int i = 0; i < inFrame.Count; i++)
                 {
                     var hittestresults = (inFrame[i].HitTest(X, Y, currtime, _currentScene));
-                    System.Diagnostics.Debug.WriteLine(string.Format("\t[{0}]: Hit test {1},{2}-{7}.  Box ({3},{4},{5},{6})", inFrame[i].Name + "/" + inFrame[i].ActionVideo, X, Y, inFrame[i].Area[0].TopLeft.X, inFrame[i].Area[0].TopLeft.Y, inFrame[i].Area[0].BottomRight.X, inFrame[i].Area[0].BottomRight.Y, hittestresults));
-                    if (hittestresults)
+                    if (triggerOrTestOnlyYN)
+                        System.Diagnostics.Debug.WriteLine(string.Format("\t[{0}]: Hit test {1},{2}-{7}.  Box ({3},{4},{5},{6})", inFrame[i].Name + "/" + inFrame[i].ActionVideo, X, Y, inFrame[i].Area[0].TopLeft.X, inFrame[i].Area[0].TopLeft.Y, inFrame[i].Area[0].BottomRight.X, inFrame[i].Area[0].BottomRight.Y, hittestresults));
+                    if (hittestresults && triggerOrTestOnlyYN)
                     {
-
-                        if (playing)
-                        {
-                            string FrameActionVideo = inFrame[i].ActionVideo;
-                            bool skipFrameActionVideodefault = false;
-
-                            if (inFrame[i].HType != HotspotType.Multi)
-                            {
-                                // no-name action video means that it is a success trigger.
-                                if (string.IsNullOrEmpty(FrameActionVideo))
-                                {
-                                    var scene = Utilities.FindNextMainScene(_allSceneOptions, _currentScene);
-                                    PlayScene(scene);
-                                    return;
-                                }
-                                string NextScene = null;
-                                if (ButtonClickPreProcessor.TryButtonPressTransformAction(FrameActionVideo, out NextScene))
-                                {
-                                    var scene = _allSceneOptions.Where(xy => xy.Name == NextScene).FirstOrDefault();
-
-                                    PlayScene(scene);
-                                    return;
-                                }
-
-                                SpecialPuzzleBase triggeredInputPuzzle = null;
-                                _displayElement.MediaPlayer.Pause();
-                                foreach (var pzzl in _puzzlesToCheck)
-                                {
-                                    if (_currentScene.Name.ToLowerInvariant() == pzzl.PuzzleInputActiveScene.ToLowerInvariant() && pzzl.PuzzleInputActiveScene.ToLowerInvariant() != pzzl.PuzzleTriggerActiveScene.ToLowerInvariant())
-                                    {
-                                        triggeredInputPuzzle = pzzl;
-                                        break;
-                                    }
+                        TriggerClickOnHotspot(inFrame[i], _allSceneOptions, _currentScene, playing);
 
 
-                                    
-                                }
-                                if (triggeredInputPuzzle != null)
-                                {
-                                    // send the input, but don't care about the output
-                                    var inputresult = triggeredInputPuzzle.Click(inFrame[i].ActionVideo, false);
-                                    if (!inputresult.OverrideNeeded)
-                                    {
-                                        RollBackFrameWithinChallenge(1000);
-                                        FrameActionVideo = null;
-                                        _displayElement.MediaPlayer.Play();
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        SceneDefinition jumpToSceneDef = null;
-                                        for (int iteration = 0; iteration < _allSceneOptions.Count; iteration++)
-                                        {
-                                            if (_allSceneOptions[iteration].Name.ToLowerInvariant() == inputresult.JumpToScene.ToLowerInvariant())
-                                            {
-                                                jumpToSceneDef = _allSceneOptions[iteration];
-                                                break;
-                                            }
-                                        }
-                                        if (jumpToSceneDef != null)
-                                        {
-                                            PlayScene(jumpToSceneDef);
-                                            _displayElement.MediaPlayer.Play();
-                                            return;
-                                        }
-                                    }
-                                }
-                                SpecialPuzzleBase triggeredpuzzle = null;
-
-                                foreach (var pzzl in _puzzlesToCheck)
-                                {
-                                    if (pzzl.PuzzleTriggersOnScene(_currentScene.Name.ToLowerInvariant()))
-                                    {
-                                        triggeredpuzzle = pzzl;
-                                        break;
-                                    }
-                                }
-                                _displayElement.MediaPlayer.Play();
-                                if (triggeredpuzzle != null)
-                                {
-                                    _displayElement.MediaPlayer.Pause();
-                                    var specialPuzzleResult = triggeredpuzzle.Click(inFrame[i].ActionVideo,false);
-                                    if (specialPuzzleResult.OverrideNeeded)
-                                    {
-
-                                        SceneDefinition jumpToSceneDef = null;
-                                        for (int iteration = 0; iteration < _allSceneOptions.Count; iteration++)
-                                        {
-                                            if (_allSceneOptions[iteration].Name.ToLowerInvariant() == specialPuzzleResult.JumpToScene.ToLowerInvariant())
-                                            {
-                                                jumpToSceneDef = _allSceneOptions[iteration];
-                                                break;
-                                            }
-                                        }
-                                        if (jumpToSceneDef != null)
-                                        {
-                                            PlayScene(jumpToSceneDef);
-                                            _displayElement.MediaPlayer.Play();
-                                            return;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        // They clicked the correct turbolift button.   Give them a little more time.
-                                        RollBackFrameWithinChallenge(1000);
-                                        _displayElement.MediaPlayer.Play();
-                                        return;
-                                    }
-                                }
-
-                            } 
-                            string _PlayTimeStopVideo = null;
-                            //if (FrameActionVideo == "V018A")
-                            //{
-                            //    _PlayTimeStopVideo = string.Format("BB{0}", _bombattemptcount);
-                            //}
-
-                            var alternatescene = _allSceneOptions.Where(sc => sc.Name == FrameActionVideo).FirstOrDefault();
-                            if (alternatescene != null && !skipFrameActionVideodefault)
-                            {
-                                _currentScene.LastHotspotTrigger = inFrame[i];
-                                PlayScene(alternatescene, 0, _PlayTimeStopVideo);
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            TriggerInfoScene(inFrame[i].ActionVideo);
-                        }
+                    }
+                    else if (!triggerOrTestOnlyYN)
+                    {
+                        if (hittestresults)
+                            return true;
                     }
                 }
             }
@@ -646,8 +527,141 @@ namespace BorgWin10WPF
             {
                 System.Diagnostics.Debug.Write($"Playhead: {_lastPlayheadMS} < ChallengeMS:{_challengeStartMS}");
             }
-
+            return result;
         }
+
+        private void TriggerClickOnHotspot(HotspotDefinition inFrame, List<SceneDefinition> _allSceneOptions, SceneDefinition _currentScene, bool playing)
+        {
+            if (playing)
+            {
+                string FrameActionVideo = inFrame.ActionVideo;
+                bool skipFrameActionVideodefault = false;
+
+                if (inFrame.HType != HotspotType.Multi)
+                {
+                    // no-name action video means that it is a success trigger.
+                    if (string.IsNullOrEmpty(FrameActionVideo))
+                    {
+                        var scene = Utilities.FindNextMainScene(_allSceneOptions, _currentScene);
+                        PlayScene(scene);
+                        return;
+                    }
+                    string NextScene = null;
+                    if (ButtonClickPreProcessor.TryButtonPressTransformAction(FrameActionVideo, out NextScene))
+                    {
+                        var scene = _allSceneOptions.Where(xy => xy.Name == NextScene).FirstOrDefault();
+
+                        PlayScene(scene);
+                        return;
+                    }
+
+                    SpecialPuzzleBase triggeredInputPuzzle = null;
+                    _displayElement.MediaPlayer.Pause();
+                    foreach (var pzzl in _puzzlesToCheck)
+                    {
+                        if (_currentScene.Name.ToLowerInvariant() == pzzl.PuzzleInputActiveScene.ToLowerInvariant() && pzzl.PuzzleInputActiveScene.ToLowerInvariant() != pzzl.PuzzleTriggerActiveScene.ToLowerInvariant())
+                        {
+                            triggeredInputPuzzle = pzzl;
+                            break;
+                        }
+
+
+
+                    }
+                    if (triggeredInputPuzzle != null)
+                    {
+                        // send the input, but don't care about the output
+                        var inputresult = triggeredInputPuzzle.Click(inFrame.ActionVideo, false);
+                        if (!inputresult.OverrideNeeded)
+                        {
+                            RollBackFrameWithinChallenge(1000);
+                            FrameActionVideo = null;
+                            _displayElement.MediaPlayer.Play();
+                            return;
+                        }
+                        else
+                        {
+                            SceneDefinition jumpToSceneDef = null;
+                            for (int iteration = 0; iteration < _allSceneOptions.Count; iteration++)
+                            {
+                                if (_allSceneOptions[iteration].Name.ToLowerInvariant() == inputresult.JumpToScene.ToLowerInvariant())
+                                {
+                                    jumpToSceneDef = _allSceneOptions[iteration];
+                                    break;
+                                }
+                            }
+                            if (jumpToSceneDef != null)
+                            {
+                                PlayScene(jumpToSceneDef);
+                                _displayElement.MediaPlayer.Play();
+                                return;
+                            }
+                        }
+                    }
+                    SpecialPuzzleBase triggeredpuzzle = null;
+
+                    foreach (var pzzl in _puzzlesToCheck)
+                    {
+                        if (pzzl.PuzzleTriggersOnScene(_currentScene.Name.ToLowerInvariant()))
+                        {
+                            triggeredpuzzle = pzzl;
+                            break;
+                        }
+                    }
+                    _displayElement.MediaPlayer.Play();
+                    if (triggeredpuzzle != null)
+                    {
+                        _displayElement.MediaPlayer.Pause();
+                        var specialPuzzleResult = triggeredpuzzle.Click(inFrame.ActionVideo, false);
+                        if (specialPuzzleResult.OverrideNeeded)
+                        {
+
+                            SceneDefinition jumpToSceneDef = null;
+                            for (int iteration = 0; iteration < _allSceneOptions.Count; iteration++)
+                            {
+                                if (_allSceneOptions[iteration].Name.ToLowerInvariant() == specialPuzzleResult.JumpToScene.ToLowerInvariant())
+                                {
+                                    jumpToSceneDef = _allSceneOptions[iteration];
+                                    break;
+                                }
+                            }
+                            if (jumpToSceneDef != null)
+                            {
+                                PlayScene(jumpToSceneDef);
+                                _displayElement.MediaPlayer.Play();
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            // They clicked the correct turbolift button.   Give them a little more time.
+                            RollBackFrameWithinChallenge(1000);
+                            _displayElement.MediaPlayer.Play();
+                            return;
+                        }
+                    }
+
+                }
+                string _PlayTimeStopVideo = null;
+                //if (FrameActionVideo == "V018A")
+                //{
+                //    _PlayTimeStopVideo = string.Format("BB{0}", _bombattemptcount);
+                //}
+
+                var alternatescene = _allSceneOptions.Where(sc => sc.Name == FrameActionVideo).FirstOrDefault();
+                if (alternatescene != null && !skipFrameActionVideodefault)
+                {
+                    _currentScene.LastHotspotTrigger = inFrame;
+                    PlayScene(alternatescene, 0, _PlayTimeStopVideo);
+                    return;
+                }
+            }
+            else
+            {
+                TriggerInfoScene(inFrame.ActionVideo);
+            }
+        }
+
         /// <summary>
         /// In Multi-click buttons..   they expect you to click multiple buttons in a very short timeframe.  
         /// This just gives you extra time when you click the button...  to click the next button.

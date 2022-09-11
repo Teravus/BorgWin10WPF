@@ -115,6 +115,11 @@ namespace BorgWin10WPF
 
         // This is the borg cube when the game says User do something.
         BitmapImage CubeCursor = new BitmapImage(new Uri(System.IO.Path.Combine("Assets", "BorgCubeCursor.gif"), UriKind.Relative));
+        private double _letterbox_width = 0;
+        private double _letterbox_height = 0;
+
+        private double _aspect_ratio_width = 0;
+        private double _aspect_ratio_height = 0;
 
         private int _gridCursor = 1;
 
@@ -130,6 +135,7 @@ namespace BorgWin10WPF
         bool _coreVLCInitialized = false;
 
         TricorderGifAnimationController TricorderAnimation;
+        TricorderCursorSpinAnimationController TricorderSpinner;
 
         public MainPage()
         {
@@ -182,15 +188,11 @@ namespace BorgWin10WPF
                 lock (_clickTimer)
                     _clickTimer.Stop();
 
-                var clickareawidth = ClickSurface.ActualWidth;
-                var clickareaheight = ClickSurface.ActualHeight;
+ 
+                // See Video window resize for the setting of _aspect_ratio width and height.
+                var relclickX = (int)((_lastClickPoint.X - _letterbox_width) / _aspect_ratio_width);
+                var relclickY = (int)((_lastClickPoint.Y - _letterbox_height) / _aspect_ratio_height);
 
-                // ILOVEPIE ( https://github.com/ILOVEPIE )  suggested this alternative to my broken home-grown code.
-                var letterbox_width = Math.Max(0, clickareawidth - (_OriginalAspectRatio * clickareaheight)) * 0.5f;
-                var letterbox_height = Math.Max(0, clickareaheight - (clickareawidth / _OriginalAspectRatio)) * 0.5f;
-
-                var relclickX = (int)((_lastClickPoint.X - letterbox_width) / ((clickareawidth - (letterbox_width * 2)) / _HotspotOriginalMainVideoWidth));
-                var relclickY = (int)((_lastClickPoint.Y - letterbox_height) / ((clickareaheight - (letterbox_height * 2)) / _HotspotOriginalMainVideoHeight));
                 relclickY += 19; // Borg wants things offset by more
                 long time = 0;
                 TimeSpan ts = TimeSpan.Zero;
@@ -206,7 +208,7 @@ namespace BorgWin10WPF
                 if (_MainVideoLoaded && _mainScenePlayer != null && !string.IsNullOrEmpty(_mainScenePlayer.ScenePlaying))
                 {
                     if (!TricorderOpen)
-                        _mainScenePlayer.MouseClick(relclickX, relclickY);
+                        _mainScenePlayer.MouseClick(relclickX, relclickY, true);
                     else
                     {
                         //Original Video: 256x200
@@ -956,8 +958,38 @@ namespace BorgWin10WPF
             if (!_mcurVisible)
                 return;
             CurEmulator.Margin = new Thickness(point.X, point.Y + 1, 0, 0);
-        }
 
+            // When you click, it shows a debug message on the output window.  Including the current time in milliseconds since video start.
+            if (_MainVideoLoaded)
+            {
+
+                //System.Diagnostics.Debug.WriteLine("{0},{1}({2},{3})[{4}] - t{5} - f{6}", _lastClickPoint.X, _lastClickPoint.Y, relclickX, relclickY, ts.ToString(@"hh\:mm\:ss"), (long)((float)time), Utilities.MsTo15fpsFrames(time));
+
+                // If we have loaded the main video and player..   Tell it a user clickdd!
+                if (_MainVideoLoaded && _mainScenePlayer != null && !string.IsNullOrEmpty(_mainScenePlayer.ScenePlaying))
+                {
+                    bool playing = VideoView.MediaPlayer.IsPlaying;
+                    // See Video window resize for the setting of _aspect_ratio width and height.
+
+                    if (!TricorderOpen && !playing)
+                    {
+                        var relclickX = (int)((point.X - _letterbox_width) / _aspect_ratio_width);
+                        var relclickY = (int)((point.Y - _letterbox_height) / _aspect_ratio_height);
+                        relclickY += 19; // Borg wants things offset by more
+                        bool overhotspot = _mainScenePlayer.MouseClick(relclickX, relclickY, false);
+                        if (overhotspot)
+                        {
+                            TricorderSpinner.Stop();
+                        }
+                        else
+                        {
+                            TricorderSpinner.Start();
+
+                        }
+                    }
+                }
+            }
+        }
 
         // We have resized the window.  Adjust all the maths!
         private void WindowResized(object o, SizeChangedEventArgs e)
@@ -1049,6 +1081,15 @@ namespace BorgWin10WPF
                 }
                 VideoView.Width = width;
                 VideoView.Height = height;
+
+                var clickareawidth = ClickSurface.ActualWidth;
+                var clickareaheight = ClickSurface.ActualHeight;
+
+                // ILOVEPIE ( https://github.com/ILOVEPIE )  suggested this alternative to my broken home-grown code.
+                _letterbox_width = Math.Max(0, clickareawidth - (_OriginalAspectRatio * clickareaheight)) * 0.5f;
+                _letterbox_height = Math.Max(0, clickareaheight - (clickareawidth / _OriginalAspectRatio)) * 0.5f;
+                _aspect_ratio_width = ((clickareawidth - (_letterbox_width * 2)) / _HotspotOriginalMainVideoWidth);
+                _aspect_ratio_height = ((clickareaheight - (_letterbox_height * 2)) / _HotspotOriginalMainVideoHeight);
             }
             ImgStartMain.Height = height;
             ImgStartMain.Width = width;
@@ -1233,6 +1274,14 @@ namespace BorgWin10WPF
                         break;
                     case Key.G:
                         NextGrid();
+                        break;
+                    case Key.Y:
+                        lock (TricorderSpinner)
+                            TricorderSpinner.Start();
+                        break;
+                    case Key.U:
+                        lock (TricorderSpinner)
+                            TricorderSpinner.Stop();
                         break;
                 }
             }
@@ -1454,6 +1503,8 @@ namespace BorgWin10WPF
             TricorderAnimation.CloseTricorder();
             TricorderAnimation.OnTricorderOpen += InfoVideoPlayTimeSpan;
             AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
+            TricorderSpinner = new TricorderCursorSpinAnimationController(CurEmulator);
+            TricorderSpinner.Start();
             InfoSpring.Visibility = Visibility.Collapsed;
             VideoInfo.Visibility = Visibility.Collapsed;
             WindowResized(null);

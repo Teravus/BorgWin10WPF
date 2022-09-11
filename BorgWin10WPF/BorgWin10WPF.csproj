@@ -139,7 +139,7 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="XamlAnimatedGif, Version=2.0.0.0, Culture=neutral, PublicKeyToken=20a987d8023d9690, processorArchitecture=MSIL">
-      <HintPath>..\packages\XamlAnimatedGif.2.0.1\lib\net45\XamlAnimatedGif.dll</HintPath>
+      <HintPath>..\packages\XamlAnimatedGif.2.0.2\lib\net45\XamlAnimatedGif.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -148,6 +148,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="AspectRatioMaxResult.cs" />
+    <Compile Include="TricorderCursorSpinAnimationController.cs" />
     <Compile Include="BorgComputerPuzzle.cs" />
     <Compile Include="ButtonClickPreProcessor.cs" />
     <Compile Include="DisableBorgPhonePadPuzzle.cs" />
