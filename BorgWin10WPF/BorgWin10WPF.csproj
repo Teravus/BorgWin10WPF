@@ -149,6 +149,7 @@
     </ApplicationDefinition>
     <Compile Include="AspectRatioMaxResult.cs" />
     <Compile Include="Animators\TricorderCursorSpinAnimationController.cs" />
+    <Compile Include="PlayerControllers\ABorgIsABorgJoke.cs" />
     <Compile Include="Puzzles\BorgComputerPuzzle.cs" />
     <Compile Include="StoryDirector\ButtonClickPreProcessor.cs" />
     <Compile Include="Puzzles\DisableBorgPhonePadPuzzle.cs" />

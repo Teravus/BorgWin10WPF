@@ -64,6 +64,8 @@ namespace BorgWin10WPF.PlayerControllers
         private string _idleActionVisualizationText = string.Empty;
         private Label DoNothingVisualization;
         private float hotspotscale = 4f;
+
+        private ABorgIsABorgJoke borgs = new ABorgIsABorgJoke();
         // This resizes the visualization for the hotspots.   It's funky.  Don't mess with it.
 
         private void UnsetEQ()
@@ -271,6 +273,17 @@ namespace BorgWin10WPF.PlayerControllers
             _videotype = type;
             _sceneEndMS = (int)def.EndMS;
             _currentScene = def;
+
+            if (borgs.ShouldActivate(def))
+            {
+                string redirectto = borgs.Activate(def);
+                SceneDefinition redirect = this._InfoSceneOptions.Where(xy => xy.Name == redirectto).FirstOrDefault();
+                if (redirect != null)
+                {
+                    PlayScene(redirect, "info", 0, false, false);
+                    return;
+                }
+            }
 
             if (specifictimecode > 0 && _displayElement.MediaPlayer.Media.Duration > specifictimecode)
                 _displayElement.MediaPlayer.Time = specifictimecode;
