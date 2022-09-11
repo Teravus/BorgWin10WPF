@@ -14,6 +14,8 @@ namespace BorgWin10WPF.Puzzles
         public int FailedCount { get; set; } = 0;
         public int ClicksSoFar { get; set; } = 0;
 
+        public override string Name => "BorgComputerPuzzle";
+
         public override string PuzzleInputActiveScene { get; } = "V_20";
         public override string PuzzleTriggerActiveScene { get; } = "V_20";
 
@@ -119,6 +121,26 @@ namespace BorgWin10WPF.Puzzles
         {
             ButtonsPressedSoFar = "";
             ClicksSoFar = 0;
+        }
+
+        public override SpecialPuzzleSaveState GetSaveState()
+        {
+            SpecialPuzzleSaveState result = new SpecialPuzzleSaveState();
+            result.puzzlename = Name;
+            result.str0 = ButtonsPressedSoFar;
+            result.int0 = FailedCount;
+            result.int1 = ClicksSoFar;
+            return result;
+        }
+
+        public override void LoadSaveState(SpecialPuzzleSaveState state)
+        {
+            if (state.puzzlename == Name)
+            {
+                ButtonsPressedSoFar = state.str0;
+                FailedCount = state.int0;
+                ClicksSoFar = state.int1;
+            }
         }
     }
 }

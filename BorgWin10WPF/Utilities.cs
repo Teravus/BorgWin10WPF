@@ -65,6 +65,33 @@ namespace BorgWin10WPF
 
             return nextScene;
         }
+        public static SceneDefinition FindBadSceneMainSceneByRetry(List<SceneDefinition> options, int retryframes, int cd)
+        {
+            // Find our current position in the options array.
+            List<SceneDefinition> candidates = new List<SceneDefinition>();
+            SceneDefinition result = null;
+
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i].SceneType != SceneType.Main)
+                    continue;
+
+                if (options[i].FrameStart <= retryframes && MsTo15fpsFrames(options[i].SuccessMS) < retryframes && options[i].CD == cd)
+                    candidates.Add(options[i]);
+            }
+            if (candidates.Count == 1)
+            {
+                result = candidates[0];
+            }
+            else
+            {
+                // Pick the latest one.
+                var latestcandidate = candidates.OrderByDescending(xy => xy.StartMS).FirstOrDefault();
+                result = latestcandidate;
+            }
+            return result;
+
+        }
         public static AspectRatioMaxResult GetMax(double width, double height, double AspectDecimal)
         {
             var heightbywidth = width / AspectDecimal;

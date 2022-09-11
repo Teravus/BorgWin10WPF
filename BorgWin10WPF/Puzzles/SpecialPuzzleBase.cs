@@ -10,5 +10,11 @@
         public abstract SpecialPuzzleResult Click(string ButtonName, bool CheckOnly);
         public abstract void Reset();
         public abstract void Retry();
+        public abstract SpecialPuzzleSaveState GetSaveState();
+
+        public abstract void LoadSaveState(SpecialPuzzleSaveState state);
+
+        public abstract string Name { get; }
+
     }
 }

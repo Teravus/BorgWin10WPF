@@ -8,7 +8,7 @@
       xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="Star Trek : Borg Win 10 Remake" Height="939" Width="1236" MinHeight="939" MinWidth="1236" WindowStyle="None" ShowInTaskbar="True">
+      Title="Star Trek: Borg Win 10 Remake. COLLECTIVE DEMANDS YOUR ATTENTION" Height="939" Width="1236" MinHeight="939" MinWidth="1236" WindowStyle="None" ShowInTaskbar="True">
 
     <Grid Width="1280" Height="800" HorizontalAlignment="Left" VerticalAlignment="Top" x:Name="VideoViewGrid" Background="Black">
         <Grid.RowDefinitions>
@@ -18,7 +18,7 @@
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
          <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoAudio" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" RenderTransformOrigin="0,0"/>
-        <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoInfo" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="534.25" Height="426.29069999999996" RenderTransformOrigin="0,0"  Background="Black" Margin="0,0,0,138">
+        <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoInfo" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="534.25" Height="426.29069999999996" RenderTransformOrigin="0,0"  Background="Black" Margin="0,0,0,138" Visibility="Hidden">
             <Grid x:Name="VVGridInfo">
                 <Button x:Name="InfoClickSurface" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" Opacity="0.01" />
             </Grid>
@@ -31,13 +31,13 @@
                 <Image x:Name="InfoSpring" Source="/Assets/QTricorderT20frame.gif" Margin="250,0,0,0" Width="1057.25" Height="939.3004" HorizontalAlignment="Center" VerticalAlignment="Bottom" Stretch="Fill" gif:AnimationBehavior.SourceUri="{Binding SelectedImage}" gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}" />
 
                 <Button x:Name="ClickSurface" HorizontalAlignment="Left" VerticalAlignment="Top" Width="1280" Height="800" Opacity="0.01" />
-                <TextBlock Name="tbDebugTextBlock" Visibility="Collapsed" Grid.Row="0" Margin="537,554,0,0" Foreground="Red" Background="White" Opacity="0.80" Height="200" Width="500" IsHitTestVisible="False">Debug Mode. <LineBreak />Hotspot Visualizations Enabled. <LineBreak />Press C to get to the next interaction. <LineBreak />Press M to move forward 10 seconds.<LineBreak />Press N to move backward 10 seconds.<LineBreak /> <LineBreak /> Debug Mode breaks some states in the game when you use it<LineBreak /> especially during interactions and bad-alternate endings.<LineBreak />Use it sparingly through an actual playthrough.</TextBlock>
-                <TextBlock Name="tbHelpText" Visibility="Collapsed" Grid.Row="0" Margin="537,454,0,0" Foreground="Red" Background="White" Opacity="0.80" Height="280" Width="500" IsHitTestVisible="False">Welcome to the Klingon Immersion Studies Holodeck program. <LineBreak />There are times when you must make a decision. <LineBreak />The D&#180;k tahg cursor will appear at those moments. <LineBreak />If the D&#180;k tahg is not visible, <LineBreak />You can pause and resume the simulation by double clicking. <LineBreak />While the program is paused, you can click some items to learn about them.<LineBreak /> <LineBreak /> ==== This game does not shy away from starting you over. Save reasonably often. ====<LineBreak /> ==== If you quit, it will not save before quitting, so Make sure you save beforehand! .====<LineBreak /> <LineBreak />  Controls:<LineBreak /> * Double Click to pause the simulation and switch to Info mode<LineBreak /> * Press + to increase volume.<LineBreak /> * Press - to decrease volume.<LineBreak /> * Press S to save.<LineBreak /> * Press Q to quit<LineBreak /> * Press &#180; for Debug Mode.</TextBlock>
+                <TextBlock Name="tbDebugTextBlock" Visibility="Collapsed" Grid.Row="0" Margin="537,554,0,0" Foreground="Green" Background="White" Opacity="0.80" Height="200" Width="500" IsHitTestVisible="False">Debug Mode.<LineBreak />Hotspot Visualizations Enabled. <LineBreak />Press C to get to the next interaction. <LineBreak />Press M to move forward 10 seconds.<LineBreak />Press N to move backward 10 seconds.<LineBreak />Top selector changes chapter. Bottom selector opens information point chapters.<LineBreak /> <LineBreak /> Debug Mode breaks some states in the game when you use it<LineBreak /> especially during interactions and bad-alternate endings.<LineBreak />Use it sparingly through an actual playthrough.</TextBlock>
+                <TextBlock Name="tbHelpText" Visibility="Collapsed" Grid.Row="0" Margin="537,454,0,0" Foreground="Green" Background="White" Opacity="0.80" Height="280" Width="500" IsHitTestVisible="False">RESISTANCE IS FUTILE. YOU WILL BE ASSIMILATED<LineBreak />There are times when you must make a decision. <LineBreak />The BORG CUBE cursor will appear at those moments. <LineBreak />If the BORG CUBE is not visible, <LineBreak />You can pause and resume by double clicking. <LineBreak />While the program is paused, you can click some items to learn about them.<LineBreak /> ==== This game does not shy away from starting you over. Save reasonably often. ====<LineBreak /> ==== If you quit, it will not save before quitting, so Make sure you save beforehand! .====<LineBreak /> <LineBreak />  Controls:<LineBreak /> * Double Click to pause and switch to Tricorder Mode.<LineBreak /> * When the Tricorder stops spinning, Click to scan.<LineBreak /> * Press + to increase volume. Press - to decrease volume.<LineBreak /> * Press S to save.<LineBreak /> * Press Q to quit<LineBreak /> * Press G to switch the video screen.<LineBreak /> * Press &#180; for Debug Mode.</TextBlock>
                 <TextBox Name="txtMS" HorizontalAlignment="Left" Margin="537,554,0,0" Text="" TextWrapping="Wrap" VerticalAlignment="Top" Grid.Row="0" Width="50"  Visibility="Collapsed"/>
                 <TextBox Name="txtOffsetMs" HorizontalAlignment="Left" Margin="610,554,0,0" Text="" TextWrapping="Wrap" VerticalAlignment="Top" Grid.Row="0" Visibility="Collapsed"/>
                 <ComboBox x:Name="lstScene" Grid.Row="0" Width="300" Height="20" Margin="810,52,0,0" Visibility="Collapsed" />
                 <ComboBox x:Name="lstComputer" Grid.Row="0" Width="300" Height="20" Margin="810,152,0,0" Visibility="Collapsed" />
-                <Canvas VerticalAlignment="Center" HorizontalAlignment="Center" x:Name="SaveDialog" Visibility="Collapsed" Width="606" Height="206" Background="DarkRed" >
+                <Canvas VerticalAlignment="Center" HorizontalAlignment="Center" x:Name="SaveDialog" Visibility="Collapsed" Width="606" Height="206" Background="Green" >
                     <Grid Background="Black" Height="200" Width="600" HorizontalAlignment="Center" Margin="3,3,0,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="1*" />
@@ -49,10 +49,10 @@
                             <ColumnDefinition Width="1*" />
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="txtSaveName" VerticalAlignment="Center" HorizontalAlignment="Center" Width="400" Grid.Row="2" Grid.Column="0" />
-                        <TextBlock x:Name="txtSaveText"  Text="Would you you like to save? Type a name below and click Save!" Grid.Column="0" Grid.Row="0" Foreground="Orange" FontWeight="Bold" FontSize="16" Width="500" TextWrapping="Wrap" />
-                        <TextBlock x:Name="txtSaveErrorText" HorizontalAlignment="Center" Text="" Grid.Column="0" Grid.Row="1" Foreground="Red" FontWeight="Bold" FontSize="16" Width="500" TextWrapping="Wrap" />
+                        <TextBlock x:Name="txtSaveText"  Text="RECORD BACKUP DESIGNATION?" Grid.Column="0" Grid.Row="0" Foreground="LightGray" FontWeight="Bold" FontSize="16" Width="500" TextWrapping="Wrap" />
+                        <TextBlock x:Name="txtSaveErrorText" HorizontalAlignment="Center" Text="" Grid.Column="0" Grid.Row="1" Foreground="LightGreen" FontWeight="Bold" FontSize="16" Width="500" TextWrapping="Wrap" />
 
-                        <Button Content="Save" x:Name="btnSave" Grid.Row="3" Grid.Column="0" Margin="50,0,0,0" Background="DarkRed" Foreground="Orange" Width="80" Height="25" HorizontalAlignment="Left">
+                        <Button Content="1" x:Name="btnSave" Grid.Row="3" Grid.Column="0" Margin="50,0,0,0" Background="LightGray" Foreground="Green" Width="80" Height="25" HorizontalAlignment="Left">
                             <!--<Button.Resources>
                         <ResourceDictionary>
                             <ResourceDictionary.ThemeDictionaries>
@@ -69,7 +69,7 @@
                         </ResourceDictionary>
                     </Button.Resources>-->
                         </Button>
-                        <Button Content="Cancel" x:Name="btnSaveCancel" Grid.Row="3" Grid.Column="0" Margin="0,0,50,0" Background="DarkRed" Foreground="Orange" HorizontalAlignment="Right" Width="80" Height="25">
+                        <Button Content="0" x:Name="btnSaveCancel" Grid.Row="3" Grid.Column="0" Margin="0,0,50,0" Background="LightGray" Foreground="Green" HorizontalAlignment="Right" Width="80" Height="25">
                             <!--<Button.Resources>
                         <ResourceDictionary>
                             <ResourceDictionary.ThemeDictionaries>
@@ -88,7 +88,7 @@
 
                     </Grid>
                 </Canvas>
-                <Canvas VerticalAlignment="Center" HorizontalAlignment="Center" x:Name="GenericErrorDialog" Visibility="Collapsed" Width="606" Height="406" Background="DarkRed" >
+                <Canvas VerticalAlignment="Center" HorizontalAlignment="Center" x:Name="GenericErrorDialog" Visibility="Collapsed" Width="606" Height="406" Background="Green" >
                     <Grid Background="Black" Height="400" Width="600" HorizontalAlignment="Center" Margin="3,3,0,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="1*" />
@@ -100,11 +100,11 @@
                             <ColumnDefinition Width="1*" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock x:Name="txtGenericTextMessage"  Text="An error occurred while playing the game." Grid.Column="0" Grid.Row="0" Foreground="Orange" FontWeight="Bold" FontSize="16" Width="500" TextWrapping="Wrap" />
+                        <TextBlock x:Name="txtGenericTextMessage"  Text="An error occurred while playing the game." Grid.Column="0" Grid.Row="0" Foreground="LightGray" FontWeight="Bold" FontSize="16" Width="500" TextWrapping="Wrap" />
                         <TextBlock x:Name="txtGenericErrorText" HorizontalAlignment="Center" Text="The game video wasn't found.  Please check the github readme for how to prepare the original game media." Grid.Column="0" Grid.Row="1" Foreground="Red" FontWeight="Bold" FontSize="16" Width="500" TextWrapping="Wrap" Margin="50,0" />
 
 
-                        <Button Content="OK" x:Name="btnGenericcErrorOKCancel" Grid.Row="3" Grid.Column="0" Margin="0,0,0,0" Background="DarkRed" Foreground="Orange" HorizontalAlignment="Center" Width="80" Height="25">
+                        <Button Content="1" x:Name="btnGenericcErrorOKCancel" Grid.Row="3" Grid.Column="0" Margin="0,0,0,0" Background="LightGray" Foreground="Green" HorizontalAlignment="Center" Width="80" Height="25">
                             <!--<Button.Resources>
                         <ResourceDictionary>
                             <ResourceDictionary.ThemeDictionaries>
@@ -141,7 +141,7 @@
                 <ColumnDefinition Width="1*" />
                 <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
-            <Button x:Name="btnNewGame" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Top" Content="New Game" Background="DarkRed" Foreground="Orange" Width="80" Height="30">
+            <Button x:Name="btnNewGame" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Top" Content="New Game" Background="LightGray" Foreground="Green" Width="80" Height="30">
                 <!--<Button.Resources>
                     <ResourceDictionary>
                         <ResourceDictionary.ThemeDictionaries>
@@ -159,7 +159,7 @@
             </Button>
             <TextBlock Text="Executable Remaster: RebootTech/Teravus/IdealistDoit Built using the fantastic video player: VLC Viewer&#10;https://www.videolan.org/.&#10;Animated Gif player by Thomas Levesque &#10;https://github.com/XamlAnimatedGif/XamlAnimatedGif" Margin="83,96,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Width="344" Height="68" Foreground="White" Grid.Column="0" FontWeight="Bold" FontFamily="Arial Black" TextWrapping="Wrap" FontSize="11" />
             <TextBlock Text="The purpose of this executable is to allow the purchased game to be played on newer computers. This executable contains no game assets and relies on you providing the actual game assets from the original CDs.&#10;It does not work without them. " Margin="32,617,27,0" HorizontalAlignment="Center" VerticalAlignment="Top" Width="368" Height="73" Foreground="White" Grid.Column="1" FontWeight="Bold" FontFamily="Arial Black" TextWrapping="Wrap" FontSize="11" />
-            <Button x:Name="btnLoadGame" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Top" Content="Load Game" Background="DarkRed" Foreground="Orange" Width="80" Height="30">
+            <Button x:Name="btnLoadGame" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Top" Content="Load Game" Background="LightGray" Foreground="Green" Width="80" Height="30">
                 <!--<Button.Resources>
                     <ResourceDictionary>
                         <ResourceDictionary.ThemeDictionaries>
@@ -175,7 +175,7 @@
                     </ResourceDictionary>
                 </Button.Resources>-->
             </Button>
-            <Button x:Name="btnQuitGame" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top" Content="Quit Game" Background="DarkRed" Foreground="Orange" Height="35" Width="80">
+            <Button x:Name="btnQuitGame" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top" Content="Quit Game" Background="LightGray" Foreground="Green" Height="35" Width="80">
                 <!--<Button.Resources>
                     <ResourceDictionary>
                         <ResourceDictionary.ThemeDictionaries>
@@ -193,7 +193,7 @@
             </Button>
         </Grid>
 
-        <Canvas VerticalAlignment="Center" HorizontalAlignment="Center" Width="606" Height="206" x:Name="LoadDialog" Visibility="Collapsed" Background="DarkRed" >
+        <Canvas VerticalAlignment="Center" HorizontalAlignment="Center" Width="606" Height="206" x:Name="LoadDialog" Visibility="Collapsed" Background="Green" >
             <Grid Background="Black" Height="200" Width="600" HorizontalAlignment="Center" Margin="3,3,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="2*" />
@@ -203,9 +203,9 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="txtLoadText" Text="Would you continue your quest with one of the following or start your journey anew down the River of Blood?" Grid.Column="0" Grid.Row="0" Foreground="Orange" FontWeight="Bold" FontSize="16" Width="500" TextWrapping="Wrap" />
+                <TextBlock x:Name="txtLoadText" Text="RESUME FROM BACKUP DESIGNATION?" Grid.Column="0" Grid.Row="0" Foreground="LightGray" FontWeight="Bold" FontSize="16" Width="500" TextWrapping="Wrap" />
                 <ComboBox x:Name="lstRiver" VerticalAlignment="Center" HorizontalAlignment="Center" Width="400" Grid.Row="1" Grid.Column="0" />
-                <Button Content="Load" x:Name="btnLoad" Grid.Row="2" Grid.Column="0" Margin="50,0,0,0" Background="DarkRed" Foreground="Orange" IsEnabled="False" Width="80" Height="25" HorizontalAlignment="Left" >
+                <Button Content="1" x:Name="btnLoad" Grid.Row="2" Grid.Column="0" Margin="50,0,0,0" Background="LightGray" Foreground="Green" IsEnabled="False" Width="80" Height="25" HorizontalAlignment="Left" >
                     <!--<Button.Resources>
                         <ResourceDictionary>
                             <ResourceDictionary.ThemeDictionaries>
@@ -222,7 +222,7 @@
                         </ResourceDictionary>
                     </Button.Resources>-->
                 </Button>
-                <Button Content="Cancel" x:Name="btnLoadCancel" Grid.Row="2" Grid.Column="0" Margin="0,0,50,0" Background="DarkRed" Foreground="Orange" HorizontalAlignment="Right" Width="80" Height="25">
+                <Button Content="0" x:Name="btnLoadCancel" Grid.Row="2" Grid.Column="0" Margin="0,0,50,0" Background="LightGray" Foreground="Green" HorizontalAlignment="Right" Width="80" Height="25">
                     <!--<Button.Resources>
                         <ResourceDictionary>
                             <ResourceDictionary.ThemeDictionaries>
@@ -241,7 +241,7 @@
             </Grid>
 
         </Canvas>
-        <Canvas VerticalAlignment="Center" HorizontalAlignment="Center" x:Name="VideoErrorDialog" Visibility="Collapsed" Width="606" Height="406" Background="DarkRed" >
+        <Canvas VerticalAlignment="Center" HorizontalAlignment="Center" x:Name="VideoErrorDialog" Visibility="Collapsed" Width="606" Height="406" Background="Green" >
             <Grid Background="Black" Height="400" Width="600" HorizontalAlignment="Center" Margin="3,3,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="1*" />
@@ -253,11 +253,11 @@
                     <ColumnDefinition Width="1*" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock x:Name="txtVideoGenericText"  Text="There was a problem loading the game." Grid.Column="0" Grid.Row="0" Foreground="Orange" FontWeight="Bold" FontSize="16" Width="500" TextWrapping="Wrap" />
-                <TextBlock x:Name="txtVideoErrorText" HorizontalAlignment="Center" Text="The game video wasn't found.  Please check the github readme for how to prepare the original game media." Grid.Column="0" Grid.Row="1" Foreground="Red" FontWeight="Bold" FontSize="16" Width="500" TextWrapping="Wrap" Margin="50,0" />
+                <TextBlock x:Name="txtVideoGenericText"  Text="There was a problem loading the game." Grid.Column="0" Grid.Row="0" Foreground="LightGray" FontWeight="Bold" FontSize="16" Width="500" TextWrapping="Wrap" />
+                <TextBlock x:Name="txtVideoErrorText" HorizontalAlignment="Center" Text="The game video wasn't found.  Please check the github readme for how to prepare the original game media." Grid.Column="0" Grid.Row="1" Foreground="LightGreen" FontWeight="Bold" FontSize="16" Width="500" TextWrapping="Wrap" Margin="50,0" />
 
 
-                <Button Content="OK" x:Name="btnVideoFileMissingOKCancel" Grid.Row="3" Grid.Column="0" Margin="0,0,0,0" Background="DarkRed" Foreground="Orange" HorizontalAlignment="Center" Width="80" Height="25">
+                <Button Content="1" x:Name="btnVideoFileMissingOKCancel" Grid.Row="3" Grid.Column="0" Margin="0,0,0,0" Background="LightGray" Foreground="Green" HorizontalAlignment="Center" Width="80" Height="25">
                     <!--<Button.Resources>
                         <ResourceDictionary>
                             <ResourceDictionary.ThemeDictionaries>

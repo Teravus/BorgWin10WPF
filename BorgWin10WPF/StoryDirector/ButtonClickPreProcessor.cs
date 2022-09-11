@@ -15,7 +15,17 @@ namespace BorgWin10WPF.StoryDirector
         private static bool _visitedBorgifiedScenev_12 { get; set; } = false;
 
         private static int Chapter_V_16_ComputerCoreClicks { get; set; } = 0;
-
+        public static Tuple<int,int,bool,int> GetState()
+        {
+            return new Tuple<int, int, bool, int>(Chapter_V_18_CircuitClicks, Chapter_V_17_ComputerCoreClicks, _visitedBorgifiedScenev_12, Chapter_V_16_ComputerCoreClicks);
+        }
+        public static void LoadState(Tuple<int, int, bool, int> state)
+        {
+            Chapter_V_18_CircuitClicks = state.Item1;
+            Chapter_V_17_ComputerCoreClicks = state.Item2;
+            _visitedBorgifiedScenev_12 = state.Item3;
+            Chapter_V_16_ComputerCoreClicks = state.Item4;
+        }
         public static bool TryButtonPressTransformAction(string OriginalButton, out string NextScene)
         {
             NextScene = OriginalButton;

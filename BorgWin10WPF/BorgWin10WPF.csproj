@@ -151,6 +151,8 @@
     <Compile Include="Animators\TricorderCursorSpinAnimationController.cs" />
     <Compile Include="PlayerControllers\ABorgIsABorgJoke.cs" />
     <Compile Include="Puzzles\BorgComputerPuzzle.cs" />
+    <Compile Include="Puzzles\SpecialPuzzleSaveState.cs" />
+    <Compile Include="Save\SaveLoader.cs" />
     <Compile Include="StoryDirector\ButtonClickPreProcessor.cs" />
     <Compile Include="Puzzles\DisableBorgPhonePadPuzzle.cs" />
     <Compile Include="Hotspot\HotspotDefinition.cs" />
@@ -309,9 +311,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Resource Include="Assets\Borg.ico" />
-    <Content Include="CDAssets\borgs.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Assets\holodeckscenes.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

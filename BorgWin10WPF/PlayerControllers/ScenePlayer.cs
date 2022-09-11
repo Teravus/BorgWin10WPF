@@ -251,24 +251,6 @@ namespace BorgWin10WPF.PlayerControllers
         }
 
         /// <summary>
-        /// Loads a save.
-        /// </summary>
-        /// <param name="def">SaveDefinition objects that are created by the Save loader from the user's Save file</param>
-        public void LoadSave(SaveDefinition def)
-        {
-            _turboLiftPuzzle = new TurboLiftPuzzle();
-            string scene = def.SaveScene;
-            int frame = def.SaveFrame;
-            var loadscene = _allSceneOptions.Where(xy => xy.Name == scene).FirstOrDefault();
-            if (loadscene != null)
-            {
-                _inactionacount = def.DoNothingCount;
-                var framems = Utilities.Frames15fpsToMS(frame - 2);
-                PlayScene(loadscene, framems);
-            }
-        }
-
-        /// <summary>
         /// When debugging, sometimes it is a time saver to jump to the next challenge.  This does that.
         /// </summary>
         public void JumpToChallenge()
@@ -820,9 +802,38 @@ namespace BorgWin10WPF.PlayerControllers
         {
 
             int SceneArrayPosition = -1;
+            int sceneframe = (int)Utilities.MsTo15fpsFrames(_displayElement.MediaPlayer.Time);
+            SceneDefinition saveScene = _currentScene;
+
+            // We're in a challenge frame.  Move the frame back 15 seconds to give them an opportunity to reorient themselves on load.
+            if (_challengeSectionNotificationComplete)
+            {
+                sceneframe = sceneframe - (int)Utilities.MsTo15fpsFrames(15000);
+            }
+
+            // You can't really save during a bad outcome scene because unless the scene is in the story controller,
+            // the game won't know what to do with you after the alternate scene you play is over.
+
+            // Try to get the last good scene.   The majority of the scene progression is good->bad->good so this should work in most cases.
+            // Also 0 for frame means whenever the scene says it should be.
+            if (saveScene.SceneType == SceneType.Bad)
+            {
+                saveScene = _lastScene;
+                sceneframe = _currentScene.OriginalRetryFrames;
+            }
+            // If we're still bad....
+            if (saveScene.SceneType == SceneType.Bad)
+            {
+
+                int retryframes = _currentScene.OriginalRetryFrames;
+                int CDnumber = _currentScene.CD;
+                saveScene = Utilities.FindBadSceneMainSceneByRetry(_allSceneOptions, retryframes, CDnumber);
+
+            }
+
             for (int scenei = 0; scenei < _allSceneOptions.Count; scenei++)
             {
-                if (_allSceneOptions[scenei].Name == _currentScene.Name)
+                if (_allSceneOptions[scenei].Name == saveScene.Name)
                 {
                     SceneArrayPosition = scenei;
                     break;
@@ -831,13 +842,86 @@ namespace BorgWin10WPF.PlayerControllers
             SaveDefinition result = new SaveDefinition()
             {
                 DoNothingCount = _inactionacount,
-                SaveFrame = (int)Utilities.MsTo15fpsFrames(_displayElement.MediaPlayer.Time),
+                SaveFrame = sceneframe,
                 SaveName = string.Empty,
                 SaveRowType = "g",
                 SaveScene = _currentScene.Name,
-                SaveSceneInt = SceneArrayPosition
+                SaveSceneInt = SceneArrayPosition,
+                Volume = _displayElement.MediaPlayer.Volume
             };
+            var buttonclickPreprocessorState = ButtonClickPreProcessor.GetState();
+            result.Chapter_V_18_CircuitClicks = buttonclickPreprocessorState.Item1;
+            result.Chapter_V_17_ComputerCoreClicks = buttonclickPreprocessorState.Item2;
+            result.VisitedBorgifiedScenev_12 = buttonclickPreprocessorState.Item3 ? 1 : 0;
+            result.Chapter_V_16_ComputerCoreClicks = buttonclickPreprocessorState.Item4;
+
+            foreach (var item in _puzzlesToCheck)
+            {
+                result.puzzlestate.Add(item.GetSaveState());
+            }
+
             return result;
+        }
+
+        /// <summary>
+        /// Loads a save.
+        /// </summary>
+        /// <param name="def">SaveDefinition objects that are created by the Save loader from the user's Save file</param>
+        public void LoadSave(SaveDefinition def)
+        {
+            //_turboLiftPuzzle = new TurboLiftPuzzle();
+            string scene = def.SaveScene;
+            int frame = def.SaveFrame;
+            SceneDefinition loadscene = null;
+            for (int i = 0; i < _allSceneOptions.Count; i++)
+            {
+                if (_allSceneOptions[i].Name == scene)
+                {
+                    loadscene = _allSceneOptions[i];
+                    break;
+                }
+                
+            }
+
+            if (frame >= loadscene.EndMS)
+            {
+                frame = frame - (int)Utilities.MsTo15fpsFrames(15000);
+            }
+            // You can't really load during a bad outcome scene because unless the scene is in the story controller,
+            // the game won't know what to do with you after the alternate scene you play is over.
+
+            // Try to get the last good scene.   The majority of the scene progression is good->bad->good so this should work in most cases.
+            // Also 0 for frame means whenever the scene says it should be.
+            if (loadscene.SceneType == SceneType.Bad)
+            {
+                int retryframes = loadscene.OriginalRetryFrames;
+                int CDnumber = loadscene.CD;
+                loadscene = Utilities.FindBadSceneMainSceneByRetry(_allSceneOptions, retryframes, CDnumber);
+                
+            }
+            
+
+
+            ButtonClickPreProcessor.LoadState(new Tuple<int, int, bool, int>(def.Chapter_V_18_CircuitClicks, def.Chapter_V_17_ComputerCoreClicks, def.VisitedBorgifiedScenev_12 == 1 ? true : false, def.Chapter_V_16_ComputerCoreClicks));
+            
+            // There's a name check that allows us not to care. Just offer to load the state to all puzzles.  The puzzles use name to determine if it is related to them
+            foreach (var puzzle in _puzzlesToCheck)
+            {
+                foreach (var state in def.puzzlestate)
+                {
+                    puzzle.LoadSaveState(state);
+                }
+            }
+            if (def.Volume > -1)
+            {
+                _displayElement.MediaPlayer.Volume = def.Volume;
+            }
+            if (loadscene != null)
+            {
+                _inactionacount = def.DoNothingCount;
+                var framems = Utilities.Frames15fpsToMS(frame - 2);
+                PlayScene(loadscene, framems);
+            }
         }
 
         /// <summary>

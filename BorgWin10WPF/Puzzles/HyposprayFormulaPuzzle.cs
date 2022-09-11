@@ -199,5 +199,26 @@ namespace BorgWin10WPF.Puzzles
             ClicksSoFar = 0;
         }
 
+        public override string Name => "HypoSprayPuzzle";
+
+        public override SpecialPuzzleSaveState GetSaveState()
+        {
+            SpecialPuzzleSaveState result = new SpecialPuzzleSaveState();
+            result.puzzlename = Name;
+            result.str0 = ButtonsPressedSoFar;
+            result.int0 = FailedCount;
+            result.int1 = ClicksSoFar;
+            return result;
+        }
+
+        public override void LoadSaveState(SpecialPuzzleSaveState state)
+        {
+            if (state.puzzlename == Name)
+            {
+                ButtonsPressedSoFar = state.str0;
+                FailedCount = state.int0;
+                ClicksSoFar = state.int1;
+            }
+        }
     }
 }

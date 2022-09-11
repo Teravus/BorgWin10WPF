@@ -130,8 +130,6 @@ namespace BorgWin10WPF
 
         private List<Tuple<string, string, int>> OverlayGrids;
 
-
-
         private bool TricorderOpen = false;
 
         private bool SwapDisplay = false;
@@ -176,6 +174,10 @@ namespace BorgWin10WPF
                 ,new Tuple<string, string, int>("4 Pixel Square Grid 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x2x1-240p_50.png"), 255)
                 ,new Tuple<string, string, int>("4 Pixel Square Grid 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x2x1-240p_50.png"), 127)
             };
+            if (!SaveLoader.SaveFileExistsYN("borgs.txt"))
+            {
+                btnLoadGame.Visibility = Visibility.Collapsed;
+            }
             this.KeyUp += (ob, ea) =>
             {
                 Keyup(ob, ea);
@@ -312,7 +314,7 @@ namespace BorgWin10WPF
                     _mediaPlayerMain = new LibVLCSharp.Shared.MediaPlayer(_libVLCMain);
                     VideoView.MediaPlayer = _mediaPlayerMain;
                     VideoView.MediaPlayer.Scale = 0;
-                    VideoView.MediaPlayer.AspectRatio = "4:3";
+ //                   VideoView.MediaPlayer.AspectRatio = "4:3";
                     SwapDisplay = !SwapDisplay;
                     // If you want console spam.  Uncomment this and the line in log_fired to lag the game..   and..  get the reason why libVLC is not happy.
                     // _libVLCMain.Log += Log_Fired;
@@ -589,7 +591,31 @@ namespace BorgWin10WPF
 
 
             };
+            btnLoadGame.Click += (s, e) =>
+            {
+                var saveloadTask = SaveLoader.LoadSavesFromAsset("borgs.txt");
+                
+                if (!saveloadTask.IsCompleted)
+                    saveloadTask.RunSynchronously();
+                
+                var saves = saveloadTask.Result;
+                lstRiver.Items.Clear();
+                foreach (var save in saves)
+                    lstRiver.Items.Add(new ComboBoxItem() { Content = save.SaveName });
 
+                LoadDialog.Visibility = Visibility.Visible;
+                lstRiver.Focus();
+            };
+            lstRiver.KeyUp += (s, e) =>
+            {
+                if (e.Key == Key.Enter)
+                {
+                    if (lstRiver.SelectedIndex != 0)
+                    {
+                        btnLoad.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                    }
+                }
+            };
             // You clicked OK on the video not found error message
             btnVideoFileMissingOKCancel.Click += (s, e) =>
             {
@@ -607,14 +633,14 @@ namespace BorgWin10WPF
                 {
                     var savedata = _mainScenePlayer.GetSaveInfo();
                     DateTime now = DateTime.Now;
-                    string SaveName = string.Format("AutoSave_{0}{1}{2}{3}{4}{5}", now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second);
+                    string SaveName = string.Format("AutoSave_{0}{1:00}{2:00}{3:00}{4:00}{5:00}", now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second);
                     SaveDefinition info = _mainScenePlayer.GetSaveInfo();
 
                     info.SaveName = SaveName;
 
-                    //List<SaveDefinition> saves = new List<SaveDefinition>();// await SaveLoader.LoadSavesFromAsset("RIVER.TXT");
-                    //saves.Add(info);
-                    //await SaveLoader.SaveSavesToAsset(saves, "RIVER.TXT");
+                    List<SaveDefinition> saves = await SaveLoader.LoadSavesFromAsset("borgs.txt");
+                    saves.Add(info);
+                    await SaveLoader.SaveSavesToAsset(saves, "borgs.txt");
 
                 }
                 catch
@@ -672,6 +698,57 @@ namespace BorgWin10WPF
             btnLoadCancel.Click += (s, e) =>
             {
                 LoadDialog.Visibility = Visibility.Collapsed;
+                ClickSurface.Focus();
+            };
+
+            btnLoad.Click += (s, e) =>
+            {
+                if (lstRiver.SelectedIndex >= 0)
+                {
+                    SaveDefinition savedef = null;
+                    var saveloadTask = SaveLoader.LoadSavesFromAsset("borgs.txt");
+
+                    if (!saveloadTask.IsCompleted)
+                        saveloadTask.RunSynchronously();
+
+                    var saves = saveloadTask.Result;
+
+                    foreach (var save in saves)
+                    {
+                        ComboBoxItem citem = lstRiver.SelectedValue as ComboBoxItem;
+                        if (save.SaveName == citem.Content.ToString())
+                        {
+                            savedef = save;
+                        }
+                    }
+                    if (savedef != null)
+                    {
+                        LoadDialog.Visibility = Visibility.Collapsed;
+                        string FileCheckResult = Utilities.CheckForOriginalMedia();
+                        if (!string.IsNullOrEmpty(FileCheckResult))
+                        {
+                            // Display message.
+                            txtVideoErrorText.Text = FileCheckResult;
+                            VideoErrorDialog.Visibility = Visibility.Visible;
+
+                            _mcurVisible = true;
+                            CurEmulator.Source = CubeCursor;
+                            AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
+                            CurEmulator.Visibility = Visibility.Visible;
+
+                            return;
+                        }
+                        VideoErrorDialog.Visibility = Visibility.Collapsed;
+                        PrepPlayer();
+                        _mainScenePlayer.TheSupportingPlayer = _supportingPlayer;
+                        WindowResized(this, null);
+                        _mainScenePlayer.LoadSave(savedef);
+                        _gridCursor = savedef.GridID - 1;
+                        ClickSurface.Focus();
+                        NextGrid();
+
+                    }
+                }
             };
 
             // You're quitting the game!   Fill out my survey.  Like..  Follow..  Subscribe!
@@ -711,10 +788,20 @@ namespace BorgWin10WPF
                 CurEmulator.Source = CubeCursor;
                 AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
                 CurEmulator.Visibility = Visibility.Collapsed;
+                ClickSurface.Focus();
             };
 
             // You clicked the save button!
-
+            txtSaveName.KeyUp += (s, e) =>
+            {
+                if (e.Key == Key.Enter)
+                {
+                    if (!string.IsNullOrEmpty(txtSaveName.Text))
+                    {
+                        btnSave.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                    }
+                }
+            };
             // Get the user game state from the player and save it to the save file!
             btnSave.Click += async (s, e) =>
             {
@@ -722,7 +809,7 @@ namespace BorgWin10WPF
 
                 if (string.IsNullOrEmpty(SaveName))
                 {
-                    txtSaveErrorText.Text = "Please type a Name in the box.";
+                    txtSaveErrorText.Text = "CANNOT COMPY. TYPE SAVE DESIGNATION.";
                     txtSaveErrorText.Visibility = Visibility.Visible;
                     return;
                 }
@@ -732,10 +819,11 @@ namespace BorgWin10WPF
                     SaveDefinition info = _mainScenePlayer.GetSaveInfo();
 
                     info.SaveName = SaveName;
+                    info.GridID = _gridCursor;
 
-                    //List<SaveDefinition> saves = await SaveLoader.LoadSavesFromAsset("RIVER.TXT");
-                    //saves.Add(info);
-                    //await SaveLoader.SaveSavesToAsset(saves, "RIVER.TXT");
+                    List<SaveDefinition> saves = await SaveLoader.LoadSavesFromAsset("borgs.txt");
+                    saves.Add(info);
+                    await SaveLoader.SaveSavesToAsset(saves, "borgs.txt");
 
                     if (!VideoView.MediaPlayer.IsPlaying)
                         VideoView.MediaPlayer.Play();
@@ -749,12 +837,13 @@ namespace BorgWin10WPF
                     CurEmulator.Visibility = Visibility.Collapsed;
                     txtSaveErrorText.Visibility = Visibility.Collapsed;
                     txtSaveErrorText.Text = "";
+                    ClickSurface.Focus();
                     return;
 
                 }
-                txtSaveErrorText.Text = "Please remove this dishonorable text you Ferengi Ha'DIbaH!";
+                txtSaveErrorText.Text = "CANNOT COMPLY WITH INCORRECT SAVE DESIGNATION";
                 txtSaveErrorText.Visibility = Visibility.Visible;
-
+                ClickSurface.Focus();
 
             };
             ClickSurface.Click += (o, cEventArgs) =>
@@ -1090,7 +1179,7 @@ namespace BorgWin10WPF
                 var clickareawidth = ClickSurface.ActualWidth;
                 var clickareaheight = ClickSurface.ActualHeight;
 
-                // ILOVEPIE ( https://github.com/ILOVEPIE )  suggested this alternative to my broken home-grown code.
+                // ILOVEPIE ( https://github.com/ILOVEPIE )  suggested this alternative to my broken home-grown aspect ratio calculation code.
                 _letterbox_width = Math.Max(0, clickareawidth - (_OriginalAspectRatio * clickareaheight)) * 0.5f;
                 _letterbox_height = Math.Max(0, clickareaheight - (clickareawidth / _OriginalAspectRatio)) * 0.5f;
                 _aspect_ratio_width = ((clickareawidth - (_letterbox_width * 2)) / _HotspotOriginalMainVideoWidth);
@@ -1182,7 +1271,7 @@ namespace BorgWin10WPF
                         else
                         {
                             VideoView.MediaPlayer.Scale = 0;
-                            VideoView.MediaPlayer.AspectRatio = "16:9";
+                            VideoView.MediaPlayer.AspectRatio = "";
                         }
                         break;
                     case Key.Enter:
@@ -1238,13 +1327,10 @@ namespace BorgWin10WPF
                                 }
                             }
                             lstScene.SelectionChanged += lstSceneChanged;
-                            //var pointerPosition = Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition;
 
-                            //var pos = this.PointFromScreen;// PointerPosition;
-                            //CurEmulator.Margin = new Thickness(pos.X - Window.Current.Bounds.X, pos.Y - Window.Current.Bounds.Y + 1, 0, 0);
                             ShowCursor();
                             _mainScenePlayer.VisualizeHotspots(VVGrid);// VideoViewGrid);
-                            //_supportingPlayer.HotspotScale = 4;
+                            
                             _supportingPlayer.VisualizeHotspots(VVGridInfo);// VideoViewGrid);
                             _mcurVisible = true;
                         }
@@ -1320,7 +1406,7 @@ namespace BorgWin10WPF
                         if (VideoView.MediaPlayer.IsPlaying)
                         {
                             VideoView.MediaPlayer.Pause();
-                            //TricorderAnimation.OpenTricorder();
+                            
                             CurEmulator.Visibility = Visibility.Visible;
                             
                             CurEmulator.Source = TricorderCursor;
@@ -1332,9 +1418,6 @@ namespace BorgWin10WPF
                             //_supportingPlayer.QueueScene(hum, "holodeck", 0, true);
                             _videoAudioPlayer.QueueScene(hum, "holodeck", 0, true);
 
-                            //var pointerPosition = Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition;
-                            //var pos = Window.Current.CoreWindow.PointerPosition;
-                            //CurEmulator.Margin = new Thickness(pos.X - Window.Current.Bounds.X, pos.Y - Window.Current.Bounds.Y + 1, 0, 0);
                             var point = Mouse.GetPosition(ClickSurface);
                             CurEmulator.Margin = new Thickness(point.X, point.Y + 1, 0, 0);
                             _mcurVisible = true;
@@ -1369,8 +1452,8 @@ namespace BorgWin10WPF
 
         private void Quit()
         {
-            Close();
-            return;
+            //Close();
+            //return;
             string FileCheckResult = Utilities.CheckForOriginalMedia();
             if (!string.IsNullOrEmpty(FileCheckResult))
             {
@@ -1395,15 +1478,56 @@ namespace BorgWin10WPF
             }
             else
             {
-                scene = _scenes[0];
-                if (scene != null)
+                if (_mainScenePlayer != null)
                 {
-                    _mainScenePlayer.PlayScene(scene);
+                    if (!string.IsNullOrEmpty(_mainScenePlayer.ScenePlaying))
+                    {
+                        //try
+                        //{
+                        var savedata = _mainScenePlayer.GetSaveInfo();
+                        DateTime now = DateTime.Now;
+                        string SaveName = string.Format("AutoSave_{0}{1:00}{2:00}{3:00}{4:00}{5:00}", now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second);
+                        SaveDefinition info = _mainScenePlayer.GetSaveInfo();
+
+                        info.SaveName = SaveName;
+
+                        var saveloadTask = SaveLoader.LoadSavesFromAsset("borgs.txt");
+
+                        if (!saveloadTask.IsCompleted)
+                            saveloadTask.RunSynchronously();
+
+                        var saves = saveloadTask.Result;
+
+                        saves.Add(info);
+                        SaveLoader.SaveSavesToAsset(saves, "borgs.txt");
+
+                        //}
+                        //catch
+                        //{
+                        //    // Whoops  can't do anything about it.
+                        //}
+                    }
+
+                    scene = _scenes[0];
+                    if (scene != null)
+                    {
+                        _mainScenePlayer.PlayScene(scene);
+                    }
+                    scene = _scenes.Where(xy => xy.Name == "LOGO1").FirstOrDefault();
+                    if (scene != null)
+                    {
+                        _mainScenePlayer.PlayScene(scene);
+                    }
+                    else // We couldn't find LOGO1
+                    {
+                        Close();
+                        return;
+                    }
                 }
-                scene = _scenes.Where(xy => xy.Name == "LOGO1").FirstOrDefault();
-                if (scene != null)
+                else // Main Scene Player not loaded
                 {
-                    _mainScenePlayer.PlayScene(scene);
+                    Close();
+                    return;
                 }
             }
         }
