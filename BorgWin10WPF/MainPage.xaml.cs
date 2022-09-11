@@ -149,20 +149,20 @@ namespace BorgWin10WPF
             var currentdir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             OverlayGrids = new List<Tuple<string, string, int>>() {
                 new Tuple<string, string, int>("No Grid", null, 0)
+                ,new Tuple<string, string, int>("Wide Pixel 420p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-480p_50.png"), 255)
+                ,new Tuple<string, string, int>("Irregular Tall Pixel 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x1x2-240p_50.png"), 127)
                 ,new Tuple<string, string, int>("Original Grid 240p 100%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x2x1-240p_100.png"), 255)
                 ,new Tuple<string, string, int>("Original Grid 420p 100%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x2x1-480p_100.png"), 255)
                 ,new Tuple<string, string, int>("Irregular Wide Pixel 420p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x2x1-480p_50.png"), 255)
                 ,new Tuple<string, string, int>("Irregular Wide Pixel 420p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x2x1-480p_50.png"), 127)
                 ,new Tuple<string, string, int>("Irregular Wide Pixel 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x2x1-240p_50.png"), 255)
                 ,new Tuple<string, string, int>("Irregular Wide Pixel 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x2x1-240p_50.png"), 127)
-                ,new Tuple<string, string, int>("Wide Pixel 420p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-480p_50.png"), 255)
                 ,new Tuple<string, string, int>("Wide Pixel 420p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-480p_50.png"), 127)
                 ,new Tuple<string, string, int>("Wide Pixel 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-240p_50.png"), 255)
                 ,new Tuple<string, string, int>("Wide Pixel 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-240p_50.png"), 127)
                 ,new Tuple<string, string, int>("Irregular Tall Pixel 420p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x1x2-480p_50.png"), 255)
                 ,new Tuple<string, string, int>("Irregular Tall Pixel 420p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x1x2-480p_50.png"), 127)
                 ,new Tuple<string, string, int>("Irregular Tall Pixel 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x1x2-240p_50.png"), 255)
-                ,new Tuple<string, string, int>("Irregular Tall Pixel 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x1x2-240p_50.png"), 127)
                 ,new Tuple<string, string, int>("Tall Pixel 420p 50%", System.IO.Path.Combine(currentdir, "Assets", "tg2x1x2-480p_50.png"), 255)
                 ,new Tuple<string, string, int>("Tall Pixel 420p 25%", System.IO.Path.Combine(currentdir, "Assets", "tg2x1x2-480p_50.png"), 127)
                 ,new Tuple<string, string, int>("Tall Pixel 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tg2x1x2-240p_50.png"), 255)
@@ -1515,6 +1515,7 @@ namespace BorgWin10WPF
             WindowResized(null);
             if (_mainScenePlayer.IsDefaultVideo)
             {
+                //_gridCursor = 14;//7
                 NextGrid();
             }
             else
