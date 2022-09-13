@@ -14,7 +14,7 @@ namespace BorgWin10WPF.Save
     {
         public static bool SaveFileExistsYN(string FileName)
         {
-            if (File.Exists(Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", FileName)))
+            if (File.Exists(Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", FileName)))
                 return true;
             return false;
         }
@@ -25,7 +25,7 @@ namespace BorgWin10WPF.Save
             string[] lines = null;// linesList.ToArray();
             try
             {
-                lines = File.ReadAllLines(Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", FileName));
+                lines = File.ReadAllLines(Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", FileName));
             }
             catch
             {
@@ -108,9 +108,9 @@ namespace BorgWin10WPF.Save
 
             }
 
-            System.Diagnostics.Debug.WriteLine(string.Format("Saved to: {0}", Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", FileName)));
+            System.Diagnostics.Debug.WriteLine(string.Format("Saved to: {0}", Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", FileName)));
 
-            File.WriteAllText(Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", FileName), saveSB.ToString());
+            File.WriteAllText(Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", FileName), saveSB.ToString());
         }
     }
 }

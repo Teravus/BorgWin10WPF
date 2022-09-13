@@ -18,18 +18,16 @@
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
          <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoAudio" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" RenderTransformOrigin="0,0"/>
-        
+        <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoInfo" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="534.25" Height="426.29069999999996" RenderTransformOrigin="0,0"  Background="Black" Margin="0,0,0,138" Visibility="Hidden">
+            <Grid x:Name="VVGridInfo">
+                <Button x:Name="InfoClickSurface" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" Opacity="0.01" />
+            </Grid>
+        </vlc:VideoView>
         <Image x:Name="ImgStartMain" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="Auto" Height="Auto" RenderTransformOrigin="0,0" Source="Assets/BORG_Intro_screen_output.png" Stretch="Fill"/>
 
         <vlc:VideoView x:Name="VideoView"  HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" IsHitTestVisible="False">
             <Grid x:Name="VVGrid">
                 <Image x:Name="VideoPixelGrid" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="Fill"  IsHitTestVisible="False" Visibility="Collapsed" />
-                <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoInfo" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="534.25" Height="426.29069999999996" RenderTransformOrigin="0,0"  Background="Black" Margin="0,0,0,138" Visibility="Hidden" IsHitTestVisible="False">
-                    <Grid x:Name="VVGridInfo">
-                        <Button x:Name="InfoClickSurface" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" Opacity="0.01"  IsHitTestVisible="False" />
-                        <Image x:Name="CurEmulatori" Source="/Assets/TricorderHolodeckCur.gif" Width="82" Height="96" HorizontalAlignment="Left" VerticalAlignment="Top"  gif:AnimationBehavior.SourceUri="{Binding SelectedImage}" gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}"  IsHitTestVisible="False" />
-                    </Grid>
-                </vlc:VideoView>
                 <Image x:Name="InfoSpring" Source="/Assets/QTricorderT20frame.gif" Margin="250,0,0,0" Width="1057.25" Height="939.3004" HorizontalAlignment="Center" VerticalAlignment="Bottom" Stretch="Fill" gif:AnimationBehavior.SourceUri="{Binding SelectedImage}" gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}" />
 
                 <Button x:Name="ClickSurface" HorizontalAlignment="Left" VerticalAlignment="Top" Width="1280" Height="800" Opacity="0.01" />

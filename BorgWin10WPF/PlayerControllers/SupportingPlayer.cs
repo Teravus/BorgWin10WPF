@@ -43,9 +43,9 @@ namespace BorgWin10WPF.PlayerControllers
         private int _sceneEndMS = 0;
         // I'm using the DispatcherTimer so that it is always on the main thread and we can interact with the unmanaged library.
         private DispatcherTimer _PlayHeadTimer = new DispatcherTimer();
-        private string _info_videopath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "CDAssets", "IPX.AVI");
-        private string _computer_videopath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "CDAssets", "computer.avi");
-        private string _holodeck_videopath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "CDAssets", "holodeck.avi");
+        private string _info_videopath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "CDAssets", "IPX.AVI");
+        private string _computer_videopath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "CDAssets", "computer.avi");
+        private string _holodeck_videopath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "CDAssets", "holodeck.avi");
         private List<HotspotDefinition> _aggregatehotspots = new List<HotspotDefinition>();
         private LibVLC _libVLCInfo = null;
         private bool _InfoVideoLoaded;

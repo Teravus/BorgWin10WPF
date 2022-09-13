@@ -12,7 +12,7 @@ namespace BorgWin10WPF.Scene
         public static List<SceneDefinition> LoadScenesFromAsset(string FileName)
         {
             List<SceneDefinition> defs = new List<SceneDefinition>();
-            string[] lines = File.ReadAllLines(Path.Combine(System.IO.Directory.GetCurrentDirectory(), "CDAssets", FileName));
+            string[] lines = File.ReadAllLines(Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "CDAssets", FileName));
             if (lines.Length > 0)
             {
                 for (var i = 0; i < lines.Length; i++)
@@ -88,7 +88,7 @@ namespace BorgWin10WPF.Scene
         public static List<SceneDefinition> LoadSupportingScenesFromAsset(string FileName)
         {
             List<SceneDefinition> defs = new List<SceneDefinition>();
-            string[] lines = File.ReadAllLines(Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", FileName));
+            string[] lines = File.ReadAllLines(Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", FileName));
             if (lines.Length > 0)
             {
                 for (var i = 0; i < lines.Length; i++)

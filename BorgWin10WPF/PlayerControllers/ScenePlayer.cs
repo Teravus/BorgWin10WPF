@@ -126,6 +126,8 @@ namespace BorgWin10WPF.PlayerControllers
             }
         }
 
+        private string _lastVideoFile = string.Empty;
+
         // In the WPF app, This has to be assigned so we place the hotspot visualize boxes inside this grid.   In the UWP app, We just call VideoView.Parent so it isn't needed.
         internal Grid innerGrid { get; set; }
 
@@ -1279,10 +1281,10 @@ namespace BorgWin10WPF.PlayerControllers
         {
             _vlcInstance = _libVLCMain;
             LoadedVideoInfo result = null;
-            string videopath = GetMP4OrAVI(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "CDAssets", string.Format("MAIN_{0}X.AVI", CD)));
+            string videopath = GetMP4OrAVI(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "CDAssets", string.Format("MAIN_{0}X.AVI", CD)));
             var filters = _vlcInstance.AudioFilters;
 
-
+            _loadedVideoFile = string.Format("MAIN_{0}X.AVI", CD);
             using (var media = new Media(_libVLCMain, videopath, FromType.FromPath))
             {
                 //media.AddOption("start-time=120.0");
@@ -1376,7 +1378,10 @@ namespace BorgWin10WPF.PlayerControllers
                     filename = string.Format("MAIN_{0}X.AVI", CD);
                     break;
             }
-            string assetpath = GetMP4OrAVI(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "CDAssets", filename));
+
+
+
+            string assetpath = GetMP4OrAVI(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "CDAssets", filename));
             if (!string.IsNullOrEmpty(filename) && filename != _loadedVideoFile)
             {
                 _loadedVideoFile = filename;

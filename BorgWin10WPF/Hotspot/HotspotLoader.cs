@@ -12,7 +12,7 @@ namespace BorgWin10WPF.Hotspot
         public static List<HotspotDefinition> LoadHotspotsFromAsset(string FileName)
         {
             List<HotspotDefinition> defs = new List<HotspotDefinition>();
-            string[] lines = File.ReadAllLines(Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", FileName));
+            string[] lines = File.ReadAllLines(Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", FileName));
             if (lines.Length > 0)
             {
                 for (var i = 0; i < lines.Length; i++)

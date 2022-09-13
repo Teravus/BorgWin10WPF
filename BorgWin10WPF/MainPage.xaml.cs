@@ -317,7 +317,7 @@ namespace BorgWin10WPF
  //                   VideoView.MediaPlayer.AspectRatio = "4:3";
                     SwapDisplay = !SwapDisplay;
                     // If you want console spam.  Uncomment this and the line in log_fired to lag the game..   and..  get the reason why libVLC is not happy.
-                     _libVLCMain.Log += Log_Fired;
+                    // _libVLCMain.Log += Log_Fired;
 
 
                     VideoView.PreviewMouseDown += (s2, e2) =>
@@ -507,9 +507,7 @@ namespace BorgWin10WPF
                     //var HolodeckScenes = new List<SceneDefinition>();
 
                     _videoAudioPlayer = new VideoAudioPlayer(VideoAudio, null, null, HolodeckScenes, null, _libVLCAudio);
-                    _videoAudioPlayer.LowerVolume();
-                    _videoAudioPlayer.LowerVolume();
-                    _videoAudioPlayer.LowerVolume();
+
                     //_supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, ComputerScenes, HolodeckScenes, _libVLCInfo);
                     //_supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, null, HolodeckScenes, _ipsHotspots, _libVLCInfo);
                     //Load_Computer_list(_computerScenes);
@@ -761,17 +759,17 @@ namespace BorgWin10WPF
             // Create the Spinning klingon logo cursor to show the user when the game is paused.
             TricorderCursor = new BitmapImage();
             TricorderCursor.BeginInit();
-            TricorderCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "TricorderHolodeckCur.gif"));
+            TricorderCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", "TricorderHolodeckCur.gif"));
             TricorderCursor.EndInit();
 
+            
 
-            AnimationBehavior.SetSourceUri(CurEmulatori, TricorderCursor.UriSource);
 
             // Create the Klingon knife cursor for the action scenes where we demand the user do something!
             CubeCursor = new BitmapImage();
             CubeCursor.BeginInit();
 
-            CubeCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "BorgCubeCursor.gif"));// new BitmapImage(new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "dktahg.gif")));
+            CubeCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", "BorgCubeCursor.gif"));// new BitmapImage(new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "dktahg.gif")));
             CubeCursor.EndInit();
             // You clicked the clickable surface!   Start a timer..  to see if you only single clickd or double clicked.  
             // If the timer fires..  you have single clickddd.  If it doesn't fire you have double clickdd.
@@ -1014,7 +1012,6 @@ namespace BorgWin10WPF
                             VideoInfo.Visibility = Visibility.Collapsed;
                             TricorderAnimation.CloseTricorder();
                             VideoPixelGrid.Visibility = Visibility.Visible;
-                            CurEmulatori.Visibility = Visibility.Collapsed;
                         }
                         break;
                 }
@@ -1053,7 +1050,7 @@ namespace BorgWin10WPF
             if (!_mcurVisible)
                 return;
             CurEmulator.Margin = new Thickness(point.X, point.Y + 1, 0, 0);
-            
+
             // When you click, it shows a debug message on the output window.  Including the current time in milliseconds since video start.
             if (_MainVideoLoaded)
             {
@@ -1082,11 +1079,6 @@ namespace BorgWin10WPF
 
                         }
                     }
-                }
-                if (CurEmulatori.Visibility == Visibility.Visible)
-                {
-                    var offset = ClickSurface.TranslatePoint(new Point() { X = 0, Y = 0 }, VideoInfo);
-                    CurEmulatori.Margin = new Thickness(point.X + (int)offset.X, (point.Y + (int)offset.Y) + 1, 0, 0);
                 }
             }
         }
@@ -1440,7 +1432,6 @@ namespace BorgWin10WPF
                                 VideoInfo.Visibility = Visibility.Collapsed;
                                 TricorderAnimation.CloseTricorder();
                                 VideoPixelGrid.Visibility = Visibility.Visible;
-                                CurEmulatori.Visibility = Visibility.Collapsed;
 
                             }
                             VideoView.MediaPlayer.Play();
@@ -1626,7 +1617,7 @@ namespace BorgWin10WPF
             };
             _mainScenePlayer.InfoVideoTrigger += InfoVideoTriggerShowFrame;
 
-            Uri uri = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "QTricorderT20frame.gif"));
+            Uri uri = new Uri(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", "QTricorderT20frame.gif"));
             AnimationBehavior.SetSourceUri(InfoSpring, uri);
             TricorderAnimation = new TricorderGifAnimationController(InfoSpring);
             TricorderAnimation.CloseTricorder();
@@ -1646,7 +1637,6 @@ namespace BorgWin10WPF
             {
                 _gridCursor = 0;
             }
-            InfoClickSurface.Visibility = Visibility.Collapsed;
             //var gridoverlay = OverlayGrids[_gridCursor];
             //_mainScenePlayer.ApplyGrid(gridoverlay.Item2, gridoverlay.Item3);
             ClickSurface.Focus();
@@ -1663,12 +1653,10 @@ namespace BorgWin10WPF
                 TricorderOpen = true;
                 TricorderAnimation.OpenTricorder(start, end);
                 VideoPixelGrid.Visibility = Visibility.Collapsed;
-                CurEmulatori.Visibility = Visibility.Visible;
                 //VideoInfo.CaptureMouse();
             }
             else
             {
-                CurEmulatori.Visibility = Visibility.Visible;
                 VideoPixelGrid.Visibility = Visibility.Collapsed;
                 InfoVideoPlayTimeSpan(start, end);
             }
@@ -1702,21 +1690,12 @@ namespace BorgWin10WPF
             //CurEmulator.Margin = new Thickness(pos.X - this.Width, pos.Y - this.Height + 1, 0, 0);
             var point = Mouse.GetPosition(ClickSurface);
             CurEmulator.Margin = new Thickness(point.X, point.Y + 1, 0, 0);
-            if (TricorderOpen)
-            {
-                CurEmulatori.Visibility = Visibility.Visible;
-                CurEmulatori.Margin = new Thickness(point.X, point.Y + 1, 0, 0);
-            }
-
             _mcurVisible = true;
         }
         private void HideCursor()
         {
             CurEmulator.Visibility = Visibility.Collapsed;
-            if (CurEmulator.Visibility == Visibility.Visible)
-            {
-                CurEmulatori.Visibility = Visibility.Collapsed;
-            }
+
             _mcurVisible = false;
         }
 
@@ -1744,7 +1723,7 @@ namespace BorgWin10WPF
         }
         private void Log_Fired(object sender, LogEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine(e.FormattedLog);
+            //System.Diagnostics.Debug.WriteLine(e.FormattedLog);
         }
     }
 }
