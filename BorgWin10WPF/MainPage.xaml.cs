@@ -133,6 +133,9 @@ namespace BorgWin10WPF
         private bool TricorderOpen = false;
 
         private bool SwapDisplay = false;
+        private bool _logFiredHookActive = false;
+        private int _initiallogprocessedcount = 0;
+        private bool _useFallbackVideoLayering = false;
 
         // We have two VideoViews on the form.   The loading order isn't guaranteed.   So..   we keep track of if we have initialized libVLC with this
         bool _coreVLCInitialized = false;
@@ -317,7 +320,7 @@ namespace BorgWin10WPF
  //                   VideoView.MediaPlayer.AspectRatio = "4:3";
                     SwapDisplay = !SwapDisplay;
                     // If you want console spam.  Uncomment this and the line in log_fired to lag the game..   and..  get the reason why libVLC is not happy.
-                    // _libVLCMain.Log += Log_Fired;
+                    Log_Fired_Hook();
 
 
                     VideoView.PreviewMouseDown += (s2, e2) =>
@@ -1721,9 +1724,68 @@ namespace BorgWin10WPF
             }      
 
         }
+        private void Log_Fired_Hook()
+        {
+            if (_logFiredHookActive)
+                return;
+            if (_libVLCMain == null)
+                return;
+
+            _logFiredHookActive = true;
+            _libVLCMain.Log += Log_Fired;
+        }
+        private void Log_Fired_Unhook()
+        {
+            if (!_logFiredHookActive)
+                return;
+            if (_libVLCMain == null)
+                return;
+
+            _libVLCMain.Log -= Log_Fired;
+            _logFiredHookActive = false;
+        }
         private void Log_Fired(object sender, LogEventArgs e)
         {
-            //System.Diagnostics.Debug.WriteLine(e.FormattedLog);
+            
+            System.Diagnostics.Debug.WriteLine(e.FormattedLog);
+            //direct3d11 Error: Could not Create the D3D11 device. (hr=0x80004001)
+            //direct3d11 Debug: Incompatible feature level
+            //direct3d9 Debug: Using Direct3D9 Extended API
+            ++_initiallogprocessedcount;
+            switch (e.Module)
+            {
+                case "direct3d11":
+                case "direct3d12":
+                case "direct3d13":
+                case "direct3d9":
+                    {
+                        if (e.Message== "Using Direct3D9 Extended API!" || e.Message.StartsWith("Could not Create the D3D11 device") || e.Message.StartsWith("Incompatible feature level"))
+                        {
+                            Log_Fired_Unhook();
+                            TriggerFallbackLayering();
+                            Console.WriteLine("Unhooked from log - Using Fallback Layering");
+                        }
+                        if (e.Message=="Direct3D11 Open Succeeded" || e.Message == "Direct3D11 device adapter successfully initialized")
+                        {
+                            Log_Fired_Unhook();
+                            Console.WriteLine("Unhooked from log DirectX11+ Started Successfully");
+                        }
+                    }
+                    break;
+            }
+            if (_initiallogprocessedcount > 800)
+            {
+                Log_Fired_Unhook();
+                Console.WriteLine($"Unhooked from log due to processing {_initiallogprocessedcount} log entries");
+            }
+        }
+        private void TriggerFallbackLayering()
+        {
+            _useFallbackVideoLayering = true;
+            if (VideoView!= null && VideoView.MediaPlayer != null )
+            {
+                
+            }
         }
     }
 }
