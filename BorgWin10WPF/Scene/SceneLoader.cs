@@ -24,6 +24,9 @@ namespace BorgWin10WPF.Scene
                         {
                             switch (linevals.Length)
                             {
+                                case 6:
+                                    defs.Add(new SceneDefinition(SceneType.Inaction, linevals[0], Convert.ToInt32(linevals[1]), Convert.ToInt32(linevals[2]), Convert.ToInt32(linevals[3]), 0, Convert.ToInt32(linevals[4]), Convert.ToInt32(linevals[5])));
+                                    break;
                                 case 5:
                                     defs.Add(new SceneDefinition(SceneType.Inaction, linevals[0], Convert.ToInt32(linevals[2]), Convert.ToInt32(linevals[3]), Convert.ToInt32(linevals[1])));
                                     break;

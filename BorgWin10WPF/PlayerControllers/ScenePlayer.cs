@@ -25,6 +25,9 @@ namespace BorgWin10WPF.PlayerControllers
     {
         public delegate void UserActionRequired();
         public delegate void InfoAction(long framestart, long frameend);
+        public delegate void FinallyGotVideoTrackInfo(LoadedVideoInfo video);
+
+
         private int _videoEndRiskDuration = 500;
         /// <summary>
         /// We need the user to do something!
@@ -45,6 +48,9 @@ namespace BorgWin10WPF.PlayerControllers
         /// The user wants information about something.  Play the info in the supporting player!
         /// </summary>
         public event InfoAction InfoVideoTrigger;
+
+        public event FinallyGotVideoTrackInfo OnTrackInfo;
+
 
         // Reference to the video player in the UI
         private VideoView _displayElement = null;
@@ -100,7 +106,7 @@ namespace BorgWin10WPF.PlayerControllers
         private List<SpecialPuzzleBase> _puzzlesToCheck = new List<SpecialPuzzleBase>();
 
         private string _idleActionVisualizationText = "Idle Action: I dont know yet";
-
+        private bool _gotLibVLCMediaSize = false;
         /// <summary>
         /// The scene file has this special frame to trigger quitting the game.
         /// </summary>
@@ -288,6 +294,10 @@ namespace BorgWin10WPF.PlayerControllers
             }
 
            
+            if (def.SceneType == SceneType.Inaction)
+            {
+                int inactivevideoItem = 0;
+            }
 
             //  If we play the Logo screen.  We are ending.  Quit now!
             var getLogo = _allSceneOptions.Where(xy => xy.Name == "DQUIT").FirstOrDefault();
@@ -501,7 +511,7 @@ namespace BorgWin10WPF.PlayerControllers
                 for (int i = 0; i < inFrame.Count; i++)
                 {
                     var hittestresults = (inFrame[i].HitTest(X, Y, currtime, _currentScene));
-                    if (triggerOrTestOnlyYN)
+                    //if (triggerOrTestOnlyYN)
                         System.Diagnostics.Debug.WriteLine(string.Format("\t[{0}]: Hit test {1},{2}-{7}.  Box ({3},{4},{5},{6})", inFrame[i].Name + "/" + inFrame[i].ActionVideo, X, Y, inFrame[i].Area[0].TopLeft.X, inFrame[i].Area[0].TopLeft.Y, inFrame[i].Area[0].BottomRight.X, inFrame[i].Area[0].BottomRight.Y, hittestresults));
                     if (hittestresults && triggerOrTestOnlyYN)
                     {
@@ -1033,9 +1043,67 @@ namespace BorgWin10WPF.PlayerControllers
             }
             System.Diagnostics.Debug.WriteLine(string.Format("\tTrigger Scene: {0}", scenename));
         }
+        /// <summary>
+        /// LibVLC doesn't always return track information.  We really need the track information for adjustments to the hotspots >.>
+        /// </summary>
+        /// <returns></returns>
+        private LoadedVideoInfo RetryGetLibVLCMediaInfo()
+        {
+            LoadedVideoInfo result = new LoadedVideoInfo();
+            bool gotTrackInfo = false;
+            using (var media = _displayElement.MediaPlayer.Media)
+            {
+                foreach (var track in media.Tracks)
+                {
+                    if (track.TrackType == TrackType.Video)
+                    {
+                        result.OriginalMainVideoHeight = (int)media.Tracks[0].Data.Video.Height;
+                        result.OriginalMainVideoWidth = (int)media.Tracks[0].Data.Video.Width;
+                        gotTrackInfo = true;
+                    }
+                    if (track.TrackType == TrackType.Audio)
+                    {
+                        var codecinfo = track.Codec;
+                        if (track.Codec == 1627419501) // Original video
+                        {
+                            gotTrackInfo = true;
+                        }
+                    }
+                }
+            }
+            if (gotTrackInfo)
+                return result;
+
+            return null;
+        }
         private void TimerTickAction()
         {
             _lastPlayingValue = _displayElement.MediaPlayer.IsPlaying;
+
+            // If we don't have the media size from libVLC try to get it again.   It should eventually give it to us when we ask, but it's finicky for some media.
+            if (!_gotLibVLCMediaSize)
+            {
+                if (_lastPlayingValue)
+                {
+                    // Let's try to reach into unmanaged land less. If there is nothing hooking the event, don't try.
+                    var TrackInfoLoaded = OnTrackInfo; 
+                    if (TrackInfoLoaded != null)
+                    {
+                        var loadedinfo = RetryGetLibVLCMediaInfo();
+                        if (loadedinfo != null)
+                        {
+                            _gotLibVLCMediaSize = true;
+                            TrackInfoLoaded = OnTrackInfo; // We check for null again here because that's the event convention.
+                            if (TrackInfoLoaded != null)
+                            {
+                                TrackInfoLoaded(loadedinfo);
+                            }
+                        }
+                    }
+                }
+
+            }
+
             if (_challengeStartMS > 0 || _challengeEndMS > 0)
             {
                 // 
@@ -1052,7 +1120,7 @@ namespace BorgWin10WPF.PlayerControllers
                 }
             }
             // Failsafe to trigger program quit action if we reach the end, but current scene is logo1
-            if (_currentScene.Name == "LOGO1" && !_lastPlayingValue)
+            if (_currentScene.Name == "DNLOGO1" && !_lastPlayingValue)
             {
                 UserActionRequired quituserAction = QuitGame;
                 if (quituserAction != null)
@@ -1204,7 +1272,10 @@ namespace BorgWin10WPF.PlayerControllers
                     }
                     break;
                 case SceneType.Inaction:
-                    if (_lastPlayheadMS >= _currentScene.EndMS - 2000)
+                    var _inaction_end = _currentScene.EndMS;
+                    if (_challengeEndMS > 0 && _challengeEndMS > _lastPlayheadMS)
+                        _inaction_end = _challengeEndMS;
+                    if (_lastPlayheadMS >= _inaction_end - 2000)
                     {
                         int vidcount = DoNothingVideos.Count;
                         if (vidcount > 4)
@@ -1227,6 +1298,21 @@ namespace BorgWin10WPF.PlayerControllers
                             //PlayScene(_lastScene, _lastScene.retryMS, ReplayFromTimeStop);
                             PlayScene(_lastScene, _lastScene.retryMS, null);
                         }
+                        
+                        
+                    }
+                    if (_challengeStartMS > 0 && _lastPlayheadMS >= _challengeStartMS && !_challengeSectionNotificationComplete)
+                    {
+                        _challengeSectionNotificationComplete = true;
+
+
+                        System.Diagnostics.Debug.WriteLine(string.Format("\tIn Challenge time {0} End {1}", _lastPlayheadMS, _challengeEndMS));
+                        UserActionRequired userAction = ActionOn;
+                        if (userAction != null)
+                        {
+                            userAction();
+                        }
+
                     }
 
                     break;
@@ -1280,15 +1366,20 @@ namespace BorgWin10WPF.PlayerControllers
             return input;
         }
         /// <summary>
-        /// Called by the PrepVideo Function in The UI.  Loads and starts the first Main video.
+        /// Called by the PrepVideo Function in The UI.  Loads and starts the first Main video.  Hooks to the events and all that.  Don't call this twice.
         /// </summary>
         /// <param name="_libVLCMain">Reference to the Unmanaged LibVLC</param>
         /// <param name="CD">Usually not provided.  Which CD to load.</param>
         /// <returns></returns>
         public LoadedVideoInfo Load_Main_Video(LibVLC _libVLCMain, int CD = 1)
         {
+            if (_vlcInstance != null)
+                return null;
+
             _vlcInstance = _libVLCMain;
             LoadedVideoInfo result = null;
+            //_displayElement.MediaPlayer.Playing += MediaPlayer_Playing;
+            //_displayElement.MediaPlayer.MediaChanged += MediaPlayer_MediaChanged;
             string videopath = GetMP4OrAVI(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "CDAssets", string.Format("MAIN_{0}X.AVI", CD)));
             var filters = _vlcInstance.AudioFilters;
 
@@ -1313,6 +1404,7 @@ namespace BorgWin10WPF.PlayerControllers
                 {
                     if (track.TrackType == TrackType.Video)
                     {
+                        _gotLibVLCMediaSize = true;
                         result.OriginalMainVideoHeight = (int)media.Tracks[0].Data.Video.Height;
                         result.OriginalMainVideoWidth = (int)media.Tracks[0].Data.Video.Width;
 
@@ -1381,9 +1473,11 @@ namespace BorgWin10WPF.PlayerControllers
                 case SceneType.Main:
                     filename = string.Format("MAIN_{0}X.AVI", CD);
                     break;
-                case SceneType.Bad:
-                case SceneType.Inaction:
+                case SceneType.Bad: 
                     filename = string.Format("MAIN_{0}X.AVI", CD);
+                    break;
+                case SceneType.Inaction:
+                    filename = string.Format("LOGOX.AVI", CD);
                     break;
             }
 
@@ -1416,6 +1510,7 @@ namespace BorgWin10WPF.PlayerControllers
         /// <param name="path">The media file to load</param>
         private void SwitchVideo(string path)
         {
+            _gotLibVLCMediaSize = false;
             using (var media = new Media(_vlcInstance, path, FromType.FromPath))
             {
                 _displayElement.MediaPlayer.Play(media);
@@ -1514,5 +1609,7 @@ namespace BorgWin10WPF.PlayerControllers
         /// The video Track Width
         /// </summary>
         public int OriginalMainVideoWidth { get; set; }
+
+        public bool OriginalGameMedia { get; set; }
     }
 }

@@ -54,6 +54,7 @@ namespace BorgWin10WPF
         private static double _OriginalMainVideoHeight = 200d;
         private static double _OriginalMainVideoWidth = 320d;
 
+        // The hotspot definitions are defined in terms of the original video size.   We scale the clicks down to the original video size using these original values.
         private static double _HotspotOriginalMainVideoHeight = 200d;
         private static double _HotspotOriginalMainVideoWidth = 320d;
 
@@ -216,6 +217,10 @@ namespace BorgWin10WPF
                 if (_MainVideoLoaded)
                 {
                     time = VideoView.MediaPlayer.Time;
+                    if (time > Int32.MaxValue)
+                    {
+                        time = 1;
+                    }
                     ts = TimeSpan.FromMilliseconds(time);
                 }
                 System.Diagnostics.Debug.WriteLine("{0},{1}({2},{3})[{4}] - t{5} - f{6}", _lastClickPoint.X, _lastClickPoint.Y, relclickX, relclickY, ts.ToString(@"hh\:mm\:ss"), (long)((float)time), Utilities.MsTo15fpsFrames(time));
@@ -475,6 +480,7 @@ namespace BorgWin10WPF
                     _holodeckScenes = HolodeckScenes;
                     //_supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, ComputerScenes, HolodeckScenes, _libVLCInfo);
                     _supportingPlayer = new SupportingPlayer(VideoInfo, InfoScenes, null, HolodeckScenes, _ipsHotspots, _libVLCInfo);
+                    _supportingPlayer.OnTrackInfo += _supportingPlayer_OnTrackInfo;
                     //Load_Computer_list(_computerScenes);
 
                 };
@@ -1013,6 +1019,12 @@ namespace BorgWin10WPF
 
         }
 
+        private void _supportingPlayer_OnTrackInfo(LoadedVideoInfo video)
+        {
+            // Good.  We know the supporting player video size >.>
+            // but we don't know the transparent square size
+        }
+
         private void SwapThreadProcessStringTask(Tuple<string> task)
         {
             switch (task.Item1)
@@ -1241,6 +1253,13 @@ namespace BorgWin10WPF
                 _letterbox_height = Math.Max(0, clickareaheight - (clickareawidth / _OriginalAspectRatio)) * 0.5f;
                 _aspect_ratio_width = ((clickareawidth - (_letterbox_width * 2)) / _HotspotOriginalMainVideoWidth);
                 _aspect_ratio_height = ((clickareaheight - (_letterbox_height * 2)) / _HotspotOriginalMainVideoHeight);
+
+                if (_useFallbackVideoLayering)
+                {
+                    var point = VideoInfo.TranslatePoint(new Point(0, 0), InfoSpring);
+                    VVGrid.Margin = new Thickness(point.X, point.Y, 0, 0);
+
+                }
             }
             ImgStartMain.Height = height;
             ImgStartMain.Width = width;
@@ -1713,7 +1732,11 @@ namespace BorgWin10WPF
             {
                 VideoInfo.Visibility = Visibility.Collapsed;
             }
-            
+
+            WindowStyle = WindowStyle.None;
+            _titlebarcurrentsize = _titlebarinvisibleheight;
+
+            WindowResized(this, null);
             WindowResized(null);
             if (_mainScenePlayer.IsDefaultVideo)
             {
@@ -1850,11 +1873,21 @@ namespace BorgWin10WPF
             _mcurVisible = false;
         }
 
+        private void MainScenePlayer_OnTrackInfo(LoadedVideoInfo result)
+        {
+            _OriginalMainVideoHeight = result.OriginalMainVideoHeight;
+            _OriginalMainVideoWidth = result.OriginalMainVideoWidth;
+
+            // yay, we have the proper video info from VLC now.   Recalculate aspect ratios and UI elements and things for the hotspots and grids
+            WindowResized(null);
+        }
+
         private void Load_Main_Video()
         {
             var result = _mainScenePlayer.Load_Main_Video(_libVLCMain);
             _OriginalMainVideoHeight = result.OriginalMainVideoHeight;
             _OriginalMainVideoWidth = result.OriginalMainVideoWidth;
+            
             
             _MainVideoLoaded = result.Loaded;
 
@@ -1917,7 +1950,7 @@ namespace BorgWin10WPF
                         {
                             Log_Fired_Unhook();
                             Console.WriteLine("Unhooked from log DirectX11+ Started Successfully");
-                            //TriggerFallbackLayering();
+                            TriggerFallbackLayering();
                         }
                     }
                     break;

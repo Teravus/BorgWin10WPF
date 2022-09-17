@@ -22,7 +22,11 @@ namespace BorgWin10WPF.PlayerControllers
 
     public class SupportingPlayer : IDisposable
     {
+        public delegate void FinallyGotVideoTrackInfo(LoadedVideoInfo video);
+
         public event EndScene SceneComplete;
+
+        public event FinallyGotVideoTrackInfo OnTrackInfo;
 
         private readonly VideoView _displayElement;
         private SceneDefinition _lastScene { get; set; }
@@ -64,6 +68,8 @@ namespace BorgWin10WPF.PlayerControllers
         private string _idleActionVisualizationText = string.Empty;
         private Label DoNothingVisualization;
         private float hotspotscale = 4f;
+
+        private bool _gotLibVLCMediaSize = false;
 
         private ABorgIsABorgJoke borgs = new ABorgIsABorgJoke();
         // This resizes the visualization for the hotspots.   It's funky.  Don't mess with it.
@@ -317,11 +323,71 @@ namespace BorgWin10WPF.PlayerControllers
         {
             _debugEventsOff = !OnOffYN;
         }
+
+        /// <summary>
+        /// LibVLC doesn't always return track information.  We really need the track information for adjustments to the hotspots >.>
+        /// </summary>
+        /// <returns></returns>
+        private LoadedVideoInfo RetryGetLibVLCMediaInfo()
+        {
+            LoadedVideoInfo result = new LoadedVideoInfo();
+            bool gotTrackInfo = false;
+            using (var media = _displayElement.MediaPlayer.Media)
+            {
+                foreach (var track in media.Tracks)
+                {
+                    if (track.TrackType == TrackType.Video)
+                    {
+                        result.OriginalMainVideoHeight = (int)media.Tracks[0].Data.Video.Height;
+                        result.OriginalMainVideoWidth = (int)media.Tracks[0].Data.Video.Width;
+                        gotTrackInfo = true;
+                    }
+                    if (track.TrackType == TrackType.Audio)
+                    {
+                        var codecinfo = track.Codec;
+                        if (track.Codec == 1627419501) // Original video
+                        {
+                            gotTrackInfo = true;
+                        }
+                    }
+                }
+            }
+            if (gotTrackInfo)
+                return result;
+
+            return null;
+        }
+
         private void TimerTickAction()
         {
             // There is nothing to do here if we don't have a scene.
             if (_currentScene == null)
                 return;
+
+            // If we don't have the media size from libVLC try to get it again.   It should eventually give it to us when we ask, but it's finicky for some media.
+            if (!_gotLibVLCMediaSize)
+            {
+                // Let's try to reach into unmanaged land less.  If there is nothing hooking the event, don't try.
+                var TrackInfoLoaded = OnTrackInfo;
+                if (TrackInfoLoaded != null)
+                {
+                    if (_displayElement.MediaPlayer.IsPlaying)
+                    {
+                        var loadedinfo = RetryGetLibVLCMediaInfo();
+                        if (loadedinfo != null)
+                        {
+                            _gotLibVLCMediaSize = true;
+                            TrackInfoLoaded = OnTrackInfo; // We check for null again here because that's the event convention.
+                            if (TrackInfoLoaded != null)
+                            {
+                                TrackInfoLoaded(loadedinfo);
+                            }
+                        }
+                    }
+                }
+
+            }
+
 
             if (_displayElement != null && _displayElement.MediaPlayer != null)
             {
@@ -522,6 +588,7 @@ namespace BorgWin10WPF.PlayerControllers
 
         private void SwitchVideo(string path)
         {
+            _gotLibVLCMediaSize = false;
             using (var media = new Media(_libVLCInfo, path, FromType.FromPath))
             {
                 _displayElement.MediaPlayer.Play(media);
