@@ -155,7 +155,7 @@
     </ApplicationDefinition>
     <Compile Include="AspectRatioMaxResult.cs" />
     <Compile Include="Animators\TricorderCursorSpinAnimationController.cs" />
-    <Compile Include="FallbackLayeringRender.cs" />
+    <Compile Include="FallbackScreenShot.cs" />
     <Compile Include="PlayerControllers\ABorgIsABorgJoke.cs" />
     <Compile Include="Puzzles\BorgComputerPuzzle.cs" />
     <Compile Include="Puzzles\SpecialPuzzleSaveState.cs" />

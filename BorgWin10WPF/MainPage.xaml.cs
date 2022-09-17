@@ -24,6 +24,7 @@ using BorgWin10WPF.Hotspot;
 using BorgWin10WPF.PlayerControllers;
 using BorgWin10WPF.Scene;
 using BorgWin10WPF.Save;
+using System.Collections.Concurrent;
 
 namespace BorgWin10WPF
 {
@@ -136,12 +137,16 @@ namespace BorgWin10WPF
         private bool _logFiredHookActive = false;
         private int _initiallogprocessedcount = 0;
         private bool _useFallbackVideoLayering = false;
+        
+        private FallbackScreenShot _fallbackScreenShot = null;
+        private string _lastScreenshotLocation = string.Empty;
 
         // We have two VideoViews on the form.   The loading order isn't guaranteed.   So..   we keep track of if we have initialized libVLC with this
         bool _coreVLCInitialized = false;
 
         TricorderGifAnimationController TricorderAnimation;
         TricorderCursorSpinAnimationController TricorderSpinner;
+        private static ConcurrentQueue<Tuple<string>> taskTransferQueue = new ConcurrentQueue<Tuple<string>>();
 
         public MainPage()
         {
@@ -177,6 +182,7 @@ namespace BorgWin10WPF
                 ,new Tuple<string, string, int>("4 Pixel Square Grid 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x2x1-240p_50.png"), 255)
                 ,new Tuple<string, string, int>("4 Pixel Square Grid 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x2x1-240p_50.png"), 127)
             };
+            
             if (!SaveLoader.SaveFileExistsYN("borgs.txt"))
             {
                 btnLoadGame.Visibility = Visibility.Collapsed;
@@ -253,7 +259,17 @@ namespace BorgWin10WPF
                 {
                     _clickRectangle.Margin = new Thickness(relclickX, relclickY, 0, 0);// right - left, bot - top);
                 }
-                
+                if (!taskTransferQueue.IsEmpty)
+                {
+                    Tuple<string> task = null;
+
+                    if (!taskTransferQueue.TryDequeue(out task))
+                    {
+                        Console.WriteLine("Couldn't get a queue entry that was there");
+                    }
+                    if (task != null)
+                        SwapThreadProcessStringTask(task);
+                }
 
             };
 
@@ -997,6 +1013,33 @@ namespace BorgWin10WPF
 
         }
 
+        private void SwapThreadProcessStringTask(Tuple<string> task)
+        {
+            switch (task.Item1)
+            {
+                case "enablefallback":
+                    if (VideoView != null && VideoView.MediaPlayer != null)
+                    {
+                        if (_mainScenePlayer.IsPlaying)
+                        {
+                            _useFallbackVideoLayering = true;
+                            
+                        }
+                    }
+                    break;
+                case "disablefallback":
+                    if (VideoView != null && VideoView.MediaPlayer != null)
+                    {
+                        if (_mainScenePlayer.IsPlaying)
+                        {
+                            _useFallbackVideoLayering = false;
+                        }
+                    }
+                    break;
+            }
+            
+        }
+
         private void _supportingPlayer_SceneComplete(object obj, string scenename, string scenetype)
         {
             if (scenetype == "info")
@@ -1011,10 +1054,21 @@ namespace BorgWin10WPF
                             _supportingPlayer.ClearQueue();
                             //VideoInfo.ReleaseMouseCapture();
                             TricorderOpen = false;
-
-                            VideoInfo.Visibility = Visibility.Collapsed;
+                            
+                            if (_useFallbackVideoLayering)
+                            {
+                                MainVideoViewFallback.Visibility = Visibility.Collapsed;
+                                VideoInfo.Visibility = Visibility.Collapsed;
+                            }
+                            else
+                            {
+                                VideoInfo.Visibility = Visibility.Collapsed;
+                            }
+                            //return;
                             TricorderAnimation.CloseTricorder();
                             VideoPixelGrid.Visibility = Visibility.Visible;
+                            MainVideoViewFallback.Visibility = Visibility.Collapsed;
+                            VideoView.Visibility = Visibility.Visible;
                         }
                         break;
                 }
@@ -1157,7 +1211,7 @@ namespace BorgWin10WPF
             {
                 InfoClickSurface.Width = VideoInfo.ActualWidth;
                 InfoClickSurface.Height = VideoInfo.ActualHeight;
-
+                
                 ClickSurface.Width = width;
                 ClickSurface.Height = height;
                 if (_mainScenePlayer != null)
@@ -1175,7 +1229,9 @@ namespace BorgWin10WPF
 
                 }
                 VideoView.Width = width;
+                MainVideoViewFallback.Width = this.ActualWidth;
                 VideoView.Height = height;
+                MainVideoViewFallback.Height = this.ActualHeight;
 
                 var clickareawidth = ClickSurface.ActualWidth;
                 var clickareaheight = ClickSurface.ActualHeight;
@@ -1432,11 +1488,28 @@ namespace BorgWin10WPF
                                 //VideoInfo.ReleaseMouseCapture();
                                 TricorderOpen = false;
 
+                                //if (_useFallbackVideoLayering)
+                                //{
+                                //    FallbackInfoSurface.Visibility = Visibility.Collapsed;
+                                //}
+                                //else
+                                //{
                                 VideoInfo.Visibility = Visibility.Collapsed;
+                                
+                                //}
+                                
                                 TricorderAnimation.CloseTricorder();
-                                VideoPixelGrid.Visibility = Visibility.Visible;
+
+                                
 
                             }
+                            if (_useFallbackVideoLayering)
+                            {
+                                MainVideoViewFallback.Visibility = Visibility.Collapsed;
+                                VideoView.Visibility = Visibility.Visible;
+                            }
+                            VideoInfo.Visibility = Visibility.Collapsed;
+                            VideoPixelGrid.Visibility = Visibility.Visible;
                             VideoView.MediaPlayer.Play();
                             
                             CurEmulator.Source = CubeCursor;
@@ -1593,6 +1666,9 @@ namespace BorgWin10WPF
             Load_Scene_List(_scenes);
             _mainScenePlayer = new ScenePlayer(VideoView, _scenes);
             Load_Main_Video();
+            
+            _fallbackScreenShot = new FallbackScreenShot(VideoView);
+            _fallbackScreenShot.OnSnapshotTaken += _fallbackScreenShot_OnSnapshotTaken;
 
             ImgStartMain.Visibility = Visibility.Collapsed;
             Mouse.OverrideCursor = Cursors.None;
@@ -1629,7 +1705,15 @@ namespace BorgWin10WPF
             TricorderSpinner = new TricorderCursorSpinAnimationController(CurEmulator);
             TricorderSpinner.Start();
             InfoSpring.Visibility = Visibility.Collapsed;
-            VideoInfo.Visibility = Visibility.Collapsed;
+            if (_useFallbackVideoLayering)
+            {
+                MainVideoViewFallback.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                VideoInfo.Visibility = Visibility.Collapsed;
+            }
+            
             WindowResized(null);
             if (_mainScenePlayer.IsDefaultVideo)
             {
@@ -1645,9 +1729,56 @@ namespace BorgWin10WPF
             ClickSurface.Focus();
         }
 
+        private void _fallbackScreenShot_OnSnapshotTaken(string filename)
+        {
+            if (string.IsNullOrEmpty(filename))
+                return;
+            var lastimage = MainVideoViewFallback.Source;
+
+            
+            using (System.IO.FileStream imagestream = File.OpenRead(filename))
+            {
+                BitmapImage backgroundshot = null;
+                backgroundshot = new BitmapImage();
+                backgroundshot.BeginInit();
+                backgroundshot.CacheOption = BitmapCacheOption.OnLoad;
+                backgroundshot.StreamSource = imagestream;
+                backgroundshot.EndInit();
+
+                MainVideoViewFallback.BeginInit();
+                MainVideoViewFallback.Source = backgroundshot;
+                MainVideoViewFallback.EndInit();
+            }
+
+            MainVideoViewFallback.Visibility = Visibility.Visible;
+            VideoView.Visibility = Visibility.Collapsed;
+
+
+            if (!string.IsNullOrEmpty(_lastScreenshotLocation))
+            {
+                try
+                {
+                    if (System.IO.File.Exists(_lastScreenshotLocation))
+                        System.IO.File.Delete(_lastScreenshotLocation);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Unable to delete last screenshot {filename}");
+                }
+            }
+
+            _lastScreenshotLocation = filename;
+   
+            
+        }
 
         private void InfoVideoTriggerShowFrame(long start, long end)
         {
+            if (_useFallbackVideoLayering)
+            {
+                VideoView.Visibility = Visibility.Hidden;
+                _fallbackScreenShot.TriggerScreenShot();
+            }
             VideoInfo.MediaPlayer.Scale = 0;
             VideoInfo.MediaPlayer.AspectRatio = "4:3";
             InfoSpring.Visibility = Visibility.Visible;
@@ -1656,11 +1787,18 @@ namespace BorgWin10WPF
                 TricorderOpen = true;
                 TricorderAnimation.OpenTricorder(start, end);
                 VideoPixelGrid.Visibility = Visibility.Collapsed;
+
+                if (_useFallbackVideoLayering)
+                {
+                    VideoView.Visibility = Visibility.Collapsed;
+                    MainVideoViewFallback.Visibility = Visibility.Visible;
+                }
                 //VideoInfo.CaptureMouse();
             }
             else
             {
                 VideoPixelGrid.Visibility = Visibility.Collapsed;
+                //MainVideoViewFallback.Visibility = Visibility.Collapsed;
                 InfoVideoPlayTimeSpan(start, end);
             }
             
@@ -1670,7 +1808,17 @@ namespace BorgWin10WPF
         {
             if (start <= 0 || end <= 0)
                 return;
-            VideoInfo.Visibility = Visibility.Visible;
+
+            if (_useFallbackVideoLayering)
+            {
+                MainVideoViewFallback.Visibility = Visibility.Visible;
+                VideoInfo.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                VideoInfo.Visibility = Visibility.Visible;
+            }
+
             SceneDefinition InfoSceneToPlay = _infoScenes.Where(xy => xy.StartMS >= start && xy.EndMS <= end).FirstOrDefault();
             // todo write a way to find the scene by start and end.
 
@@ -1769,6 +1917,7 @@ namespace BorgWin10WPF
                         {
                             Log_Fired_Unhook();
                             Console.WriteLine("Unhooked from log DirectX11+ Started Successfully");
+                            //TriggerFallbackLayering();
                         }
                     }
                     break;
@@ -1782,10 +1931,8 @@ namespace BorgWin10WPF
         private void TriggerFallbackLayering()
         {
             _useFallbackVideoLayering = true;
-            if (VideoView!= null && VideoView.MediaPlayer != null )
-            {
-                
-            }
+            taskTransferQueue.Enqueue(new Tuple<string>("enablefallback"));
+            
         }
     }
 }

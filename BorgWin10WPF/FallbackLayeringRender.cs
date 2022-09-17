@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LibVLCSharp.WPF;
 using System.Buffers;
+using System.Windows.Media.Imaging;
 
 namespace BorgWin10WPF
 {
@@ -29,13 +30,13 @@ namespace BorgWin10WPF
         /// the number of bytes per "line"
         /// For performance reasons inside the core of VLC, it must be aligned to multiples of 32.
         /// </summary>
-        private static uint Pitch;
+        private static uint Pitch = 32;
 
         /// <summary>
         /// The number of lines in the buffer.
         /// For performance reasons inside the core of VLC, it must be aligned to multiples of 32.
         /// </summary>
-        private static uint Lines;
+        private static uint Lines = 32;
 
         private static uint _Width = 5;
         private static uint _Height = 5;
@@ -44,12 +45,13 @@ namespace BorgWin10WPF
         private static MemoryMappedViewAccessor CurrentMappedViewAccessor;
         
         private static long FrameCounter = 0;
-
+        private static System.Windows.Controls.Image _fallbackImageSurface;
         private LibVLC _libVLC;
         private MediaPlayer _mediaPlayer;
         private VideoView _displayElement;
+        private static System.Windows.Media.Imaging.BitmapImage _image;
 
-        public FallbackLayeringRender(LibVLC libvlc, MediaPlayer mediaplayer, VideoView displayelement)
+        public FallbackLayeringRender(LibVLC libvlc, MediaPlayer mediaplayer, VideoView displayelement, System.Windows.Controls.Image fallbackImage)
         {
             // Listen to events
             var processingCancellationTokenSource = new CancellationTokenSource();
@@ -58,6 +60,7 @@ namespace BorgWin10WPF
             _displayElement = displayelement;
 
             _displayElement.SizeChanged += DisplayElement_SizeChanged;
+            _fallbackImageSurface = fallbackImage;
 
         }
         public void Start()
@@ -65,8 +68,10 @@ namespace BorgWin10WPF
             if (_DelegateActive)
                 return;
             _DelegateActive = true;
+            _mediaPlayer.Pause();
             _mediaPlayer.SetVideoFormat("RV32", _Width, _Height, Pitch);
             _mediaPlayer.SetVideoCallbacks(Lock, null, Display);
+            _mediaPlayer.Play();
         }
         public void Stop()
         {
@@ -77,17 +82,14 @@ namespace BorgWin10WPF
             CurrentMappedFile?.Dispose();
             CurrentMappedFile = null;
         }
-        private System.Windows.Media.Imaging.BitmapImage ToImage(byte[] array)
+        private static System.Windows.Media.Imaging.BitmapImage ToImage(MemoryStream stram)
         {
-            using (var ms = new System.IO.MemoryStream(array))
-            {
-                var image = new System.Windows.Media.Imaging.BitmapImage();
-                image.BeginInit();
-                image.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad; // here
-                image.StreamSource = ms;
-                image.EndInit();
-                return image;
-            }
+            var image = new System.Windows.Media.Imaging.BitmapImage();
+            image.BeginInit();
+            image.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad; // here
+            image.StreamSource = stram;
+            image.EndInit();
+            return image;
         }
         private void DisplayElement_SizeChanged(object sender, System.Windows.SizeChangedEventArgs e)
         {
@@ -130,10 +132,26 @@ namespace BorgWin10WPF
             return IntPtr.Zero;
         }
 
+        public static BitmapImage ToBitmapImage(MemoryStream data)
+        {
+                BitmapImage img = new BitmapImage();
+                img.BeginInit();
+                img.CacheOption = BitmapCacheOption.OnLoad;//CacheOption must be set after BeginInit()
+                img.StreamSource = data;
+                img.EndInit();
+
+                if (img.CanFreeze)
+                {
+                    img.Freeze();
+                }
+
+                return img;
+        }
+
         private static void Display(IntPtr opaque, IntPtr picture)
         {
-            if (FrameCounter % 50 == 0)
-            {
+            //if (FrameCounter % 50 == 0)
+            //{
                 //FilesToProcess.Enqueue((CurrentMappedFile, CurrentMappedViewAccessor));
                 using (var image = new Image<SixLabors.ImageSharp.PixelFormats.Bgra32>((int)(Pitch / BytePerPixel), (int)Lines))
                 using (var sourceStream = CurrentMappedFile.CreateViewStream())
@@ -143,31 +161,39 @@ namespace BorgWin10WPF
                     {
                         sourceStream.Read(MemoryMarshal.AsBytes(mg[i].Span));
                     }
-                    image.Mutate(ctx => ctx.Crop((int)_Width, (int)_Height));
+                    //image.Mutate(ctx => ctx.Crop((int)_Width, (int)_Height));
 
-                    //using (var outputFile = File.Open(fileName, FileMode.Create))
+                    MemoryStream stram = new MemoryStream();
+                    image.SaveAsBmp(stram);
+                    stram.Seek(0, SeekOrigin.Begin);
+                    //image = FallbackLayeringRender.ToImage(stram);
+                    var aBitmapImage = ToBitmapImage(stram);
+
+                    //_fallbackImageSurface.Dispatcher.BeginInvoke((Action)(() =>
                     //{
-                    //    image.Mutate(ctx => ctx.Crop((int)Width, (int)Height));
-                    //    image.SaveAsJpeg(outputFile);
-                    //}
+                    //    _fallbackImageSurface.BeginInit();
+                    //    _fallbackImageSurface.Source = aBitmapImage;
+                    //    _fallbackImageSurface.EndInit();
+                    //}));
+
                 }
                 CurrentMappedViewAccessor.Dispose();
                 CurrentMappedFile.Dispose();
 
                 CurrentMappedFile = null;
                 CurrentMappedViewAccessor = null;
-            }
-            else
-            {
-                CurrentMappedViewAccessor.Dispose();
-                CurrentMappedFile.Dispose();
-                CurrentMappedFile = null;
-                CurrentMappedViewAccessor = null;
-            }
-            FrameCounter++;
+            //}
+            //else
+            //{
+            //    CurrentMappedViewAccessor.Dispose();
+            //    CurrentMappedFile.Dispose();
+            //    CurrentMappedFile = null;
+            //    CurrentMappedViewAccessor = null;
+            //}
+            //FrameCounter++;
 
-            if (FrameCounter > long.MaxValue - 50)
-                FrameCounter = 1;
+            //if (FrameCounter > long.MaxValue - 50)
+            //    FrameCounter = 1;
         }
         
 

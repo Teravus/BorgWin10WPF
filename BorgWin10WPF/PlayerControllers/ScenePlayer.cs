@@ -107,6 +107,7 @@ namespace BorgWin10WPF.PlayerControllers
         private const int GAME_END_FRAME_ID = 999999;
 
         private bool _isDefaultVideo = true;
+        private volatile bool _lastPlayingValue = false;
 
         // This resizes the visualization for the hotspots.   It's funky.  Don't mess with it.
         public float HotspotScale
@@ -361,6 +362,7 @@ namespace BorgWin10WPF.PlayerControllers
             {
                 Task.Delay(50).Wait();
                 _displayElement.MediaPlayer.Play();
+                _lastPlayingValue = true;
             }
 
 
@@ -479,6 +481,7 @@ namespace BorgWin10WPF.PlayerControllers
 
             var currtime = _displayElement.MediaPlayer.Time;
             bool playing = _displayElement.MediaPlayer.IsPlaying;
+            _lastPlayingValue = playing;
             List<HotspotDefinition> hotspotstocheck = playing ? _currentScene.PlayingHotspots : _currentScene.PausedHotspots;
 
             if (!playing || _lastPlayheadMS >= _challengeStartMS) // to save processing we should only run queries when the user is allowed to interact.
@@ -661,6 +664,7 @@ namespace BorgWin10WPF.PlayerControllers
         {
             var currtime = _displayElement.MediaPlayer.Time;
             bool playing = _displayElement.MediaPlayer.IsPlaying;
+            _lastPlayingValue = playing;
 
             var startChallenge = _currentScene.EndMS + 1200;
             bool beyondstart = currtime - ms > startChallenge;
@@ -925,7 +929,10 @@ namespace BorgWin10WPF.PlayerControllers
                 PlayScene(loadscene, framems);
             }
         }
-
+        public bool IsPlaying
+        {
+            get { return _lastPlayingValue; }
+        }
         /// <summary>
         /// Add squares around the clickable hotspots
         /// </summary>
@@ -934,7 +941,7 @@ namespace BorgWin10WPF.PlayerControllers
         {
             if (_visualizationEnabled)
                 return;
-
+            _lastPlayingValue = _displayElement.MediaPlayer.IsPlaying;
             foreach (var item in _currentScene.PlayingHotspots)
                 item.Draw(ParentGrid, _displayElement.MediaPlayer.Time, _currentScene, VisualizationWidthMultiplier, VisualizationHeightMultiplier);
 
@@ -954,7 +961,7 @@ namespace BorgWin10WPF.PlayerControllers
                     cdvis = _currentScene.CD;
                     scenename = _currentScene.Name;
                 }
-                if (_displayElement.MediaPlayer.IsPlaying) // I don't want it to update the content if we're not playing because it will set the frame to zero.
+                if (_lastPlayingValue) // I don't want it to update the content if we're not playing because it will set the frame to zero.
                 {
                     string friendlytime = GetReadableTimeByMs(_lastPlayheadMS);
                     displayLabel.Content = $"Scene { scenename}, Frame: {frame15fps}, CD: {cdvis}, {_idleActionVisualizationText}. ({friendlytime})";
@@ -1028,12 +1035,13 @@ namespace BorgWin10WPF.PlayerControllers
         }
         private void TimerTickAction()
         {
+            _lastPlayingValue = _displayElement.MediaPlayer.IsPlaying;
             if (_challengeStartMS > 0 || _challengeEndMS > 0)
             {
                 // 
                 if (_displayElement != null && _displayElement.MediaPlayer != null)
                 {
-                    if (_displayElement.MediaPlayer.IsPlaying)
+                    if (_lastPlayingValue)
                     {
                         _lastPlayheadMS = _displayElement.MediaPlayer.Time;
                     }
@@ -1044,7 +1052,7 @@ namespace BorgWin10WPF.PlayerControllers
                 }
             }
             // Failsafe to trigger program quit action if we reach the end, but current scene is logo1
-            if (_currentScene.Name == "LOGO1" && !_displayElement.MediaPlayer.IsPlaying)
+            if (_currentScene.Name == "LOGO1" && !_lastPlayingValue)
             {
                 UserActionRequired quituserAction = QuitGame;
                 if (quituserAction != null)
@@ -1247,7 +1255,7 @@ namespace BorgWin10WPF.PlayerControllers
                         scenename = _currentScene.Name;
                     }
 
-                    if (_displayElement.MediaPlayer.IsPlaying) // I don't want it to update the content if we're not playing because it will set the frame to zero.
+                    if (_lastPlayingValue) // I don't want it to update the content if we're not playing because it will set the frame to zero.
                     {
                         string friendlytime = GetReadableTimeByMs(_lastPlayheadMS);
                         DoNothingVisualization.Content = $"Scene { scenename}, Frame: {frame15fps}, CD: {cdvis}, {_idleActionVisualizationText}. ({friendlytime})";
