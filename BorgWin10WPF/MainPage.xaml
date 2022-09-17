@@ -18,8 +18,11 @@
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <Image x:Name="MainVideoViewFallback" HorizontalAlignment="Left" VerticalAlignment="Top" Width="1280" Height="800" Stretch="Fill" IsHitTestVisible="False" Visibility="Collapsed" />
-         <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoAudio" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" RenderTransformOrigin="0,0"/>
-        
+
+        <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoAudio" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" RenderTransformOrigin="0,0" Visibility="Hidden">
+            <Image x:Name="InfoSpring_fallback" Source="/Assets/QTricorderT20frame.gif" Margin="250,0,0,0" Width="1057.25" Height="939.3004" HorizontalAlignment="Center" VerticalAlignment="Bottom" Stretch="Fill" gif:AnimationBehavior.SourceUri="{Binding SelectedImage}" gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}" IsHitTestVisible="False" />
+        </vlc:VideoView>
+
         <vlc:VideoView Grid.Column="0" Grid.Row="0" x:Name="VideoInfo" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="534.25" Height="426.29069999999996" RenderTransformOrigin="0,0"  Background="Black" Margin="0,0,0,138" Visibility="Hidden">
             <Grid x:Name="VVGridInfo">
                 <Button x:Name="InfoClickSurface" HorizontalAlignment="Left" VerticalAlignment="Top" Width="5" Height="5" Opacity="0.01" />

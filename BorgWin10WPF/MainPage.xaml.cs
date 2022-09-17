@@ -146,6 +146,7 @@ namespace BorgWin10WPF
         bool _coreVLCInitialized = false;
 
         TricorderGifAnimationController TricorderAnimation;
+        TricorderGifAnimationController TricorderAnimationFallback;
         TricorderCursorSpinAnimationController TricorderSpinner;
         private static ConcurrentQueue<Tuple<string>> taskTransferQueue = new ConcurrentQueue<Tuple<string>>();
 
@@ -609,6 +610,7 @@ namespace BorgWin10WPF
                 WindowResized(this, null);
                 _mainScenePlayer.PlayScene(_scenes[0]);
                 TricorderAnimation.CloseTricorder();
+                TricorderAnimationFallback.CloseTricorder();
                 _supportingPlayer.SceneComplete += _supportingPlayer_SceneComplete;
                 //CurEmulator.Visibility = Visibility.Visible;
 
@@ -1071,13 +1073,17 @@ namespace BorgWin10WPF
                             {
                                 MainVideoViewFallback.Visibility = Visibility.Collapsed;
                                 VideoInfo.Visibility = Visibility.Collapsed;
+
+                                TricorderAnimationFallback.CloseTricorder();
                             }
                             else
                             {
                                 VideoInfo.Visibility = Visibility.Collapsed;
+
+                                TricorderAnimation.CloseTricorder();
                             }
-                            //return;
-                            TricorderAnimation.CloseTricorder();
+
+
                             VideoPixelGrid.Visibility = Visibility.Visible;
                             MainVideoViewFallback.Visibility = Visibility.Collapsed;
                             VideoView.Visibility = Visibility.Visible;
@@ -1175,49 +1181,11 @@ namespace BorgWin10WPF
             VideoViewGrid.Width = width;
             VideoViewGrid.Height = height;
 
-            //double widthby2 = ((double)width * 0.5d);
-            //double widthby3 = ((double)width * 0.3333d);
-            //double widthby4 = ((double)width * 0.25d);
-            //double heightby3 = ((double)height * 0.3333d);
-            //double heightby4 = ((double)height * 0.25d);
-            //double infowidthby2 = widthby3 * 0.5d;
-            //double widthby23 = ((double)width * 0.48d);
-            //double leftmargin = widthby2 - infowidthby2;
-            //double topmargin = heightby4 * 3d;
-
-
-
-            //VideoInfo.Width = width * 0.24d;
-            //VideoInfo.Height = heightby3;
-
-            //InfoSpring.Width = widthby23;
-            //InfoSpring.Height = height* 0.56d ;
-
-
-
-            //VideoInfo.HorizontalAlignment = HorizontalAlignment.Center;
-            //VideoInfo.VerticalAlignment = VerticalAlignment.Bottom;
-            //VideoInfo.Margin = VideoInfoMargin;
-            ////VideoInfo.MediaPlayer.Scale = 0;
-            //InfoSpring.HorizontalAlignment = HorizontalAlignment.Center;
-            //InfoSpring.VerticalAlignment = VerticalAlignment.Bottom;
-            //InfoSpring.Margin = TricorderFrameMargin;
-            //VideoInfo.HorizontalAlignment = HorizontalAlignment.Center;
-            //VideoInfo.VerticalAlignment = VerticalAlignment.Bottom;
-            //VideoInfo.Height = 426.29069999999996;
-            //VideoInfo.Width = 534.25;
-            //Thickness VideoInfoMargin = new Thickness(0, 0, 0, 138);
-            //Thickness TricorderFrameMargin = new Thickness(250, 0, 0, 0);
-            //VideoInfo.Margin = VideoInfoMargin;
-            //InfoSpring.Margin = TricorderFrameMargin;
-            ////VideoInfo.Background = Colors.Black;
-
-            //InfoSpring.Height = 939.3004;
-            //InfoSpring.Width = 1057.25;
-            //InfoSpring.HorizontalAlignment = HorizontalAlignment.Center;
-            //InfoSpring.VerticalAlignment = VerticalAlignment.Bottom;
-            //InfoSpring.Stretch = Stretch.Fill;
-
+            if (_useFallbackVideoLayering)
+            {
+                VideoAudio.Height = height;
+                VideoAudio.Width = width;
+            }
 
             if (_MainVideoLoaded)
             {
@@ -1256,8 +1224,8 @@ namespace BorgWin10WPF
 
                 if (_useFallbackVideoLayering)
                 {
-                    var point = VideoInfo.TranslatePoint(new Point(0, 0), InfoSpring);
-                    VVGrid.Margin = new Thickness(point.X, point.Y, 0, 0);
+                    //var point = VideoInfo.TranslatePoint(new Point(0, 0), InfoSpring);
+                    //VVGrid.Margin = new Thickness(point.X, point.Y, 0, 0);
 
                 }
             }
@@ -1516,9 +1484,16 @@ namespace BorgWin10WPF
                                 VideoInfo.Visibility = Visibility.Collapsed;
                                 
                                 //}
+                                if (_useFallbackVideoLayering)
+                                {
+                                    TricorderAnimationFallback.CloseTricorder();
+                                }
+                                else
+                                {
+                                    TricorderAnimation.CloseTricorder();
+                                }
                                 
-                                TricorderAnimation.CloseTricorder();
-
+                                
                                 
 
                             }
@@ -1721,9 +1696,17 @@ namespace BorgWin10WPF
             TricorderAnimation.CloseTricorder();
             TricorderAnimation.OnTricorderOpen += InfoVideoPlayTimeSpan;
             AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
+
+            AnimationBehavior.SetSourceUri(InfoSpring_fallback, uri);
+            TricorderAnimationFallback = new TricorderGifAnimationController(InfoSpring_fallback);
+            TricorderAnimationFallback.CloseTricorder();
+            //TricorderAnimationFallback.OnTricorderOpen += InfoVideoPlayTimeSpan;   Added in the event
+            AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
+
             TricorderSpinner = new TricorderCursorSpinAnimationController(CurEmulator);
             TricorderSpinner.Start();
             InfoSpring.Visibility = Visibility.Collapsed;
+            InfoSpring_fallback.Visibility = Visibility.Collapsed;
             if (_useFallbackVideoLayering)
             {
                 MainVideoViewFallback.Visibility = Visibility.Collapsed;
@@ -1804,11 +1787,32 @@ namespace BorgWin10WPF
             }
             VideoInfo.MediaPlayer.Scale = 0;
             VideoInfo.MediaPlayer.AspectRatio = "4:3";
-            InfoSpring.Visibility = Visibility.Visible;
+
+            if (_useFallbackVideoLayering)
+            {
+                InfoSpring_fallback.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                InfoSpring.Visibility = Visibility.Visible;
+            }
+
+
             if (!TricorderOpen)
             {
                 TricorderOpen = true;
-                TricorderAnimation.OpenTricorder(start, end);
+                if (_useFallbackVideoLayering)
+                {
+                    TricorderAnimationFallback.OpenTricorder(start, end);
+                    InfoSpring_fallback.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    TricorderAnimation.OpenTricorder(start, end);
+                    
+                }
+                
+                
                 VideoPixelGrid.Visibility = Visibility.Collapsed;
 
                 if (_useFallbackVideoLayering)
@@ -1928,7 +1932,7 @@ namespace BorgWin10WPF
         private void Log_Fired(object sender, LogEventArgs e)
         {
             
-            System.Diagnostics.Debug.WriteLine(e.FormattedLog);
+            //System.Diagnostics.Debug.WriteLine(e.FormattedLog);
             //direct3d11 Error: Could not Create the D3D11 device. (hr=0x80004001)
             //direct3d11 Debug: Incompatible feature level
             //direct3d9 Debug: Using Direct3D9 Extended API
@@ -1950,7 +1954,7 @@ namespace BorgWin10WPF
                         {
                             Log_Fired_Unhook();
                             Console.WriteLine("Unhooked from log DirectX11+ Started Successfully");
-                            TriggerFallbackLayering();
+                            //TriggerFallbackLayering();
                         }
                     }
                     break;
@@ -1965,6 +1969,14 @@ namespace BorgWin10WPF
         {
             _useFallbackVideoLayering = true;
             taskTransferQueue.Enqueue(new Tuple<string>("enablefallback"));
+            TricorderAnimation.OnTricorderOpen -= InfoVideoPlayTimeSpan;
+            TricorderAnimationFallback.OnTricorderOpen += InfoVideoPlayTimeSpan;
+            this.Dispatcher.BeginInvoke((Action)(() =>
+            {
+                InfoSpring.Visibility = Visibility.Collapsed;
+                VideoAudio.Visibility = Visibility.Visible;
+                WindowResized(null);
+            }));
             
         }
     }
