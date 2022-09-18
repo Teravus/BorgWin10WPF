@@ -66,6 +66,8 @@ namespace BorgWin10WPF.PlayerControllers
         private SceneDefinition _lastScene { get; set; }
         private IdleActionControler _idleController { get; set; }
 
+        private SceneDefinition _idleLastScene { get; set; }
+
         // When, in milliseconds, the user is expected to do something.
         private long _challengeStartMS = 0;
 
@@ -89,8 +91,9 @@ namespace BorgWin10WPF.PlayerControllers
         public double VisualizationHeightMultiplier = 1d;
 
         // internal game progress counters
-        private int _inactionacount = 0;
-
+        private int _inactioncount = 0;
+        private int _qboredcount = 2;
+        private int _inactionvideo = 0;
 
         private LibVLC _vlcInstance = null;
 
@@ -341,8 +344,10 @@ namespace BorgWin10WPF.PlayerControllers
                 }
             }
 
-
+            // Don't save the last scene as the idle scene.  There's a challenge in there and doing that will cause a loop when you jump back to the last scene.
+            
             _lastScene = _currentScene;
+
             // Quit after last scene is logo.
             if (_lastScene == getLogo)
             {
@@ -359,7 +364,10 @@ namespace BorgWin10WPF.PlayerControllers
             _challengeStartMS = 0;
             _lastPlayheadMS = 0;
             _PlayHeadTimer.Stop();
+
+
             _currentScene = def;
+
             _idleActionVisualizationText = "Idle Action: I dont know yet";
 
             // Swap videos if necessary.
@@ -676,7 +684,13 @@ namespace BorgWin10WPF.PlayerControllers
                 //{
                 //    _PlayTimeStopVideo = string.Format("BB{0}", _bombattemptcount);
                 //}
-
+                if (FrameActionVideo == "DNQNClick")
+                {
+                    if (_inactionvideo>1)
+                    {
+                        FrameActionVideo = "DNQN2";
+                    }
+                }
                 var alternatescene = _allSceneOptions.Where(sc => sc.Name == FrameActionVideo).FirstOrDefault();
                 if (alternatescene != null && !skipFrameActionVideodefault)
                 {
@@ -812,13 +826,41 @@ namespace BorgWin10WPF.PlayerControllers
             }
             if (result.IdleBad)
             {
+                ++_inactioncount;
                 SceneDefinition jumpToSceneDef = null;
-                for (int i = 0; i < _allSceneOptions.Count; i++)
+                if (_inactioncount >= _qboredcount)
                 {
-                    if (_allSceneOptions[i].Name.ToLowerInvariant() == result.IdleScene.ToLowerInvariant())
+                    _qboredcount = 4;
+                    _inactioncount = 0;
+                    string InactionSceneName = "";
+                    ++_inactionvideo;
+                    if (_inactionvideo == 1)
                     {
-                        jumpToSceneDef = _allSceneOptions[i];
-                        break;
+                        InactionSceneName = "DNQN";
+                    }
+                    if (_inactionvideo > 1)
+                    {
+                        InactionSceneName = "DNQN";
+                    }
+                    for (int i = 0; i < _allSceneOptions.Count; i++)
+                    {
+                        if (_allSceneOptions[i].Name.ToLowerInvariant() == InactionSceneName.ToLowerInvariant())
+                        {
+                            jumpToSceneDef = _allSceneOptions[i];
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    
+                    for (int i = 0; i < _allSceneOptions.Count; i++)
+                    {
+                        if (_allSceneOptions[i].Name.ToLowerInvariant() == result.IdleScene.ToLowerInvariant())
+                        {
+                            jumpToSceneDef = _allSceneOptions[i];
+                            break;
+                        }
                     }
                 }
                 if (jumpToSceneDef != null)
@@ -831,6 +873,7 @@ namespace BorgWin10WPF.PlayerControllers
                     
                     return;
                 }
+
             }
             
         }
@@ -883,7 +926,7 @@ namespace BorgWin10WPF.PlayerControllers
             }
             SaveDefinition result = new SaveDefinition()
             {
-                DoNothingCount = _inactionacount,
+                DoNothingCount = _inactioncount,
                 SaveFrame = sceneframe,
                 SaveName = string.Empty,
                 SaveRowType = "g",
@@ -960,7 +1003,7 @@ namespace BorgWin10WPF.PlayerControllers
             }
             if (loadscene != null)
             {
-                _inactionacount = def.DoNothingCount;
+                _inactioncount = def.DoNothingCount;
                 var framems = Utilities.Frames15fpsToMS(frame - 2);
                 PlayScene(loadscene, framems);
             }
@@ -1212,7 +1255,9 @@ namespace BorgWin10WPF.PlayerControllers
                     if (_lastPlayheadMS >= _challengeStartMS && !_challengeSectionNotificationComplete)
                     {
                         _challengeSectionNotificationComplete = true;
-                        
+
+                        if (_currentScene.Name != "DNQN" && _currentScene.Name != "DNQN2")
+                            _idleLastScene = _currentScene;
 
                         System.Diagnostics.Debug.WriteLine(string.Format("\tIn Challenge time {0} End {1}", _lastPlayheadMS, _challengeEndMS));
                         UserActionRequired userAction = ActionOn;
@@ -1303,26 +1348,72 @@ namespace BorgWin10WPF.PlayerControllers
                         _inaction_end = _challengeEndMS;
                     if (_lastPlayheadMS >= _inaction_end - 2000)
                     {
-                        int vidcount = DoNothingVideos.Count;
-                        if (vidcount > 4)
-                            vidcount = 4;
-                        bool exceededinactiontries = _inactionacount >= vidcount;
-                        if (exceededinactiontries) // Restart!
+                        //int vidcount = DoNothingVideos.Count;
+                        //if (vidcount > 4)
+                        //    vidcount = 4;
+                        //bool exceededinactiontries = _inactionacount >= vidcount;
+                        //if (exceededinactiontries) // Restart!
+                        //{
+                        //    _inactionacount = 0;
+                        //    _PlayHeadTimer.Stop(); // Stop the timer so we don't get ReplayingFromTimeStop Twice.
+                        //    PlayScene(_allSceneOptions[1], _allSceneOptions[1].StartMS);
+                        //}
+                        //else
+                        //{
+                        //    _PlayHeadTimer.Stop(); // Stop the timer so we don't get ReplayingFromTimeStop Twice.
+                        //    //string ReplayFromTimeStop = Utilities.GetReplayingAudioFromSceneName(_lastScene.Name);
+                        //    //if (_ReplayingFromTimeStopVideo != null)
+                        //    //{
+                        //    //    ReplayFromTimeStop = _ReplayingFromTimeStopVideo;
+                        //    //}
+                        //    //PlayScene(_lastScene, _lastScene.retryMS, ReplayFromTimeStop);
+                        //    PlayScene(_lastScene, _lastScene.retryMS, null);
+                        //}
+                        SceneDefinition scenetoplay = null;
+                        if (_currentScene.Name == "DNQN")
                         {
-                            _inactionacount = 0;
-                            _PlayHeadTimer.Stop(); // Stop the timer so we don't get ReplayingFromTimeStop Twice.
-                            PlayScene(_allSceneOptions[1], _allSceneOptions[1].StartMS, "P000100");
+                            string Scenename = "DNQNIdle";
+                            scenetoplay = _allSceneOptions.Where(xy => xy.Name == Scenename).FirstOrDefault();
+                           
                         }
-                        else
+                        if (_currentScene.Name == "DNQNClick")
                         {
-                            _PlayHeadTimer.Stop(); // Stop the timer so we don't get ReplayingFromTimeStop Twice.
-                            //string ReplayFromTimeStop = Utilities.GetReplayingAudioFromSceneName(_lastScene.Name);
-                            //if (_ReplayingFromTimeStopVideo != null)
-                            //{
-                            //    ReplayFromTimeStop = _ReplayingFromTimeStopVideo;
-                            //}
-                            //PlayScene(_lastScene, _lastScene.retryMS, ReplayFromTimeStop);
+                            if (_idleLastScene != null)
+                            {
+                                scenetoplay = _idleLastScene;
+                            }
+                        }
+                        if (_currentScene.Name == "DNQN2")
+                        {
+                            if (_idleLastScene != null)
+                            {
+                                scenetoplay = _idleLastScene;
+                            }
+                        }
+                        if (_currentScene.Name == "DNQNIdle")
+                        {
+                            UserActionRequired userAction = QuitGame;
+                            if (userAction != null)
+                            {
+                                userAction();
+                                return;
+                            }
+                        }
+                        if (scenetoplay == null)
+                        {
                             PlayScene(_lastScene, _lastScene.retryMS, null);
+                            return;
+                        }
+
+
+
+                        if (scenetoplay != null)
+                        {
+                            var retryms = scenetoplay.retryMS;
+
+                            if (scenetoplay.Name == "DNQNIdle")
+                                retryms = 0;// The algorithm automatically gives this a retry seconds and it shouldn't.  Override it..  because it is correct everywhere else.
+                            PlayScene(scenetoplay, retryms);
                         }
                         
                         
@@ -1459,7 +1550,7 @@ namespace BorgWin10WPF.PlayerControllers
                     if (videoPathLower.EndsWith("x.avi"))
                     {
                         // This is most likely the upscaled media
-                        result.OriginalMainVideoHeight = 200;
+                        result.OriginalMainVideoHeight = 232;// 200;
                     }
                 }
                 if (result.OriginalMainVideoWidth == 0)
@@ -1475,7 +1566,7 @@ namespace BorgWin10WPF.PlayerControllers
                     if (videoPathLower.EndsWith("x.avi"))
                     {
                         // This is most likely the upscaled media
-                        result.OriginalMainVideoWidth = 320;
+                        result.OriginalMainVideoWidth = 312;// 320;
                     }
                 }
                 result.Loaded = true;

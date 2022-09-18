@@ -51,12 +51,12 @@ namespace BorgWin10WPF
         private Point _lastClickPoint = new Point(0d, 0d);
 
         // Original video heights and widths..    When the main video loads, these get set.
-        private static double _OriginalMainVideoHeight = 200d;
-        private static double _OriginalMainVideoWidth = 320d;
+        private static double _OriginalMainVideoHeight = 232d;
+        private static double _OriginalMainVideoWidth = 312d;
 
         // The hotspot definitions are defined in terms of the original video size.   We scale the clicks down to the original video size using these original values.
-        private static double _HotspotOriginalMainVideoHeight = 200d;
-        private static double _HotspotOriginalMainVideoWidth = 320d;
+        private static double _HotspotOriginalMainVideoHeight = 232d;
+        private static double _HotspotOriginalMainVideoWidth = 312d;
 
         // Aspect ratio.  Used for calculating the black bar offset when window doesn't match the aspect ratio.
         private double _OriginalAspectRatio = _OriginalMainVideoWidth / _OriginalMainVideoHeight;
@@ -220,7 +220,8 @@ namespace BorgWin10WPF
                 var relclickX = (int)((_lastClickPoint.X - _letterbox_width) / _aspect_ratio_width);
                 var relclickY = (int)((_lastClickPoint.Y - _letterbox_height) / _aspect_ratio_height);
 
-                relclickY += 19; // Borg wants things offset by more
+                //relclickY += 19; // Borg wants things offset by more
+                //relclickX += 19;
                 long time = 0;
                 TimeSpan ts = TimeSpan.Zero;
                 // When you click, it shows a debug message on the output window.  Including the current time in milliseconds since video start.
