@@ -122,6 +122,12 @@ namespace BorgWin10WPF
 
         // This is the borg cube when the game says User do something.
         BitmapImage CubeCursor = new BitmapImage(new Uri(System.IO.Path.Combine("Assets", "BorgCubeCursor.gif"), UriKind.Relative));
+
+
+        // click flourish
+        BitmapImage ClickFlourish = new BitmapImage(new Uri(System.IO.Path.Combine("Assets", "ButtonFAnim.gif"), UriKind.Relative));
+
+
         private double _letterbox_width = 0;
         private double _letterbox_height = 0;
 
@@ -138,6 +144,7 @@ namespace BorgWin10WPF
         private bool _logFiredHookActive = false;
         private int _initiallogprocessedcount = 0;
         private bool _useFallbackVideoLayering = false;
+        private bool _flippedbar = false;
         
         private FallbackScreenShot _fallbackScreenShot = null;
         private string _lastScreenshotLocation = string.Empty;
@@ -148,6 +155,9 @@ namespace BorgWin10WPF
         TricorderGifAnimationController TricorderAnimation;
         TricorderGifAnimationController TricorderAnimationFallback;
         TricorderCursorSpinAnimationController TricorderSpinner;
+        ClickAnimation ClickFlourishAnimator;
+
+
         private static ConcurrentQueue<Tuple<string>> taskTransferQueue = new ConcurrentQueue<Tuple<string>>();
 
         public MainPage()
@@ -157,6 +167,7 @@ namespace BorgWin10WPF
             var currentdir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             OverlayGrids = new List<Tuple<string, string, int>>() {
                 new Tuple<string, string, int>("No Grid", null, 0)
+                ,new Tuple<string, string, int>("Wide Pixel 420p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-480p_50.png"), 127)
                 ,new Tuple<string, string, int>("Wide Pixel 420p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-480p_50.png"), 255)
                 ,new Tuple<string, string, int>("Irregular Tall Pixel 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x1x2-240p_50.png"), 127)
                 ,new Tuple<string, string, int>("Original Grid 240p 100%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x2x1-240p_100.png"), 255)
@@ -165,7 +176,6 @@ namespace BorgWin10WPF
                 ,new Tuple<string, string, int>("Irregular Wide Pixel 420p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x2x1-480p_50.png"), 127)
                 ,new Tuple<string, string, int>("Irregular Wide Pixel 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x2x1-240p_50.png"), 255)
                 ,new Tuple<string, string, int>("Irregular Wide Pixel 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x2x1-240p_50.png"), 127)
-                ,new Tuple<string, string, int>("Wide Pixel 420p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-480p_50.png"), 127)
                 ,new Tuple<string, string, int>("Wide Pixel 340p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-240p_50.png"), 255)
                 ,new Tuple<string, string, int>("Wide Pixel 340p 25%", System.IO.Path.Combine(currentdir, "Assets", "tgr2x1x2-240p_50.png"), 127)
                 ,new Tuple<string, string, int>("Irregular Tall Pixel 420p 50%", System.IO.Path.Combine(currentdir, "Assets", "tgi2x1x2-480p_50.png"), 255)
@@ -205,7 +215,6 @@ namespace BorgWin10WPF
             {
                 lock (_clickTimer)
                     _clickTimer.Stop();
-
  
                 // See Video window resize for the setting of _aspect_ratio width and height.
                 var relclickX = (int)((_lastClickPoint.X - _letterbox_width) / _aspect_ratio_width);
@@ -302,6 +311,7 @@ namespace BorgWin10WPF
                             GenericErrorDialog.Visibility = Visibility.Visible;
                             _mcurVisible = true;
                             CurEmulator.Source = CubeCursor;
+                           
                             AnimationBehavior.SetSourceUri(CurEmulator, CubeCursor.UriSource);
                             CurEmulator.Visibility = Visibility.Visible;
                             err.Handled = true;
@@ -612,6 +622,7 @@ namespace BorgWin10WPF
                 TricorderAnimation.CloseTricorder();
                 TricorderAnimationFallback.CloseTricorder();
                 _supportingPlayer.SceneComplete += _supportingPlayer_SceneComplete;
+                _mainScenePlayer.OnClickedHotspot += _mainScenePlayer_OnClickedHotspot;
                 //CurEmulator.Visibility = Visibility.Visible;
 
 
@@ -798,6 +809,11 @@ namespace BorgWin10WPF
 
             CubeCursor.UriSource = new Uri(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", "BorgCubeCursor.gif"));// new BitmapImage(new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets", "dktahg.gif")));
             CubeCursor.EndInit();
+
+            ClickFlourish = new BitmapImage();
+            ClickFlourish.BeginInit();
+            ClickFlourish.UriSource = new Uri(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", "ButtonFAnim.gif"));
+            ClickFlourish.EndInit();
             // You clicked the clickable surface!   Start a timer..  to see if you only single clickd or double clicked.  
             // If the timer fires..  you have single clickddd.  If it doesn't fire you have double clickdd.
 
@@ -1021,6 +1037,14 @@ namespace BorgWin10WPF
 
         }
 
+        private void _mainScenePlayer_OnClickedHotspot()
+        {
+            ClickIndicator.Visibility = Visibility.Visible;
+            ClickIndicator.Margin = new Thickness(CurEmulator.Margin.Left-40, CurEmulator.Margin.Top-40, 0, 0);
+           
+            ClickFlourishAnimator.Trigger();
+        }
+
         private void _supportingPlayer_OnTrackInfo(LoadedVideoInfo video)
         {
             // Good.  We know the supporting player video size >.>
@@ -1095,6 +1119,25 @@ namespace BorgWin10WPF
             _videoAudioPlayer.QueueScene(hum, "holodeck", 0, true);
         }
 
+
+        private void FlipBar()
+        {
+            WindowStyle = WindowStyle.None;
+            _titlebarcurrentsize = _titlebarinvisibleheight;
+
+            
+            _titlebarcurrentsize = _titlebarsize;
+            WindowStyle = WindowStyle.SingleBorderWindow;
+            WindowResized(this, null);
+           
+            WindowStyle = WindowStyle.None;
+            _titlebarcurrentsize = _titlebarinvisibleheight;
+            WindowResized(this, null);
+
+            Mouse_Moved();
+            WindowResized(this, null);
+        }
+
         private void Mouse_Moved()
         {
 
@@ -1107,12 +1150,20 @@ namespace BorgWin10WPF
                 _titlebarcurrentsize = _titlebarsize;
                 WindowStyle = WindowStyle.SingleBorderWindow;
                 WindowResized(this, null);
+                if (VideoView != null && VideoView.MediaPlayer != null && VideoView.MediaPlayer.IsPlaying)
+                {
+                    _flippedbar = true;
+                }
             }
             if (point.Y > _titlebarShowHeight && WindowStyle == WindowStyle.SingleBorderWindow)
             {
                 WindowStyle = WindowStyle.None;
                 _titlebarcurrentsize = _titlebarinvisibleheight;
                 WindowResized(this, null);
+                if (VideoView != null && VideoView.MediaPlayer != null && VideoView.MediaPlayer.IsPlaying)
+                {
+                    _flippedbar = true;
+                }
             }
             // Don't move the cursor emulator if it isn't visible.
 
@@ -1673,7 +1724,11 @@ namespace BorgWin10WPF
             _mainScenePlayer.ActionOn += () =>
             {
                 _actionTime = true;
-                _clickTimer.Interval = TimeSpan.FromSeconds(0.05);
+                if (!_flippedbar)
+                {
+                    FlipBar();
+                    _flippedbar = true;
+                }
                 ShowCursor();
             };
             _mainScenePlayer.ActionOff += () =>
@@ -1705,6 +1760,11 @@ namespace BorgWin10WPF
 
             TricorderSpinner = new TricorderCursorSpinAnimationController(CurEmulator);
             TricorderSpinner.Start();
+
+            ClickFlourishAnimator = new ClickAnimation(ClickIndicator);
+            //ClickIndicator.Source = ClickFlourish;
+            AnimationBehavior.SetSourceUri(ClickIndicator, ClickFlourish.UriSource);
+
             InfoSpring.Visibility = Visibility.Collapsed;
             InfoSpring_fallback.Visibility = Visibility.Collapsed;
             if (_useFallbackVideoLayering)
@@ -1732,6 +1792,8 @@ namespace BorgWin10WPF
             }
             //var gridoverlay = OverlayGrids[_gridCursor];
             //_mainScenePlayer.ApplyGrid(gridoverlay.Item2, gridoverlay.Item3);
+
+            
             ClickSurface.Focus();
         }
 

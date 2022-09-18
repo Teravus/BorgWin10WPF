@@ -132,8 +132,9 @@
 
                     </Grid>
                 </Canvas>
+                <Image x:Name="ClickIndicator" Source="/Assets/ButtonFAnim.gif" Width="82" Height="82" HorizontalAlignment="Left" VerticalAlignment="Top" gif:AnimationBehavior.SourceUri="{Binding SelectedImage}" gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}" IsHitTestVisible="False" Opacity="0.2" Visibility="Collapsed" />
                 <Image x:Name="CurEmulator" Source="/Assets/BorgCubeCursor.gif" Width="82" Height="96" HorizontalAlignment="Left" VerticalAlignment="Top" gif:AnimationBehavior.SourceUri="{Binding SelectedImage}" gif:AnimationBehavior.RepeatBehavior="{Binding RepeatBehavior}" />
-              
+                
             </Grid>
 
         </vlc:VideoView>

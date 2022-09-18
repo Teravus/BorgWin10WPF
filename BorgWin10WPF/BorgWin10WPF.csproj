@@ -153,6 +153,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Animators\ClickAnimation.cs" />
     <Compile Include="AspectRatioMaxResult.cs" />
     <Compile Include="Animators\TricorderCursorSpinAnimationController.cs" />
     <Compile Include="FallbackScreenShot.cs" />
@@ -246,6 +247,9 @@
     </Content>
     <Content Include="Assets\BridgeHum.wav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\ButtonFAnim.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\ips.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

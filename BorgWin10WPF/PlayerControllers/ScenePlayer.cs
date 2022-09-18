@@ -51,6 +51,7 @@ namespace BorgWin10WPF.PlayerControllers
 
         public event FinallyGotVideoTrackInfo OnTrackInfo;
 
+        public event UserActionRequired OnClickedHotspot;
 
         // Reference to the video player in the UI
         private VideoView _displayElement = null;
@@ -141,6 +142,8 @@ namespace BorgWin10WPF.PlayerControllers
         // When the supporting player is available (it isn't immediately available).   Assign it here.
         // We need this to be able to hook to the support player events and...
         // tell the supporting player to play info scenes on the paused hotspots.
+
+        private bool _inPuzzle = false;
 
         public SupportingPlayer TheSupportingPlayer
         {
@@ -280,7 +283,7 @@ namespace BorgWin10WPF.PlayerControllers
         /// <param name="specifictimecode">In some special cases, you want to start from a specific point in the scene..  like when loading a game.  This is in Milliseconds from start of video.</param>
         public void PlayScene(SceneDefinition def, long specifictimecode = 0, string ReplayingFromTimeStop = null)
         {
-            
+            _inPuzzle = false;
 
             bool _visualizations = _visualizationEnabled;
 
@@ -294,6 +297,16 @@ namespace BorgWin10WPF.PlayerControllers
             }
 
            
+            if (def == null)
+            {
+                UserActionRequired quituserAction = QuitGame;
+                if (quituserAction != null)
+                {
+                    quituserAction();
+                }
+                return;
+            }
+
             if (def.SceneType == SceneType.Inaction)
             {
                 int inactivevideoItem = 0;
@@ -492,7 +505,7 @@ namespace BorgWin10WPF.PlayerControllers
             var currtime = _displayElement.MediaPlayer.Time;
             bool playing = _displayElement.MediaPlayer.IsPlaying;
             _lastPlayingValue = playing;
-            List<HotspotDefinition> hotspotstocheck = playing ? _currentScene.PlayingHotspots : _currentScene.PausedHotspots;
+            List<HotspotDefinition> hotspotstocheck = playing || _inPuzzle ? _currentScene.PlayingHotspots : _currentScene.PausedHotspots;
 
             if (!playing || _lastPlayheadMS >= _challengeStartMS) // to save processing we should only run queries when the user is allowed to interact.
             {
@@ -511,11 +524,16 @@ namespace BorgWin10WPF.PlayerControllers
                 for (int i = 0; i < inFrame.Count; i++)
                 {
                     var hittestresults = (inFrame[i].HitTest(X, Y, currtime, _currentScene));
-                    //if (triggerOrTestOnlyYN)
+                    if (triggerOrTestOnlyYN)
                         System.Diagnostics.Debug.WriteLine(string.Format("\t[{0}]: Hit test {1},{2}-{7}.  Box ({3},{4},{5},{6})", inFrame[i].Name + "/" + inFrame[i].ActionVideo, X, Y, inFrame[i].Area[0].TopLeft.X, inFrame[i].Area[0].TopLeft.Y, inFrame[i].Area[0].BottomRight.X, inFrame[i].Area[0].BottomRight.Y, hittestresults));
                     if (hittestresults && triggerOrTestOnlyYN)
                     {
-                        TriggerClickOnHotspot(inFrame[i], _allSceneOptions, _currentScene, playing);
+                        var hotspotclick = OnClickedHotspot;
+                        if (hotspotclick != null)
+                        {
+                            hotspotclick();
+                        }
+                        TriggerClickOnHotspot(inFrame[i], _allSceneOptions, _currentScene, playing || _inPuzzle);
 
 
                     }
@@ -537,6 +555,8 @@ namespace BorgWin10WPF.PlayerControllers
         {
             if (playing)
             {
+
+
                 string FrameActionVideo = inFrame.ActionVideo;
                 bool skipFrameActionVideodefault = false;
 
@@ -577,13 +597,16 @@ namespace BorgWin10WPF.PlayerControllers
                         var inputresult = triggeredInputPuzzle.Click(inFrame.ActionVideo, false);
                         if (!inputresult.OverrideNeeded)
                         {
-                            RollBackFrameWithinChallenge(1000);
+                            RollBackFrameWithinChallenge(3000);
+                            _displayElement.MediaPlayer.Pause();
+                            _inPuzzle = true;
                             FrameActionVideo = null;
-                            _displayElement.MediaPlayer.Play();
+                            //_displayElement.MediaPlayer.Play();
                             return;
                         }
                         else
                         {
+                            _displayElement.MediaPlayer.Play();
                             SceneDefinition jumpToSceneDef = null;
                             for (int iteration = 0; iteration < _allSceneOptions.Count; iteration++)
                             {
@@ -630,6 +653,7 @@ namespace BorgWin10WPF.PlayerControllers
                             }
                             if (jumpToSceneDef != null)
                             {
+                                
                                 PlayScene(jumpToSceneDef);
                                 _displayElement.MediaPlayer.Play();
                                 return;
@@ -638,8 +662,10 @@ namespace BorgWin10WPF.PlayerControllers
                         else
                         {
                             // They clicked the correct turbolift button.   Give them a little more time.
-                            RollBackFrameWithinChallenge(1000);
-                            _displayElement.MediaPlayer.Play();
+                            RollBackFrameWithinChallenge(3000);
+                            _inPuzzle = true;
+                            _displayElement.MediaPlayer.Pause();
+                            //_displayElement.MediaPlayer.Play();
                             return;
                         }
                     }
