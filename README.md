@@ -6,7 +6,7 @@
  You still need the original media to play.  This will not work without the content from the original disks.   No, I will not provide a copy of the disks or the disk content…  
  but you can get them on eBay for pretty cheap now if you don't already have them.
 
- This is still a work in progress.  Do not expect a working game.
+ So..   this is playable now with the original media.
 
  Based on original media content files, the windows 95 version of the Borg game engine is derived from the windows 95 Klingon engine. They have a common heritage, as a result, many of the ways things are done in the remake of Star Trek: Klingon also work with Borg.
 
