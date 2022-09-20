@@ -47,7 +47,7 @@ From Disk 2:
 From Disk 3: 
 - MAIN_3.AVI
 
-From the KlingonWin10WPF\CDAssets Folder:
+From the BorgWin10WPF\CDAssets Folder:
 - ffmpeg folder 
 - prepareVideos.bat 
 
