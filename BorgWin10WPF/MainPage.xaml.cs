@@ -2034,7 +2034,7 @@ namespace BorgWin10WPF
                         {
                             Log_Fired_Unhook();
                             Console.WriteLine("Unhooked from log DirectX11+ Started Successfully");
-                            TriggerFallbackLayering();
+                            //TriggerFallbackLayering();
                         }
                     }
                     break;
