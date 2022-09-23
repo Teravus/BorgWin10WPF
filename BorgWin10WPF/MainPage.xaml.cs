@@ -1098,7 +1098,7 @@ namespace BorgWin10WPF
                             {
                                 MainVideoViewFallback.Visibility = Visibility.Collapsed;
                                 VideoInfo.Visibility = Visibility.Collapsed;
-
+                                TricorderScreenOverlay.Visibility = Visibility.Collapsed;
                                 TricorderAnimationFallback.CloseTricorder();
                             }
                             else
@@ -1278,9 +1278,14 @@ namespace BorgWin10WPF
                 {
                     //var point = VideoInfo.TranslatePoint(new Point(0, 0), InfoSpring);
                     //VVGrid.Margin = new Thickness(point.X, point.Y, 0, 0);
-
+                    //var newleft = (this.ActualWidth * 0.5) * 0.5;
+                    //InfoSpring_fallback.HorizontalAlignment = HorizontalAlignment.Left;
+                    //InfoSpring_fallback.Margin = new Thickness(newleft, 0, 0, 0);
+                    
                 }
             }
+            
+
             ImgStartMain.Height = height;
             ImgStartMain.Width = width;
             grdStartControls.Height = height;
@@ -1538,6 +1543,7 @@ namespace BorgWin10WPF
                                 //}
                                 if (_useFallbackVideoLayering)
                                 {
+                                    TricorderScreenOverlay.Visibility = Visibility.Collapsed;
                                     TricorderAnimationFallback.CloseTricorder();
                                 }
                                 else
@@ -1768,6 +1774,7 @@ namespace BorgWin10WPF
 
             InfoSpring.Visibility = Visibility.Collapsed;
             InfoSpring_fallback.Visibility = Visibility.Collapsed;
+            TricorderScreenOverlay.Visibility = Visibility.Collapsed;
             if (_useFallbackVideoLayering)
             {
                 MainVideoViewFallback.Visibility = Visibility.Collapsed;
@@ -1903,6 +1910,7 @@ namespace BorgWin10WPF
             {
                 MainVideoViewFallback.Visibility = Visibility.Visible;
                 VideoInfo.Visibility = Visibility.Visible;
+                TricorderScreenOverlay.Visibility = Visibility.Visible;
             }
             else
             {
@@ -2017,7 +2025,7 @@ namespace BorgWin10WPF
                         {
                             Log_Fired_Unhook();
                             Console.WriteLine("Unhooked from log DirectX11+ Started Successfully");
-                            //TriggerFallbackLayering();
+                            TriggerFallbackLayering();
                         }
                     }
                     break;
@@ -2037,7 +2045,7 @@ namespace BorgWin10WPF
             this.Dispatcher.BeginInvoke((Action)(() =>
             {
                 InfoSpring.Visibility = Visibility.Collapsed;
-                VideoAudio.Visibility = Visibility.Visible;
+                //VideoAudio.Visibility = Visibility.Visible;
                 WindowResized(null);
             }));
             

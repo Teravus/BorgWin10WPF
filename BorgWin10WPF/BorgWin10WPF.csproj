@@ -325,6 +325,9 @@
     <Content Include="Assets\holodeckscenes.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\TricorderScreenFallbackOverlay.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="CDAssets\scenes.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
