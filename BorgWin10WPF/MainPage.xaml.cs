@@ -1811,14 +1811,13 @@ namespace BorgWin10WPF
                 return;
             var lastimage = MainVideoViewFallback.Source;
 
-            
-            using (System.IO.FileStream imagestream = File.OpenRead(filename))
+            using (var memorystream = new MemoryStream(File.ReadAllBytes(filename)))
             {
                 BitmapImage backgroundshot = null;
                 backgroundshot = new BitmapImage();
                 backgroundshot.BeginInit();
                 backgroundshot.CacheOption = BitmapCacheOption.OnLoad;
-                backgroundshot.StreamSource = imagestream;
+                backgroundshot.StreamSource = memorystream;
                 backgroundshot.EndInit();
 
                 MainVideoViewFallback.BeginInit();
@@ -1826,22 +1825,32 @@ namespace BorgWin10WPF
                 MainVideoViewFallback.EndInit();
             }
 
+            try
+            {
+                if (System.IO.File.Exists(filename))
+                    System.IO.File.Delete(filename);
+            }
+            catch (Exception e)
+            {
+
+            }
+
             MainVideoViewFallback.Visibility = Visibility.Visible;
             VideoView.Visibility = Visibility.Collapsed;
 
 
-            if (!string.IsNullOrEmpty(_lastScreenshotLocation))
-            {
-                try
-                {
-                    if (System.IO.File.Exists(_lastScreenshotLocation))
-                        System.IO.File.Delete(_lastScreenshotLocation);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Unable to delete last screenshot {filename}");
-                }
-            }
+            //if (!string.IsNullOrEmpty(_lastScreenshotLocation))
+            //{
+            //    try
+            //    {
+            //        if (System.IO.File.Exists(_lastScreenshotLocation))
+            //            System.IO.File.Delete(_lastScreenshotLocation);
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        Console.WriteLine($"Unable to delete last screenshot {filename}");
+            //    }
+            //}
 
             _lastScreenshotLocation = filename;
    
