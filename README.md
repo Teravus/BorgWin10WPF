@@ -8,6 +8,9 @@
 
  So..   this is playable now with the original media.
 
+![Game Engine Screen Shot 0](https://raw.githubusercontent.com/Teravus/BorgWin10WPF/main/BorgWin10WPF/Assets/Game_Engine_Screen_shot.png)
+![Game Engine Screen Shot 1](https://raw.githubusercontent.com/Teravus/BorgWin10WPF/main/BorgWin10WPF/Assets/Game_Engine_Screen_shot2.png)
+
  Based on original media content files, the windows 95 version of the Borg game engine is derived from the windows 95 Klingon engine. They have a common heritage, as a result, many of the ways things are done in the remake of Star Trek: Klingon also work with Borg.
 
  A few things to note that we learned from Klingon;
