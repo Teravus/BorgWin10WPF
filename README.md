@@ -25,9 +25,14 @@
  
 ## Build
 This was built using Visual Studio 2019 Community Edition.  (freely downloadable)
-Open the 'sln' file.   Make sure the nuget packages get restored.  Pick your platform.  Build.
+Open the 'sln' file.   Make sure the nuget packages get restored.  Pick your platform (either x86 or x64, but don't leave it on 'Any').  Build.  
 
 The program will be built and put in the bin/x64/Debug folder.  If you build it for x86, it will be in the bin/x86/Debug folder.
+
+---
+
+## Downloads of the already built application
+Not everyone can or is willing to build the game from source.  In that case youc an download the Main application (but not the original game content) from the released tags. We're currently on Alpha-2 [Download Link](https://github.com/Teravus/BorgWin10WPF/releases/tag/Alpha-2). Again, I want to reiterate that this download contains no game files. You must have or obtain the original game media and follow the import procedure in the ReadMe file in the ZIP or source to play the game. I am unable to provide the original media.
 
 ---
 
