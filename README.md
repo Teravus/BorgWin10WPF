@@ -40,7 +40,7 @@ From the original disks, you need to copy some of the AVI files to the CDAssets 
 
 From Disk 1:
 
-- HOLODECK.AVI
+- LOGO.AVI
 - IP.AVI 
 - MAIN_1.AVI
 
