@@ -57,8 +57,8 @@ From the BorgWin10WPF\CDAssets Folder:
 ---
 Once you have all of those files in the CDAssets folder.  
 Run prepareVideos.bat.   
-It should make X versions of 4 of the videos MAIN_1X.AVI, IPX.AVI, MAIN_2X.AVI, MAIN_3X.AVI, and LOGOX.AVI.  
-The X versions have the audio re-synchronized.
+It should make X versions of 5 of the videos MAIN_1X.AVI, IPX.AVI, MAIN_2X.AVI, MAIN_3X.AVI, and LOGOX.AVI.  
+The X versions have the audio re-synchronized so LibVLC can play them in sync with the video.  (The Duck TrueMotion codec is a very early version of webm and is barely supported)
 
 At that point you should be able to run the game test.  The game will check for the videos and let you know if you're missing one when you attempt to start a new game.
 
