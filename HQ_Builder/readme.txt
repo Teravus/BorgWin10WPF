@@ -34,7 +34,7 @@ You must also have the CDROM video. The 720i sources are missing some scenes and
 I'm working on a C# application that will pick up the files from this point on and cut the 720p sources.   While I'm working on this, you may be able to cut them yourself with your preferred editor with these directions.
 
 ----------------------------
-For this, you need to split Main_1's video and audio track into a .mp4 file and a .wav file.  These will be used in the EDL file.
+For this, you need to split the CDROM's Main_1's video and audio track into a .mp4 file and a .wav file. This will re-encode the video track but it's already abysmal quality so you're not losing anything.  These will be used in the EDL file.
  
 Once all of that is in order, you must adjust the speed of the 720p source.  This is because the 420p CDROM video runs at a different speed than the 720i video.
 
