@@ -4,7 +4,7 @@ The goal of this folder is to provide a way for you to build a compatible video 
 
 Acquiring the 720i sources is out of scope for this project. I purchased a physical copy of the Japanese edition of the game from a seller in Japan and imported it to where I live.  Once you have the physical sources, it isn't obvious how to get at the mpg video without problems or re-encoding.
 A few things to note: 
- * I picked only the English track audio because it makes things a little easier to deal with, however, the application has a channel picker so you can pick the audo channel once in the application.  In the 720i sources, The English audio is the second audio track;The Japanese audio is the first audio track.
+ * I picked only the English track audio because it makes things a little easier to deal with, however, the application has a channel picker so you can pick the audio channel once in the application.  In the 720i sources, The English audio is the second audio track;The Japanese audio is the first audio track.
  * You might have to try a variety of tools to read/repair the timecode of the original sources. There is software that results in a proper mpeg without re-encoding the video track.  Many result in weird timecodes that causes problems with reading the video
 
 Once you have extracted the video from the sources, you must deinterlace it.  The original sources are in, essentially, mpg format.
