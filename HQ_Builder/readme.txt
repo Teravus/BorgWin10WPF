@@ -43,9 +43,9 @@ ffmpeg -i VTS_02_1.mp4  -vf "setpts=(PTS-STARTPTS)/1.000158982" -af atempo=1.000
 
 From the resulting sources, you can use the EDL cuts to compose the video in your editor. 
 Note: 
- * I have only produced an EDL cut file for Main_1 so far (6/11/2023). I will produce Main_2 and Main_3 soon and update this file. I'll also provide a few LUT that will recolor the source like TNG
+ * I have only produced an EDL cut file for Main_1 and Main_2 so far (6/8/2023). I will produce Main_3 soon and update this file. I'll also provide a few LUT that will recolor the source like TNG
  * The EDL cuts are in a Semi-colon separated format with a direct path to the audio files. 
  * * You must change the location of the video files in the EDL cut file to where you have them stored.
- * To produce the scenes that are missing in the 720i source, you will need the Main_1 video track as an mp4 and the audio track as a wav from the original CD sources. (this can be done with ffmpeg)
+ * To produce the scenes that are missing in the 720i source, you will need the CDROM Main_1 video track as an mp4 and the audio track as a wav from the original CD sources. (this can be done with ffmpeg)
 
 Eventually, an application will be made to do this last bit.
