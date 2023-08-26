@@ -113,10 +113,17 @@ After this was released, The Duck Corporation changed their name to On2 Technolo
 Also, the Simon & Schuster Interactive division was shuttered in 2003.  The parent company went through several hands, Paramount, Viacom, CBS Corporation. Currently it is held by Paramount Global with a pending sale to Penguin Random House.  The sale is blocked with an antitrust lawsuit by USDOJ.
 From: https://en.wikipedia.org/wiki/Simon_%26_Schuster .   In theory, they /could/ remake the original game, but it is highly unlikely.
 
+--
+
+## Additional Legal Notice from https://www.startrek.com/fan-films
+While this isn't a fan film, CBS/Paramount would like fan made projects to have an explicit disclaimer regarding trademarks, logos and other proprties held by CBS/Paramount Pictures and other Star Trek Franchises.
+
+Star Trek and all related marks, logos and characters are solely owned by CBS Studios Inc. This fan project is not endorsed by, sponsored by, nor affiliated with CBS, Paramount Pictures, or any other Star Trek franchise, and is a non-commercial fan-made recreation of a software application from scratch intended for recreational use. No commercial exhibition or distribution is permitted. No alleged independent rights will be asserted against CBS or Paramount Pictures.
+
 ---
 
 The code for the engine is released under the MIT license. It makes use of libvlc and libvlcsharp as a video player which is released under the GNU Lesser GPL license, version 2.1. https://github.com/videolan/libvlcsharp/ 
 
 If you need to contact me about this software or a legal issue regarding this software, please do so at Teravus at gmail dot com.  Or Discord: RebootTech#6247. The intent is to make this engine free to use and distribute, however, it only works as long as you have the original licensed media.
 
-I also tend to stream on Twitch on Thursdays at around 4:30 PM Pacific time under the screen name 'RebootTech'.
+I also tend to stream on Twitch on Thursdays at around 4:30 PM Pacific time under the screen name 'RebootTech'.  You can also poke me there about this project.
