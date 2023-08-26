@@ -110,8 +110,12 @@ The remake of the FMV engine is entirely new and includes none of the game asset
 Also, some corporate history for the license holders;
 After this was released, The Duck Corporation changed their name to On2 Technologies and Google acquired On2 and used the technology to develop webm.
 
-Also, the Simon & Schuster Interactive division was shuttered in 2003.  The parent company went through several hands, Paramount, Viacom, CBS Corporation. Currently it is held by Paramount Global with a pending sale to Penguin Random House.  The sale is blocked with an antitrust lawsuit by USDOJ.
-From: https://en.wikipedia.org/wiki/Simon_%26_Schuster .   In theory, they /could/ remake the original game, but it is highly unlikely.
+Also, the Simon & Schuster Interactive division was shuttered in 2003.  The parent company went through several hands, Paramount, Viacom, CBS Corporation. Paramount Global tried to sell it to Penguin Random House, however, the sale was blocked with an antitrust lawsuit by USDOJ.  In Aug 7, 2023, Simon & Schuster was sold to Kohlberg Kravis Roberts & Co (KKR) Private Equity.
+
+From: https://en.wikipedia.org/wiki/Simon_%26_Schuster   
+From: https://www.hollywoodreporter.com/business/business-news/simon-schuster-sold-paramount-1235526542/
+
+It is highly unlikely that any of the parties involved will remake the original game.
 
 --
 
